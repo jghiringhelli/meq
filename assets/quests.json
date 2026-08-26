@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "schema": "quests-v1",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Hero starting + advanced quests."
+    ]
+  },
+  "quests": [
+    {
+      "id": "quest-beravor-guarding-the-dimrill-stair",
+      "hero": "beravor",
+      "name": "Guarding the Dimrill Stair",
+      "type": "Starting Quest",
+      "setup": "",
+      "task": "Explore The Redhorn Gate.",
+      "reward": "Gain 2 favor and receive training. Then place Gandalf in Bree and reveal Beravor's Advanced Quest.",
+      "region": "green",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-beravor-spies-in-mithlond",
+      "hero": "beravor",
+      "name": "Spies in Mithlond",
+      "type": "Starting Quest",
+      "setup": "Place Gandalf in The Grey Havens. When you would draw Encounter cards at The Hrey Havens, combat a Crebain instead.",
+      "task": "Defeat the Crebain.",
+      "reward": "Gain a \"Boat\" Item card and receive training. Then reveal Beravor's Advanced Quest.",
+      "region": "orange",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-beravor-bones-of-a-darkness-past",
+      "hero": "beravor",
+      "name": "Bones of a Darkness Past",
+      "type": "Advanced Quest",
+      "setup": "",
+      "task": "Explore the Ruins of Angmar",
+      "reward": "Gain 2 favor and 1 level of agility.",
+      "region": "purple",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-argalad-they-have-become-queer-and-wild",
+      "hero": "argalad",
+      "name": "They Have Become Queer and Wild",
+      "type": "Starting Quest",
+      "setup": "",
+      "task": "Explore Fangorn.",
+      "reward": "Gain 2 favor and receive training. Then place Thranduil in Woodland Realm and reveal Argalad's Advanced Quest.",
+      "region": "green",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-argalad-the-forest-must-provide-no-refuge",
+      "hero": "argalad",
+      "name": "The Forest Must Provide No Refuge",
+      "type": "Starting Quest",
+      "setup": "Place Aragorn in The South Eaves. When you would draw Encounter cards in The South Eaves, combat an Orc instead.",
+      "task": "Defeat the Orc.",
+      "reward": "Receive training. Then reveal Argalad's Advanced Quest.",
+      "region": "light green",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-argalad-echoes-of-bolg-s-army",
+      "hero": "argalad",
+      "name": "Echoes of Bolg's Army",
+      "type": "Advanced Quest",
+      "setup": "",
+      "task": "Explore Mount Gundabad.",
+      "reward": "Gain 2 favor or 1 level of fortitude. Then force Sauron to discard 1 random Shadow card from his hand.",
+      "region": "purple",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-eleanor-an-appeal-to-golasgil",
+      "hero": "eleanor",
+      "name": "An Appeal to Golasgil",
+      "type": "Starting Quest",
+      "setup": "",
+      "task": "Explore Anfalas.",
+      "reward": "Gain 1 favor, receive training, and place Boromir in Osgiliath. Then shuffle your rest pool into your life pool and reveal Eleanor's Advanced Quest.",
+      "region": "blue",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-eleanor-where-the-stars-are-strange",
+      "hero": "eleanor",
+      "name": "Where the Stars are Strange",
+      "type": "Starting Quest",
+      "setup": "Place Boromir in Near Harad.",
+      "task": "Explore Near Harad or combat the Black Serpent.",
+      "reward": "Gain 1 level of strength and receive training. Then place Denethor in Minas Tirith and reveal Eleanor's Advanced Quest.",
+      "region": "light blue",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-eleanor-hidden-in-the-ash-mountains",
+      "hero": "eleanor",
+      "name": "Hidden in the Ash Mountains",
+      "type": "Advanced Quest",
+      "setup": "",
+      "task": "Explore Barad-dûr.",
+      "reward": "Gain 2 favor or 1 level of agility. Then remove 1 influence from the Shadow Pool.",
+      "region": "red",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-eometh-drive-back-the-evil-men",
+      "hero": "eometh",
+      "name": "Drive Back the Evil Men",
+      "type": "Starting Quest",
+      "setup": "",
+      "task": "Explore the Mouth of the Greyflood.",
+      "reward": "Gain 2 favor and place Saruman in Isengard. Then reveal Eometh's Advanced Quest.",
+      "region": "yellow",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-eometh-a-message-to-the-white-wizard",
+      "hero": "eometh",
+      "name": "A message to the White Wizard",
+      "type": "Starting Quest",
+      "setup": "Place Saruman in Isengard. When you would draw Encounter cards in Isengard, combat an Agent instead.",
+      "task": "Defeat the Agent.",
+      "reward": "Gain 1 favor and receive training. Then reveal Eometh's Advanced Quest.",
+      "region": "blue",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-eometh-hill-of-sorcery",
+      "hero": "eometh",
+      "name": "Hill of Sorcery",
+      "type": "Advanced Quest",
+      "setup": "",
+      "task": "Explore Dol Guldur.",
+      "reward": "Gain 2 favor or 1 level of agility. Sauron must then choose to either discard 1 plot card from his hand or 2 influence from the Shadow Pool.",
+      "region": "brown",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-th-lin-the-ered-luin",
+      "hero": "thalin",
+      "name": "The Ered Luin",
+      "type": "Starting Quest",
+      "setup": "",
+      "task": "Explore the Blue Mountains.",
+      "reward": "Gain 3 favor and place Dain II in Erebor. Then shuffle your rest pool into your life pool and reveal Thálin's Advanced Quest.",
+      "region": "orange",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-th-lin-a-new-threat",
+      "hero": "thalin",
+      "name": "A New Threat",
+      "type": "Starting Quest",
+      "setup": "Place Dain II in The Northern Wast. When you would draw Encounter cards in The Northern Waste, combat a Snaga instead.",
+      "task": "Defeat the Snaga.",
+      "reward": "Receive training. Then reveal Thálin's Advanced Quest.",
+      "region": "grey",
+      "effectKey": ""
+    },
+    {
+      "id": "quest-th-lin-to-look-into-the-mirrormere",
+      "hero": "thalin",
+      "name": "To Look into the Mirrormere",
+      "type": "Advanced Quest",
+      "setup": "",
+      "task": "Explore Moria.",
+      "reward": "Gain 2 favor or 1 level of wisdom.",
+      "region": "yellow",
+      "effectKey": ""
+    }
+  ]
+}

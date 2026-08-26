@@ -1,0 +1,26 @@
+{
+  "schema": "items-v1",
+  "_meta": {
+    "notes": "The 3 Item cards from Heros_training_cards_items.pdf (p.7), x3 copies of each. Item abilities are movement/economy modifiers; effects are the authoritative rules text pending engine wiring (movement graph). Eometh starts the game with a Horse."
+  },
+  "items": [
+    {
+      "id": "item-boat",
+      "name": "Boat",
+      "copies": 3,
+      "ability": "You may move along a water path by playing 1 card of any terrain. You may also move between the Grey Havens and Belfalas as if they were connected, at a cost of 3 cards of any terrain."
+    },
+    {
+      "id": "item-horse",
+      "name": "Horse",
+      "copies": 3,
+      "ability": "Reduce the card cost of each path you move along by 1 (to a minimum of 1)."
+    },
+    {
+      "id": "item-elven-cloak",
+      "name": "Elven Cloak",
+      "copies": 3,
+      "ability": "After Sauron plays a Shadow card on your turn, discard 1 influence from the Shadow Pool."
+    }
+  ]
+}

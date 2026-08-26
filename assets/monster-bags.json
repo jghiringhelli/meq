@@ -1,0 +1,71 @@
+{
+  "schema": "monster-bags-v2",
+  "_meta": {
+    "note": "Each region-PAIR shares one bag of 10 face-down monster tokens (some blank). Regions pair up for BOTH monster tokens and Location cards. When Sauron places a monster token in a location he draws one at random from that location's region bag without knowing it until placed; a blank draws nothing. Bags are keyed by regionId (geographic), NOT by printed color: strongholds are printed red (Ruins of Angmar purple) but pool by their region. Counts are owner-authoritative. Color pairs (owner-confirmed): Eriador/Enedwaith=Orange+Yellow, Rhudaur/Grey Mountains=Purple+Grey, Misty Mountains/Mirkwood=Green+Light Green, Rohan/Gondor=Blue+Light Blue, Brown Lands/Mordor=Brown+Red; havens=white.",
+    "totalPerBag": 10
+  },
+  "pools": [
+    {
+      "regionId": "eriador-and-enedwaith",
+      "name": "Eriador / Enedwaith",
+      "colors": ["Orange", "Yellow"],
+      "blanks": 4,
+      "tokens": [
+        { "monsterId": "mon-dunlending", "count": 2 },
+        { "monsterId": "mon-agent", "count": 2 },
+        { "monsterId": "mon-crebain", "count": 1 },
+        { "monsterId": "mon-barrow-wight", "count": 1 }
+      ]
+    },
+    {
+      "regionId": "rhudaur-and-grey-mountains",
+      "name": "Rhudaur / Grey Mountains",
+      "colors": ["Purple", "Grey"],
+      "blanks": 4,
+      "tokens": [
+        { "monsterId": "mon-barrow-wight", "count": 1 },
+        { "monsterId": "mon-agent", "count": 1 },
+        { "monsterId": "mon-crebain", "count": 1 },
+        { "monsterId": "mon-snaga", "count": 1 },
+        { "monsterId": "mon-orc", "count": 1 },
+        { "monsterId": "mon-cave-troll", "count": 1 }
+      ]
+    },
+    {
+      "regionId": "mist-mountains-and-mirkwood",
+      "name": "Misty Mountains / Mirkwood",
+      "colors": ["Green", "Light Green"],
+      "blanks": 4,
+      "tokens": [
+        { "monsterId": "mon-snaga", "count": 2 },
+        { "monsterId": "mon-huorn", "count": 2 },
+        { "monsterId": "mon-giant-spider", "count": 1 },
+        { "monsterId": "mon-orc", "count": 1 }
+      ]
+    },
+    {
+      "regionId": "rohan-and-gondor",
+      "name": "Rohan / Gondor",
+      "colors": ["Blue", "Light Blue"],
+      "blanks": 4,
+      "tokens": [
+        { "monsterId": "mon-warg-rider", "count": 2 },
+        { "monsterId": "mon-southron", "count": 2 },
+        { "monsterId": "mon-orc", "count": 1 },
+        { "monsterId": "mon-oliphaunt", "count": 1 }
+      ]
+    },
+    {
+      "regionId": "mordor-and-brown-lands",
+      "name": "Brown Lands / Mordor",
+      "colors": ["Brown", "Red"],
+      "blanks": 4,
+      "tokens": [
+        { "monsterId": "mon-cave-troll", "count": 2 },
+        { "monsterId": "mon-giant-spider", "count": 2 },
+        { "monsterId": "mon-barrow-wight", "count": 1 },
+        { "monsterId": "mon-orc", "count": 1 }
+      ]
+    }
+  ]
+}

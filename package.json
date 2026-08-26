@@ -1,0 +1,35 @@
+{
+  "name": "middle-earth-quest",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Unofficial fan-made digital port of Middle-earth Quest (FFG 2009). Base game only. Non-commercial.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node scripts/run-all-tests.mjs",
+    "test:all": "node scripts/run-all-tests.mjs && vitest run",
+    "vitest": "vitest run",
+    "vitest:watch": "vitest",
+    "e2e": "playwright test",
+    "verify:effects": "node scripts/verify-effect-coverage.mjs"
+  },
+  "dependencies": {
+    "peerjs": "^1.5.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "peer": "^1.0.2",
+    "tsx": "^4.23.12",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^4.1.11"
+  }
+}

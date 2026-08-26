@@ -1,0 +1,897 @@
+{
+  "schema": "movement-graph-v2",
+  "_meta": {
+    "rule": "MEQ Move (manual): each connecting path shows a movement icon = a terrain symbol with a number. To cross, discard EITHER one Hero card matching the terrain, OR 'anyCost' Hero cards of any type (the number on the icon). An 'any card' icon (terrain='') costs 1 any-card. With a Boat Item you may cross water/blue paths (boat=true) by discarding any one card regardless of icon.",
+    "fields": "terrain: woods|swamp|mountain|plains|hill|'' (any-card). anyCost: number of any-cards alternative (null = number not legible on tile, fill by hand). boat/horse: path also offers boat/horse shortcut. confidence: image legibility.",
+    "provenance": "Transcribed from files/tiles by 4 explore passes; HAND-CORRECT against the board.",
+    "edgeCount": 94,
+    "needsReview": {
+      "isolated": [
+        "south-eaves (no path transcribed; add its real connections)"
+      ],
+      "lowConfidence": [
+        "amon-hen--fangorn",
+        "amon-hen--rhosgobel",
+        "anfalas--edoras",
+        "dagorlad--rhun",
+        "dagorlad--sea-of-udun",
+        "edoras--the-redhorn-gate",
+        "erebor--the-iron-hills",
+        "fangorn--moria",
+        "lake-esgaroth--rhun",
+        "moria--rhosgobel",
+        "near-harad--pelagir",
+        "plains-of-rohan--sea-of-udun",
+        "rhun--the-bight",
+        "rhun--the-iron-hills",
+        "the-iron-hills--the-withered-heath"
+      ]
+    }
+  },
+  "edges": [
+    {
+      "a": "amon-hen",
+      "b": "fangorn",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "amon-hen",
+      "b": "rhosgobel",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "anfalas",
+      "b": "edoras",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "anfalas",
+      "b": "helm-s-deep",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "anfalas",
+      "b": "morthond",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "barad-dur",
+      "b": "mount-doom",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "belfalas",
+      "b": "pelagir",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "blue-mountains",
+      "b": "the-grey-havens",
+      "terrain": "mountain",
+      "anyCost": 2,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "bree",
+      "b": "fornost",
+      "terrain": "",
+      "anyCost": 2,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "bree",
+      "b": "the-shire",
+      "terrain": "",
+      "anyCost": 2,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "bree",
+      "b": "the-trollshaws",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "bree",
+      "b": "weathertop",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dagorlad",
+      "b": "dol-guldur",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dagorlad",
+      "b": "emyn-muil",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dagorlad",
+      "b": "rhun",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "dagorlad",
+      "b": "sea-of-udun",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "dagorlad",
+      "b": "the-dead-marshes",
+      "terrain": "swamp",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dol-guldur",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dunharrow",
+      "b": "edoras",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dunharrow",
+      "b": "morthond",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dunland",
+      "b": "fangorn",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "dunland",
+      "b": "gap-of-rohan",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "edoras",
+      "b": "gap-of-rohan",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "edoras",
+      "b": "helm-s-deep",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "edoras",
+      "b": "isengard",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "edoras",
+      "b": "the-redhorn-gate",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "enedwaith-plains",
+      "b": "mouth-of-the-greyflood",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "enedwaith-plains",
+      "b": "tharbad",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "enedwaith-plains",
+      "b": "weathertop",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "erebor",
+      "b": "lake-esgaroth",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "erebor",
+      "b": "mount-gundabad",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "erebor",
+      "b": "the-forest-road",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "erebor",
+      "b": "the-forest-trail",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "erebor",
+      "b": "the-iron-hills",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "ered-mithrin",
+      "b": "the-northern-waste",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "ered-mithrin",
+      "b": "the-trollshaws",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "eregion",
+      "b": "lothl-rien",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "eregion",
+      "b": "moria",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "eregion",
+      "b": "rivendell",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "eregion",
+      "b": "tharbad",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "eregion",
+      "b": "the-trollshaws",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "ettenmoors",
+      "b": "fornost",
+      "terrain": "",
+      "anyCost": 2,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "ettenmoors",
+      "b": "ruins-of-angmar",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "ettenmoors",
+      "b": "the-north-downs",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "fangorn",
+      "b": "isengard",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "fangorn",
+      "b": "moria",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "fornost",
+      "b": "hills-of-evendim",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "fornost",
+      "b": "the-north-downs",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "fornost",
+      "b": "the-trollshaws",
+      "terrain": "",
+      "anyCost": 2,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "gap-of-rohan",
+      "b": "helm-s-deep",
+      "terrain": "hill",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "gap-of-rohan",
+      "b": "isengard",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "gap-of-rohan",
+      "b": "plains-of-rohan",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "gladden-fields",
+      "b": "rhosgobel",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "gladden-fields",
+      "b": "the-bight",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "harlindon",
+      "b": "the-grey-havens",
+      "terrain": "forest",
+      "anyCost": 2,
+      "boat": true,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "high-pass",
+      "b": "lake-esgaroth",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "high-pass",
+      "b": "rivendell",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "high-pass",
+      "b": "the-forest-road",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "hills-of-evendim",
+      "b": "the-north-downs",
+      "terrain": "hill",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "lake-esgaroth",
+      "b": "rhun",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "lake-esgaroth",
+      "b": "the-forest-trail",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "lothl-rien",
+      "b": "rhosgobel",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "minas-morgul",
+      "b": "mount-doom",
+      "terrain": "plains",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "minas-morgul",
+      "b": "osgiliath",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "minas-tirith",
+      "b": "osgiliath",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "minas-tirith",
+      "b": "pelagir",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": true,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "moria",
+      "b": "rhosgobel",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "moria",
+      "b": "the-forest-road",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "moria",
+      "b": "the-redhorn-gate",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "morthond",
+      "b": "pelagir",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "mount-doom",
+      "b": "plains-of-gorgoroth",
+      "terrain": "plains",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "mount-gundabad",
+      "b": "ruins-of-angmar",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "mount-gundabad",
+      "b": "the-withered-heath",
+      "terrain": "mountain",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "mouth-of-the-greyflood",
+      "b": "tharbad",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "near-harad",
+      "b": "pelagir",
+      "terrain": "plains",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "old-forest",
+      "b": "the-shire",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "old-forest",
+      "b": "the-trollshaws",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "old-forest",
+      "b": "weathertop",
+      "terrain": "swamp",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "plains-of-gorgoroth",
+      "b": "sea-of-udun",
+      "terrain": "plains",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "plains-of-rohan",
+      "b": "sea-of-udun",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "plains-of-rohan",
+      "b": "the-nindalf",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "rhun",
+      "b": "the-bight",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "rhun",
+      "b": "the-iron-hills",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "rivendell",
+      "b": "the-forest-road",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "rivendell",
+      "b": "the-trollshaws",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-dead-marshes",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-forest-road",
+      "b": "the-woodland-realm",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-forest-trail",
+      "b": "the-woodland-realm",
+      "terrain": "woods",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-grey-havens",
+      "b": "the-shire",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": true,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-iron-hills",
+      "b": "the-withered-heath",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "med"
+    },
+    {
+      "a": "the-north-downs",
+      "b": "weathertop",
+      "terrain": "",
+      "anyCost": 2,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-northern-waste",
+      "b": "the-withered-heath",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-trollshaws",
+      "b": "weathertop",
+      "terrain": "",
+      "anyCost": 1,
+      "boat": false,
+      "horse": false,
+      "confidence": "high"
+    },
+    {
+      "a": "the-bight",
+      "b": "south-eaves",
+      "terrain": "",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "low"
+    },
+    {
+      "a": "south-eaves",
+      "b": "rhun",
+      "terrain": "",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "low"
+    },
+    {
+      "a": "rhosgobel",
+      "b": "south-eaves",
+      "terrain": "",
+      "anyCost": null,
+      "boat": false,
+      "horse": false,
+      "confidence": "low"
+    }
+  ]
+}

@@ -1,0 +1,765 @@
+{
+  "_meta": {
+    "schema": "shadow-v1",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Sauron Shadow cards."
+    ]
+  },
+  "cards": [
+    {
+      "id": "shadow-betrayed",
+      "name": "Betrayed",
+      "poolRequirement": "1",
+      "timing": "Play at the start of combat.",
+      "effect": "The hero must discard 2 random cards from his hand. Until the end of combat, the hero's strength is reduced by 1 for each Corruption card on him.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardHand",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "combatStatMod",
+              "stat": "strength",
+              "n": -1,
+              "per": "corruptionOnHero"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-an-evil-fog",
+      "name": "An Evil Fog",
+      "poolRequirement": "1",
+      "timing": "Play during your Action step.",
+      "effect": "Choose a hero. You may move him to an adjacent location. He must then discard 1 random card from his hand for each Corruption card on him.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "optional",
+            "prompt": "Move the hero to an adjacent location",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "moveAdjacent"
+              }
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardHand",
+              "n": 0,
+              "perCorruption": true
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-flocks-of-crebain",
+      "name": "Flocks of Crebain",
+      "poolRequirement": "2",
+      "timing": "Play at the start of hero's turn, if he is not in a Haven.",
+      "effect": "The hero must immediately combat a Crebain. Until the end of the battle, his Agility is reduced to 0. The hero skips his Ambush step this turn.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "forceCombat",
+              "monster": "Crebain"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "combatStatMod",
+              "stat": "agility",
+              "n": -99
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "skipAmbush"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-his-arm-has-grown-long",
+      "name": "His Arm Has Grown Long",
+      "poolRequirement": "2",
+      "timing": "Play after a hero enters a non-Haven location.",
+      "effect": "The location is treated as if perilous until the end of the hero's turn.",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "forcePeril"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-his-arm-has-grown-long-2",
+      "name": "His Arm Has Grown Long",
+      "poolRequirement": "2",
+      "timing": "Play after a hero enters a non-Haven location.",
+      "effect": "The location is treated as if perilous until the end of the hero's turn.",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "forcePeril"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-seem-fairer-feel-fouler",
+      "name": "Seem Fairer, Feel Fouler",
+      "poolRequirement": "3",
+      "timing": "Play at the start of hero's turn, if he is not in a Haven.",
+      "effect": "The hero must combat an Agent. Then, if the hero has at least 1 Corruption card, Sauron draws 1 Plot card. The hero skips his Ambush step this turn.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "forceCombat",
+              "monster": "Agent"
+            }
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "count": "corruptionOnHero"
+              },
+              "right": {
+                "num": 1
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "sauronDrawPlot"
+              }
+            },
+            "else": {
+              "k": "none"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "skipAmbush"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-dark-promises",
+      "name": "Dark Promises",
+      "poolRequirement": "3",
+      "timing": "Play at the start of combat.",
+      "effect": "The hero must choose to either receive 1 Corruption card or be dealt 5 damage.",
+      "effectKey": "",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You choose to either receive 1 corruption card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-dark-promises-2",
+      "name": "Dark Promises",
+      "poolRequirement": "3",
+      "timing": "Play at the start of combat.",
+      "effect": "The hero must choose to either receive 1 Corruption card or be dealt 5 damage.",
+      "effectKey": "",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You choose to either receive 1 corruption card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-do-not-tempt-me",
+      "name": "Do not tempt me!",
+      "poolRequirement": "4",
+      "timing": "Play during your Action step.",
+      "effect": "Choose a hero. You may place 1 influence in his location. He must then discard 1 favor for each of his Corruption cards.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "optional",
+            "prompt": "Place 1 influence in the hero's location",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "placeInfluence",
+                "where": "location",
+                "n": 1
+              }
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "loseFavor",
+              "n": 1
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-a-new-power-is-rising",
+      "name": "A New Power Is Rising",
+      "poolRequirement": "4",
+      "timing": "Play during your Action step.",
+      "effect": "Place 2 influence in each location of Mordor or place up to 2 monster tokens (using normal placement rules).",
+      "effectKey": "",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Place 2 influence in each location of mordor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "placeInfluence",
+                "where": "mordor",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Place up to 2 monster tokens (using normal placement rules)",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "spawnMonster",
+                "n": 2
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-storms-of-mordor",
+      "name": "Storms of Mordor",
+      "poolRequirement": "4",
+      "timing": "Play during your Action step.",
+      "effect": "Each hero must choose and discard cards from his hand, until he has 5 or less cards in his hand. Each hero must then discard 1 random card from his hand for each Corruption card on him.",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardHand",
+          "n": 0,
+          "toHand": 5,
+          "perCorruption": true
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-storms-of-mordor-2",
+      "name": "Storms of Mordor",
+      "poolRequirement": "4",
+      "timing": "Play during your Action step.",
+      "effect": "Each hero must choose and discard cards from his hand, until he has 5 or less cards in his hand. Each hero must then discard 1 random card from his hand for each Corruption card on him.",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardHand",
+          "n": 0,
+          "toHand": 5,
+          "perCorruption": true
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-saruman-s-lies",
+      "name": "Saruman's Lies",
+      "poolRequirement": "5",
+      "timing": "Play during your Action step.",
+      "effect": "Look at the top card of the Plot deck and return it either to the top or the bottom of the Plot deck. Then, if any hero has a number of Corruption cards equal to or greater than his wisdom, advance the black story marker 1 space on the Story Track.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "plotPeekReorder"
+            }
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "count": "corruptionOnHero"
+              },
+              "right": {
+                "stat": "wisdom"
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "advanceMarker",
+                "marker": "black",
+                "n": 1
+              }
+            },
+            "else": {
+              "k": "none"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-morgul-blade",
+      "name": "Morgul-Blade",
+      "poolRequirement": "6",
+      "timing": "Play at the start of combat involving a minion.",
+      "effect": "Deal the hero 5 damage for each Corruption card on him or Deal the hero 3 damage and give him 1 Corruption card.",
+      "effectKey": "",
+      "tree": {
+        "k": "choice",
+        "prompt": "Take 5 damage per Corruption, or 3 damage and 1 Corruption",
+        "options": [
+          {
+            "label": "5 damage per Corruption",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damagePer",
+                "n": 5,
+                "per": "corruptionOnHero"
+              }
+            }
+          },
+          {
+            "label": "3 damage and 1 Corruption",
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "damage",
+                    "n": 3
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainCorruption",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-lord-of-the-rings",
+      "name": "Lord of The Rings",
+      "poolRequirement": "6",
+      "timing": "Play during your Action step.",
+      "effect": "Choose a Plot or Shadow card in the discard pile, show it to the heroes, and place it in your hand. Then, if the \"A Dark Messenger\" Plot card is active, advance the yellow story marker 1 space on the Story Tack.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "plotFromDiscard"
+            }
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "count": "plotsInPlay"
+              },
+              "right": {
+                "num": 1
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "advanceMarker",
+                "marker": "yellow",
+                "n": 1
+              }
+            },
+            "else": {
+              "k": "none"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-evil-wound",
+      "name": "Evil Wound",
+      "poolRequirement": "7",
+      "timing": "Play after a hero is defeated.",
+      "effect": "After placing all of his cards in his life pool, the hero is dealt 4 damage. Then, for each Corruption card on the hero, he is dealt 2 additional damage.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "damage",
+              "n": 4
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "damagePer",
+              "n": 2,
+              "per": "corruptionOnHero"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-shire-baggins",
+      "name": "Shire, Baggins",
+      "poolRequirement": "7",
+      "timing": "Play during your Action step.",
+      "effect": "Place 1 influence in the Shadow Pool and 1 influence in The Shire. Then, if you have at least 3 influence or a minion in The Shire, advance the yellow story marker 2 spaces on the Story Track.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeInfluence",
+              "where": "location",
+              "n": 1,
+              "location": "the-shire"
+            }
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "count": "shireControl"
+              },
+              "right": {
+                "num": 3
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "advanceMarker",
+                "marker": "yellow",
+                "n": 2
+              }
+            },
+            "else": {
+              "k": "none"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-creatures-of-the-wild",
+      "name": "Creatures of The Wild",
+      "poolRequirement": "7",
+      "timing": "Play at the start of hero's turn, if he is not in a Haven.",
+      "effect": "The hero must combat a Giant Spider. If the hero has at least 2 Corruption cards, he instead must combat a Cave Troll. The hero skips his Ambush step this turn.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "count": "corruptionOnHero"
+              },
+              "right": {
+                "num": 2
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "forceCombat",
+                "monster": "Cave Troll"
+              }
+            },
+            "else": {
+              "k": "op",
+              "atom": {
+                "op": "forceCombat",
+                "monster": "Giant Spider"
+              }
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "skipAmbush"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-the-ithil-stone",
+      "name": "The Ithil-Stone",
+      "poolRequirement": "8",
+      "timing": "Play during your Action step.",
+      "effect": "Search the Plot deck or discard pile for the \"Denethor Succumbs to Madness\" or \"The Saruman Falls to Corruption\" Plot card. Place it in your hand, or immediately play it (if able).",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "plotTutor",
+          "ids": [
+            "denethor-falls-into-madness",
+            "saruman-falls-to-corruption"
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-they-are-terrible",
+      "name": "They Are Terrible",
+      "poolRequirement": "8",
+      "timing": "Play during your Action step.",
+      "effect": "Choose a minion that is on the game board, or one that has been defeated. Remove all damage tokens from that minion, and place it on any location that contains influence.",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "reviveRelocateMinion"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-the-lidless-eye",
+      "name": "The Lidless Eye",
+      "poolRequirement": "8",
+      "timing": "Play during your Action step.",
+      "effect": "Choose any two heroes, and redistribute Corruption cards between them. Then choose any one hero and give him 1 Corruption card.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "redistributeCorruption"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainCorruption",
+              "n": 1
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-the-black-breath",
+      "name": "The Black Breath",
+      "poolRequirement": "8",
+      "timing": "Play at the start of combat involving a minion.",
+      "effect": "The hero receives 1 Corruption card. Until the end of the battle, the hero has -1 strength and 1- agility for each Corruption card on him.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainCorruption",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "combatStatMod",
+              "stat": "strength",
+              "n": -1
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-winter-storm",
+      "name": "Winter Storm",
+      "poolRequirement": "10",
+      "timing": "Play at the start of hero's turn.",
+      "effect": "The current hero may not move more than once during his next Travel step.",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "restrictMovement",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "shadow-grievous-loss",
+      "name": "Grievous Loss",
+      "poolRequirement": "12",
+      "timing": "Play after a hero is defeated.",
+      "effect": "For each Corruption card on the defeated hero, place 1 influence in extension of a Shadow Stronghold or in the Shadow Pool. The green story marker advances 1 fewer space during the next Story step.",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "advanceMarker",
+              "marker": "green",
+              "n": -1
+            }
+          }
+        ]
+      },
+      "partial": false
+    }
+  ]
+}

@@ -1,0 +1,1548 @@
+{
+  "_meta": {
+    "schema": "locations-v2",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Real named board nodes with true board-pixel coords read off the VASSAL map art."
+    ],
+    "boardWidth": 6112,
+    "boardHeight": 4203,
+    "boardImage": "/dev-assets/MEQ_full_board.jpg"
+  },
+  "locations": [
+    {
+      "id": "the-shire",
+      "name": "The Shire",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day"
+      ],
+      "coords": {
+        "x": 1804,
+        "y": 1285
+      },
+      "image": ""
+    },
+    {
+      "id": "the-grey-havens",
+      "name": "The Grey Havens",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-cirdan-the-shipwright"
+      ],
+      "coords": {
+        "x": 1390,
+        "y": 1345
+      },
+      "image": ""
+    },
+    {
+      "id": "bree",
+      "name": "Bree",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-the-grey-company"
+      ],
+      "coords": {
+        "x": 2335,
+        "y": 1440
+      },
+      "image": ""
+    },
+    {
+      "id": "old-forest",
+      "name": "Old Forest",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+        "enc-eriador-and-enedwaith-a-merry-fellow"
+      ],
+      "coords": {
+        "x": 2112,
+        "y": 1230
+      },
+      "image": ""
+    },
+    {
+      "id": "enedwaith-plains",
+      "name": "Enedwaith Plains",
+      "regionColor": "Yellow",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-remmants-of-the-north-south-road"
+      ],
+      "coords": {
+        "x": 2458,
+        "y": 2419
+      },
+      "image": ""
+    },
+    {
+      "id": "tharbad",
+      "name": "Tharbad",
+      "regionColor": "Yellow",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-the-city-by-the-greyflood"
+      ],
+      "coords": {
+        "x": 2525,
+        "y": 1912
+      },
+      "image": ""
+    },
+    {
+      "id": "weathertop",
+      "name": "Weathertop",
+      "regionColor": "Purple",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+        "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l"
+      ],
+      "coords": {
+        "x": 2601,
+        "y": 1265
+      },
+      "image": ""
+    },
+    {
+      "id": "the-trollshaws",
+      "name": "The Trollshaws",
+      "regionColor": "Purple",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins"
+      ],
+      "coords": {
+        "x": 2941,
+        "y": 1277
+      },
+      "image": ""
+    },
+    {
+      "id": "the-iron-hills",
+      "name": "The Iron Hills",
+      "regionColor": "Grey",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-emyn-engrin"
+      ],
+      "coords": {
+        "x": 4840,
+        "y": 835
+      },
+      "image": ""
+    },
+    {
+      "id": "ered-mithrin",
+      "name": "Ered Mithrin",
+      "regionColor": "Grey",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-above-the-withered-heath"
+      ],
+      "coords": {
+        "x": 3814,
+        "y": 634
+      },
+      "image": ""
+    },
+    {
+      "id": "the-northern-waste",
+      "name": "The Northern Waste",
+      "regionColor": "Grey",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-forodwaith"
+      ],
+      "coords": {
+        "x": 3525,
+        "y": 405
+      },
+      "image": ""
+    },
+    {
+      "id": "rhosgobel",
+      "name": "Rhosgobel",
+      "regionColor": "Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown"
+      ],
+      "coords": {
+        "x": 3974,
+        "y": 1656
+      },
+      "image": ""
+    },
+    {
+      "id": "high-pass",
+      "name": "High Pass",
+      "regionColor": "Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help"
+      ],
+      "coords": {
+        "x": 3544,
+        "y": 1177
+      },
+      "image": ""
+    },
+    {
+      "id": "lake-esgaroth",
+      "name": "Esgaroth",
+      "regionColor": "Light Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale"
+      ],
+      "coords": {
+        "x": 4367,
+        "y": 1073
+      },
+      "image": ""
+    },
+    {
+      "id": "gladden-fields",
+      "name": "Gladden Fields",
+      "regionColor": "Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman"
+      ],
+      "coords": {
+        "x": 3689,
+        "y": 1594
+      },
+      "image": ""
+    },
+    {
+      "id": "the-forest-trail",
+      "name": "The Forest Trail",
+      "regionColor": "Light Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path"
+      ],
+      "coords": {
+        "x": 3801,
+        "y": 1043
+      },
+      "image": ""
+    },
+    {
+      "id": "fangorn",
+      "name": "Fangorn",
+      "regionColor": "Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires"
+      ],
+      "coords": {
+        "x": 3173,
+        "y": 2449
+      },
+      "image": ""
+    },
+    {
+      "id": "osgiliath",
+      "name": "Osgiliath",
+      "regionColor": "Light Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin"
+      ],
+      "coords": {
+        "x": 4225,
+        "y": 3391
+      },
+      "image": ""
+    },
+    {
+      "id": "belfalas",
+      "name": "Belfalas",
+      "regionColor": "Light Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-prince-imrahil"
+      ],
+      "coords": {
+        "x": 3324,
+        "y": 3706
+      },
+      "image": ""
+    },
+    {
+      "id": "amon-hen",
+      "name": "Amon Hen",
+      "regionColor": "Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-seat-of-seeing"
+      ],
+      "coords": {
+        "x": 3715,
+        "y": 2299
+      },
+      "image": ""
+    },
+    {
+      "id": "isengard",
+      "name": "Isengard",
+      "regionColor": "Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams"
+      ],
+      "coords": {
+        "x": 2950,
+        "y": 2423
+      },
+      "image": ""
+    },
+    {
+      "id": "the-dead-marshes",
+      "name": "The Dead Marshes",
+      "regionColor": "Brown",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water"
+      ],
+      "coords": {
+        "x": 4173,
+        "y": 2770
+      },
+      "image": ""
+    },
+    {
+      "id": "emyn-muil",
+      "name": "Emyn Muil",
+      "regionColor": "Brown",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-shapes-in-the-mist"
+      ],
+      "coords": {
+        "x": 3889,
+        "y": 2359
+      },
+      "image": ""
+    },
+    {
+      "id": "mount-doom",
+      "name": "Mount Doom",
+      "regionColor": "Brown",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-sauron-s-road"
+      ],
+      "coords": {
+        "x": 4661,
+        "y": 3092
+      },
+      "image": ""
+    },
+    {
+      "id": "edoras",
+      "name": "Edoras",
+      "regionColor": "Blue",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-the-court-of-th-oden",
+        "enc-haven-intrigue-within-meduseld"
+      ],
+      "coords": {
+        "x": 3162,
+        "y": 2862
+      },
+      "image": ""
+    },
+    {
+      "id": "minas-tirith",
+      "name": "Minas Tirith",
+      "regionColor": "Light Blue",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-the-houses-of-healing",
+        "enc-haven-the-palantirs"
+      ],
+      "coords": {
+        "x": 4089,
+        "y": 3155
+      },
+      "image": ""
+    },
+    {
+      "id": "the-woodland-realm",
+      "name": "The Woodland Realm",
+      "regionColor": "Light Green",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-the-halls-of-an-elven-king",
+        "enc-haven-the-enchanted-stream"
+      ],
+      "coords": {
+        "x": 4087,
+        "y": 945
+      },
+      "image": ""
+    },
+    {
+      "id": "erebor",
+      "name": "Erebor",
+      "regionColor": "Grey",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-the-lonely-mountain",
+        "enc-haven-ancient-greed"
+      ],
+      "coords": {
+        "x": 4370,
+        "y": 790
+      },
+      "image": ""
+    },
+    {
+      "id": "fornost",
+      "name": "Fornost",
+      "regionColor": "Orange",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-the-northern-fortress",
+        "enc-haven-deadmen-s-dike"
+      ],
+      "coords": {
+        "x": 2200,
+        "y": 980
+      },
+      "image": ""
+    },
+    {
+      "id": "lothl-rien",
+      "name": "Lothlorien",
+      "regionColor": "Green",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-the-golden-wood"
+      ],
+      "coords": {
+        "x": 3430,
+        "y": 2275
+      },
+      "image": ""
+    },
+    {
+      "id": "rivendell",
+      "name": "Rivendell",
+      "regionColor": "Green",
+      "kind": "haven",
+      "regionId": "haven",
+      "regionName": "Haven",
+      "plotSlot": true,
+      "encounterDeck": [
+        "enc-haven-inladris"
+      ],
+      "coords": {
+        "x": 3256,
+        "y": 1295
+      },
+      "image": ""
+    },
+    {
+      "id": "blue-mountains",
+      "name": "Blue Mountains",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day",
+        "enc-eriador-and-enedwaith-cirdan-the-shipwright",
+        "enc-eriador-and-enedwaith-the-grey-company",
+        "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+        "enc-eriador-and-enedwaith-a-merry-fellow",
+        "enc-eriador-and-enedwaith-remmants-of-the-north-south-road",
+        "enc-eriador-and-enedwaith-the-city-by-the-greyflood",
+        "enc-eriador-and-enedwaith-the-riaders-in-the-hills",
+        "enc-eriador-and-enedwaith-quest-find-the-grey-pilgrim",
+        "enc-eriador-and-enedwaith-the-mad-baggins",
+        "enc-eriador-and-enedwaith-quest-the-squint-eyed-southerner",
+        "enc-eriador-and-enedwaith-quest-the-black-pit",
+        "enc-eriador-and-enedwaith-saruman-s-agents",
+        "enc-eriador-and-enedwaith-the-ranger",
+        "enc-eriador-and-enedwaith-the-road-goes-ever-on-and-on"
+      ],
+      "coords": {
+        "x": 1154,
+        "y": 983
+      },
+      "image": ""
+    },
+    {
+      "id": "harlindon",
+      "name": "Harlindon",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day",
+        "enc-eriador-and-enedwaith-cirdan-the-shipwright",
+        "enc-eriador-and-enedwaith-the-grey-company",
+        "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+        "enc-eriador-and-enedwaith-a-merry-fellow",
+        "enc-eriador-and-enedwaith-remmants-of-the-north-south-road",
+        "enc-eriador-and-enedwaith-the-city-by-the-greyflood",
+        "enc-eriador-and-enedwaith-the-riaders-in-the-hills",
+        "enc-eriador-and-enedwaith-quest-find-the-grey-pilgrim",
+        "enc-eriador-and-enedwaith-the-mad-baggins",
+        "enc-eriador-and-enedwaith-quest-the-squint-eyed-southerner",
+        "enc-eriador-and-enedwaith-quest-the-black-pit",
+        "enc-eriador-and-enedwaith-saruman-s-agents",
+        "enc-eriador-and-enedwaith-the-ranger",
+        "enc-eriador-and-enedwaith-the-road-goes-ever-on-and-on"
+      ],
+      "coords": {
+        "x": 1040,
+        "y": 1488
+      },
+      "image": ""
+    },
+    {
+      "id": "hills-of-evendim",
+      "name": "Hills of Evendim",
+      "regionColor": "Orange",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day",
+        "enc-eriador-and-enedwaith-cirdan-the-shipwright",
+        "enc-eriador-and-enedwaith-the-grey-company",
+        "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+        "enc-eriador-and-enedwaith-a-merry-fellow",
+        "enc-eriador-and-enedwaith-remmants-of-the-north-south-road",
+        "enc-eriador-and-enedwaith-the-city-by-the-greyflood",
+        "enc-eriador-and-enedwaith-the-riaders-in-the-hills",
+        "enc-eriador-and-enedwaith-quest-find-the-grey-pilgrim",
+        "enc-eriador-and-enedwaith-the-mad-baggins",
+        "enc-eriador-and-enedwaith-quest-the-squint-eyed-southerner",
+        "enc-eriador-and-enedwaith-quest-the-black-pit",
+        "enc-eriador-and-enedwaith-saruman-s-agents",
+        "enc-eriador-and-enedwaith-the-ranger",
+        "enc-eriador-and-enedwaith-the-road-goes-ever-on-and-on"
+      ],
+      "coords": {
+        "x": 1811,
+        "y": 911
+      },
+      "image": ""
+    },
+    {
+      "id": "eregion",
+      "name": "Eregion",
+      "regionColor": "Yellow",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+        "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l",
+        "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins",
+        "enc-rhudaur-and-grey-mountains-emyn-engrin",
+        "enc-rhudaur-and-grey-mountains-above-the-withered-heath",
+        "enc-rhudaur-and-grey-mountains-forodwaith",
+        "enc-rhudaur-and-grey-mountains-quest-beyond-the-dark-lord-s-reach",
+        "enc-rhudaur-and-grey-mountains-carn-d-m-reborn",
+        "enc-rhudaur-and-grey-mountains-a-path-through-the-mountains",
+        "enc-rhudaur-and-grey-mountains-quest-the-haunted-ruins",
+        "enc-rhudaur-and-grey-mountains-lost-in-the-wild",
+        "enc-rhudaur-and-grey-mountains-the-iron-will-of-the-dwarves",
+        "enc-rhudaur-and-grey-mountains-a-commom-purpose",
+        "enc-rhudaur-and-grey-mountains-quest-the-son-of-gl-in",
+        "enc-rhudaur-and-grey-mountains-the-world-is-grey-the-mountains-old"
+      ],
+      "coords": {
+        "x": 2945,
+        "y": 1664
+      },
+      "image": ""
+    },
+    {
+      "id": "dunland",
+      "name": "Dunland",
+      "regionColor": "Yellow",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day",
+        "enc-eriador-and-enedwaith-cirdan-the-shipwright",
+        "enc-eriador-and-enedwaith-the-grey-company",
+        "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+        "enc-eriador-and-enedwaith-a-merry-fellow",
+        "enc-eriador-and-enedwaith-remmants-of-the-north-south-road",
+        "enc-eriador-and-enedwaith-the-city-by-the-greyflood",
+        "enc-eriador-and-enedwaith-the-riaders-in-the-hills",
+        "enc-eriador-and-enedwaith-quest-find-the-grey-pilgrim",
+        "enc-eriador-and-enedwaith-the-mad-baggins",
+        "enc-eriador-and-enedwaith-quest-the-squint-eyed-southerner",
+        "enc-eriador-and-enedwaith-quest-the-black-pit",
+        "enc-eriador-and-enedwaith-saruman-s-agents",
+        "enc-eriador-and-enedwaith-the-ranger",
+        "enc-eriador-and-enedwaith-the-road-goes-ever-on-and-on"
+      ],
+      "coords": {
+        "x": 2768,
+        "y": 2182
+      },
+      "image": ""
+    },
+    {
+      "id": "mouth-of-the-greyflood",
+      "name": "Mouth of the Greyflood",
+      "regionColor": "Yellow",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day",
+        "enc-eriador-and-enedwaith-cirdan-the-shipwright",
+        "enc-eriador-and-enedwaith-the-grey-company",
+        "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+        "enc-eriador-and-enedwaith-a-merry-fellow",
+        "enc-eriador-and-enedwaith-remmants-of-the-north-south-road",
+        "enc-eriador-and-enedwaith-the-city-by-the-greyflood",
+        "enc-eriador-and-enedwaith-the-riaders-in-the-hills",
+        "enc-eriador-and-enedwaith-quest-find-the-grey-pilgrim",
+        "enc-eriador-and-enedwaith-the-mad-baggins",
+        "enc-eriador-and-enedwaith-quest-the-squint-eyed-southerner",
+        "enc-eriador-and-enedwaith-quest-the-black-pit",
+        "enc-eriador-and-enedwaith-saruman-s-agents",
+        "enc-eriador-and-enedwaith-the-ranger",
+        "enc-eriador-and-enedwaith-the-road-goes-ever-on-and-on"
+      ],
+      "coords": {
+        "x": 2038,
+        "y": 2424
+      },
+      "image": ""
+    },
+    {
+      "id": "the-north-downs",
+      "name": "The North Downs",
+      "regionColor": "Purple",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+        "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l",
+        "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins",
+        "enc-rhudaur-and-grey-mountains-emyn-engrin",
+        "enc-rhudaur-and-grey-mountains-above-the-withered-heath",
+        "enc-rhudaur-and-grey-mountains-forodwaith",
+        "enc-rhudaur-and-grey-mountains-quest-beyond-the-dark-lord-s-reach",
+        "enc-rhudaur-and-grey-mountains-carn-d-m-reborn",
+        "enc-rhudaur-and-grey-mountains-a-path-through-the-mountains",
+        "enc-rhudaur-and-grey-mountains-quest-the-haunted-ruins",
+        "enc-rhudaur-and-grey-mountains-lost-in-the-wild",
+        "enc-rhudaur-and-grey-mountains-the-iron-will-of-the-dwarves",
+        "enc-rhudaur-and-grey-mountains-a-commom-purpose",
+        "enc-rhudaur-and-grey-mountains-quest-the-son-of-gl-in",
+        "enc-rhudaur-and-grey-mountains-the-world-is-grey-the-mountains-old"
+      ],
+      "coords": {
+        "x": 2567,
+        "y": 667
+      },
+      "image": ""
+    },
+    {
+      "id": "ettenmoors",
+      "name": "Ettenmoors",
+      "regionColor": "Purple",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+        "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l",
+        "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins",
+        "enc-rhudaur-and-grey-mountains-emyn-engrin",
+        "enc-rhudaur-and-grey-mountains-above-the-withered-heath",
+        "enc-rhudaur-and-grey-mountains-forodwaith",
+        "enc-rhudaur-and-grey-mountains-quest-beyond-the-dark-lord-s-reach",
+        "enc-rhudaur-and-grey-mountains-carn-d-m-reborn",
+        "enc-rhudaur-and-grey-mountains-a-path-through-the-mountains",
+        "enc-rhudaur-and-grey-mountains-quest-the-haunted-ruins",
+        "enc-rhudaur-and-grey-mountains-lost-in-the-wild",
+        "enc-rhudaur-and-grey-mountains-the-iron-will-of-the-dwarves",
+        "enc-rhudaur-and-grey-mountains-a-commom-purpose",
+        "enc-rhudaur-and-grey-mountains-quest-the-son-of-gl-in",
+        "enc-rhudaur-and-grey-mountains-the-world-is-grey-the-mountains-old"
+      ],
+      "coords": {
+        "x": 3192,
+        "y": 976
+      },
+      "image": ""
+    },
+    {
+      "id": "ruins-of-angmar",
+      "name": "Ruins of Angmar",
+      "regionColor": "Purple",
+      "kind": "wild",
+      "perilous": true,
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+        "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l",
+        "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins",
+        "enc-rhudaur-and-grey-mountains-emyn-engrin",
+        "enc-rhudaur-and-grey-mountains-above-the-withered-heath",
+        "enc-rhudaur-and-grey-mountains-forodwaith",
+        "enc-rhudaur-and-grey-mountains-quest-beyond-the-dark-lord-s-reach",
+        "enc-rhudaur-and-grey-mountains-carn-d-m-reborn",
+        "enc-rhudaur-and-grey-mountains-a-path-through-the-mountains",
+        "enc-rhudaur-and-grey-mountains-quest-the-haunted-ruins",
+        "enc-rhudaur-and-grey-mountains-lost-in-the-wild",
+        "enc-rhudaur-and-grey-mountains-the-iron-will-of-the-dwarves",
+        "enc-rhudaur-and-grey-mountains-a-commom-purpose",
+        "enc-rhudaur-and-grey-mountains-quest-the-son-of-gl-in",
+        "enc-rhudaur-and-grey-mountains-the-world-is-grey-the-mountains-old"
+      ],
+      "coords": {
+        "x": 2909,
+        "y": 500
+      },
+      "image": ""
+    },
+    {
+      "id": "moria",
+      "name": "Moria",
+      "regionColor": "Yellow",
+      "kind": "wild",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 3139,
+        "y": 2071
+      },
+      "image": ""
+    },
+    {
+      "id": "mount-gundabad",
+      "name": "Mount Gundabad",
+      "regionColor": "Grey",
+      "kind": "stronghold",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+        "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l",
+        "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins",
+        "enc-rhudaur-and-grey-mountains-emyn-engrin",
+        "enc-rhudaur-and-grey-mountains-above-the-withered-heath",
+        "enc-rhudaur-and-grey-mountains-forodwaith",
+        "enc-rhudaur-and-grey-mountains-quest-beyond-the-dark-lord-s-reach",
+        "enc-rhudaur-and-grey-mountains-carn-d-m-reborn",
+        "enc-rhudaur-and-grey-mountains-a-path-through-the-mountains",
+        "enc-rhudaur-and-grey-mountains-quest-the-haunted-ruins",
+        "enc-rhudaur-and-grey-mountains-lost-in-the-wild",
+        "enc-rhudaur-and-grey-mountains-the-iron-will-of-the-dwarves",
+        "enc-rhudaur-and-grey-mountains-a-commom-purpose",
+        "enc-rhudaur-and-grey-mountains-quest-the-son-of-gl-in",
+        "enc-rhudaur-and-grey-mountains-the-world-is-grey-the-mountains-old"
+      ],
+      "coords": {
+        "x": 3314,
+        "y": 667
+      },
+      "image": "",
+      "influenceStrength": 3,
+      "strongholdMax": 3
+    },
+    {
+      "id": "the-redhorn-gate",
+      "name": "The Redhorn Gate",
+      "regionColor": "Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 3264,
+        "y": 1839
+      },
+      "image": ""
+    },
+    {
+      "id": "the-withered-heath",
+      "name": "The Withered Heath",
+      "regionColor": "Grey",
+      "kind": "wild",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 4159,
+        "y": 559
+      },
+      "image": ""
+    },
+    {
+      "id": "the-forest-road",
+      "name": "The Forest Road",
+      "regionColor": "Light Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 4034,
+        "y": 1231
+      },
+      "image": ""
+    },
+    {
+      "id": "the-bight",
+      "name": "The Bight",
+      "regionColor": "Light Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 4409,
+        "y": 1688
+      },
+      "image": ""
+    },
+    {
+      "id": "south-eaves",
+      "name": "South Eaves",
+      "regionColor": "Light Green",
+      "kind": "wild",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 4375,
+        "y": 2014
+      },
+      "image": ""
+    },
+    {
+      "id": "rhun",
+      "name": "Rhun",
+      "regionColor": "Brown",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 4830,
+        "y": 2078
+      },
+      "image": ""
+    },
+    {
+      "id": "dol-guldur",
+      "name": "Dol Guldur",
+      "regionColor": "Brown",
+      "kind": "stronghold",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+        "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+        "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+        "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+        "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+        "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+        "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+        "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+        "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+        "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+        "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+        "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+        "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+        "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+        "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold"
+      ],
+      "coords": {
+        "x": 3825,
+        "y": 1962
+      },
+      "image": "",
+      "influenceStrength": 3,
+      "strongholdMax": 3
+    },
+    {
+      "id": "dagorlad",
+      "name": "Dagorlad",
+      "regionColor": "Brown",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 4533,
+        "y": 2561
+      },
+      "image": ""
+    },
+    {
+      "id": "the-nindalf",
+      "name": "The Nindalf",
+      "regionColor": "Brown",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 3920,
+        "y": 2904
+      },
+      "image": ""
+    },
+    {
+      "id": "gap-of-rohan",
+      "name": "Gap of Rohan",
+      "regionColor": "Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 2890,
+        "y": 2720
+      },
+      "image": ""
+    },
+    {
+      "id": "helm-s-deep",
+      "name": "Helm's Deep",
+      "regionColor": "Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 3166,
+        "y": 2746
+      },
+      "image": ""
+    },
+    {
+      "id": "plains-of-rohan",
+      "name": "Plains of Rohan",
+      "regionColor": "Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 3575,
+        "y": 2583
+      },
+      "image": ""
+    },
+    {
+      "id": "dunharrow",
+      "name": "Dunharrow",
+      "regionColor": "Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 3782,
+        "y": 3169
+      },
+      "image": ""
+    },
+    {
+      "id": "anfalas",
+      "name": "Anfalas",
+      "regionColor": "Light Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 2741,
+        "y": 3342
+      },
+      "image": ""
+    },
+    {
+      "id": "morthond",
+      "name": "Morthond",
+      "regionColor": "Light Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 3172,
+        "y": 3195
+      },
+      "image": ""
+    },
+    {
+      "id": "pelagir",
+      "name": "Pelargir",
+      "regionColor": "Light Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 3994,
+        "y": 3623
+      },
+      "image": ""
+    },
+    {
+      "id": "near-harad",
+      "name": "Near Harad",
+      "regionColor": "Light Blue",
+      "kind": "wild",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-rohan-and-gondor-the-key-to-the-anduin",
+        "enc-rohan-and-gondor-prince-imrahil",
+        "enc-rohan-and-gondor-the-seat-of-seeing",
+        "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+        "enc-rohan-and-gondor-they-come-from-umbar",
+        "enc-rohan-and-gondor-the-ored",
+        "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+        "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+        "enc-rohan-and-gondor-lies-and-deceit",
+        "enc-rohan-and-gondor-smugglers",
+        "enc-rohan-and-gondor-allies-of-the-dark-lord",
+        "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+        "enc-rohan-and-gondor-words-spoken-from-the-heart",
+        "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+        "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west"
+      ],
+      "coords": {
+        "x": 4186,
+        "y": 3963
+      },
+      "image": ""
+    },
+    {
+      "id": "minas-morgul",
+      "name": "Minas Morgul",
+      "regionColor": "Red",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 4353,
+        "y": 3144
+      },
+      "image": ""
+    },
+    {
+      "id": "plains-of-gorgoroth",
+      "name": "Plains of Gorgoroth",
+      "regionColor": "Red",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 4509,
+        "y": 3329
+      },
+      "image": ""
+    },
+    {
+      "id": "sea-of-udun",
+      "name": "Plains of Udûn",
+      "regionColor": "Red",
+      "kind": "wild",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 4445,
+        "y": 2853
+      },
+      "image": ""
+    },
+    {
+      "id": "barad-dur",
+      "name": "Barad-Dur",
+      "regionColor": "Red",
+      "kind": "stronghold",
+      "regionId": "mordor-and-brown-lands",
+      "regionName": "Mordor and Brown Lands",
+      "plotSlot": false,
+      "encounterDeck": [
+        "enc-mordor-and-brown-lands-the-faces-in-the-water",
+        "enc-mordor-and-brown-lands-shapes-in-the-mist",
+        "enc-mordor-and-brown-lands-sauron-s-road",
+        "enc-mordor-and-brown-lands-thirst-and-despair",
+        "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+        "enc-mordor-and-brown-lands-heavy-rains",
+        "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+        "enc-mordor-and-brown-lands-the-nest-is-stirred",
+        "enc-mordor-and-brown-lands-the-olog-hai",
+        "enc-mordor-and-brown-lands-a-hidden-path",
+        "enc-mordor-and-brown-lands-sting-of-the-west",
+        "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+        "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+        "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+        "enc-mordor-and-brown-lands-where-the-shadows-lie"
+      ],
+      "coords": {
+        "x": 5032,
+        "y": 3053
+      },
+      "image": "",
+      "influenceStrength": 6,
+      "strongholdMax": 6
+    }
+  ]
+}

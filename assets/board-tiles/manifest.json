@@ -1,0 +1,269 @@
+{
+  "board": {
+    "w": 6112,
+    "h": 4203
+  },
+  "grid": {
+    "cols": 4,
+    "rows": 3
+  },
+  "overlap": 180,
+  "tiles": [
+    {
+      "name": "r0c0.jpg",
+      "row": 0,
+      "col": 0,
+      "x0": 0,
+      "y0": 0,
+      "x1": 1708,
+      "y1": 1581,
+      "scale": 0.74941,
+      "nodes": [
+        "the-grey-havens",
+        "blue-mountains",
+        "harlindon"
+      ],
+      "kb": 289
+    },
+    {
+      "name": "r0c1.jpg",
+      "row": 0,
+      "col": 1,
+      "x0": 1348,
+      "y0": 0,
+      "x1": 3236,
+      "y1": 1581,
+      "scale": 0.67797,
+      "nodes": [
+        "the-shire",
+        "the-grey-havens",
+        "bree",
+        "old-forest",
+        "weathertop",
+        "the-trollshaws",
+        "fornost",
+        "hills-of-evendim",
+        "the-north-downs",
+        "ettenmoors",
+        "ruins-of-angmar"
+      ],
+      "kb": 283
+    },
+    {
+      "name": "r0c2.jpg",
+      "row": 0,
+      "col": 2,
+      "x0": 2876,
+      "y0": 0,
+      "x1": 4764,
+      "y1": 1581,
+      "scale": 0.67797,
+      "nodes": [
+        "the-trollshaws",
+        "ered-mithrin",
+        "the-northern-waste",
+        "high-pass",
+        "lake-esgaroth",
+        "the-forest-trail",
+        "the-woodland-realm",
+        "erebor",
+        "rivendell",
+        "ettenmoors",
+        "ruins-of-angmar",
+        "mount-gundabad",
+        "the-withered-heath",
+        "the-forest-road"
+      ],
+      "kb": 268
+    },
+    {
+      "name": "r0c3.jpg",
+      "row": 0,
+      "col": 3,
+      "x0": 4404,
+      "y0": 0,
+      "x1": 6112,
+      "y1": 1581,
+      "scale": 0.74941,
+      "nodes": [
+        "the-iron-hills"
+      ],
+      "kb": 270
+    },
+    {
+      "name": "r1c0.jpg",
+      "row": 1,
+      "col": 0,
+      "x0": 0,
+      "y0": 1221,
+      "x1": 1708,
+      "y1": 2982,
+      "scale": 0.72686,
+      "nodes": [
+        "the-grey-havens",
+        "harlindon"
+      ],
+      "kb": 299
+    },
+    {
+      "name": "r1c1.jpg",
+      "row": 1,
+      "col": 1,
+      "x0": 1348,
+      "y0": 1221,
+      "x1": 3236,
+      "y1": 2982,
+      "scale": 0.67797,
+      "nodes": [
+        "the-shire",
+        "the-grey-havens",
+        "bree",
+        "old-forest",
+        "enedwaith-plains",
+        "tharbad",
+        "weathertop",
+        "the-trollshaws",
+        "fangorn",
+        "isengard",
+        "edoras",
+        "eregion",
+        "dunland",
+        "mouth-of-the-greyflood",
+        "moria",
+        "gap-of-rohan",
+        "helm-s-deep"
+      ],
+      "kb": 311
+    },
+    {
+      "name": "r1c2.jpg",
+      "row": 1,
+      "col": 2,
+      "x0": 2876,
+      "y0": 1221,
+      "x1": 4764,
+      "y1": 2982,
+      "scale": 0.67797,
+      "nodes": [
+        "the-trollshaws",
+        "rhosgobel",
+        "gladden-fields",
+        "fangorn",
+        "amon-hen",
+        "isengard",
+        "the-dead-marshes",
+        "emyn-muil",
+        "edoras",
+        "lothl-rien",
+        "rivendell",
+        "eregion",
+        "moria",
+        "the-redhorn-gate",
+        "the-forest-road",
+        "the-bight",
+        "south-eaves",
+        "dol-guldur",
+        "dagorlad",
+        "the-nindalf",
+        "gap-of-rohan",
+        "helm-s-deep",
+        "plains-of-rohan",
+        "sea-of-udun"
+      ],
+      "kb": 335
+    },
+    {
+      "name": "r1c3.jpg",
+      "row": 1,
+      "col": 3,
+      "x0": 4404,
+      "y0": 1221,
+      "x1": 6112,
+      "y1": 2982,
+      "scale": 0.72686,
+      "nodes": [
+        "the-bight",
+        "rhun",
+        "dagorlad",
+        "sea-of-udun"
+      ],
+      "kb": 307
+    },
+    {
+      "name": "r2c0.jpg",
+      "row": 2,
+      "col": 0,
+      "x0": 0,
+      "y0": 2622,
+      "x1": 1708,
+      "y1": 4203,
+      "scale": 0.74941,
+      "nodes": [],
+      "kb": 232
+    },
+    {
+      "name": "r2c1.jpg",
+      "row": 2,
+      "col": 1,
+      "x0": 1348,
+      "y0": 2622,
+      "x1": 3236,
+      "y1": 4203,
+      "scale": 0.67797,
+      "nodes": [
+        "edoras",
+        "gap-of-rohan",
+        "helm-s-deep",
+        "anfalas",
+        "morthond"
+      ],
+      "kb": 177
+    },
+    {
+      "name": "r2c2.jpg",
+      "row": 2,
+      "col": 2,
+      "x0": 2876,
+      "y0": 2622,
+      "x1": 4764,
+      "y1": 4203,
+      "scale": 0.67797,
+      "nodes": [
+        "osgiliath",
+        "belfalas",
+        "the-dead-marshes",
+        "mount-doom",
+        "edoras",
+        "minas-tirith",
+        "the-nindalf",
+        "gap-of-rohan",
+        "helm-s-deep",
+        "dunharrow",
+        "morthond",
+        "pelagir",
+        "near-harad",
+        "minas-morgul",
+        "plains-of-gorgoroth",
+        "sea-of-udun"
+      ],
+      "kb": 289
+    },
+    {
+      "name": "r2c3.jpg",
+      "row": 2,
+      "col": 3,
+      "x0": 4404,
+      "y0": 2622,
+      "x1": 6112,
+      "y1": 4203,
+      "scale": 0.74941,
+      "nodes": [
+        "mount-doom",
+        "plains-of-gorgoroth",
+        "sea-of-udun",
+        "barad-dur"
+      ],
+      "kb": 310
+    }
+  ]
+}

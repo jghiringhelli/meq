@@ -1,0 +1,115 @@
+{
+  "_meta": {
+    "schema": "missions-v1",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Hero + Sauron mission win conditions.",
+      "Sauron mission conditions corrected from owner-authoritative text: His Dark Throne = 3 active plots; To Find Them All = Ringwraiths in play OR 6 influence on The Shire; In Darkness Bind Them/Where the Shadows Lie/To Rule Them All = red/black/yellow marker at stage III (order-matched to the owner's list).",
+      "Shire influence is approximated by region influence (eriador-and-enedwaith) since influence is tracked per region, not per location."
+    ]
+  },
+  "heroMissions": [
+    {
+      "id": "mission-hero-noble-blood",
+      "name": "Noble Blood",
+      "text": "The heroes win if they collectively have 1 or less Corruption cards.",
+      "effectKey": "",
+      "condition": {
+        "kind": "heroCorruptionAtMost",
+        "n": 1
+      }
+    },
+    {
+      "id": "mission-hero-against-the-shadow",
+      "name": "Against The Shadow",
+      "text": "The heroes win if there are no more than 2 monster tokens in play.",
+      "effectKey": "",
+      "condition": {
+        "kind": "monstersAtMost",
+        "n": 2
+      }
+    },
+    {
+      "id": "mission-hero-isildur-s-secret",
+      "name": "Isildur's Secret",
+      "text": "The heroes win if they collectively have at least 5 favor.",
+      "effectKey": "",
+      "condition": {
+        "kind": "heroFavorAtLeast",
+        "n": 5
+      }
+    },
+    {
+      "id": "mission-hero-minas-morgul-kept-at-bay",
+      "name": "Minas Morgul Kept At Bay",
+      "text": "The heroes win if there are 2 or less minions in play.",
+      "effectKey": "",
+      "condition": {
+        "kind": "minionsAtMost",
+        "n": 2
+      }
+    },
+    {
+      "id": "mission-hero-the-spear-of-the-west",
+      "name": "The Spear of the West",
+      "text": "The heroes win if each hero has completed both his Starting and Advanced quest.",
+      "effectKey": "",
+      "condition": {
+        "kind": "allQuestsComplete"
+      }
+    }
+  ],
+  "sauronMissions": [
+    {
+      "id": "mission-sauron-to-find-them-all",
+      "name": "To Find Them All",
+      "text": "Sauron wins if he has either the Ringwraiths in play or 6 influence on The Shire.",
+      "effectKey": "",
+      "condition": {
+        "kind": "ringwraithsOrShireInfluence",
+        "n": 6
+      }
+    },
+    {
+      "id": "mission-sauron-his-dark-throne",
+      "name": "His Dark Throne",
+      "text": "Sauron wins if there are 3 active Plot cards in play.",
+      "effectKey": "",
+      "condition": {
+        "kind": "activePlotsAtLeast",
+        "n": 3
+      }
+    },
+    {
+      "id": "mission-sauron-in-darkness-bind-them",
+      "name": "In Darkness Bind Them",
+      "text": "Sauron wins if his red story marker has advanced to stage III of the Story Track.",
+      "effectKey": "",
+      "condition": {
+        "kind": "sauronMarkerAtStageIII",
+        "marker": "red"
+      }
+    },
+    {
+      "id": "mission-sauron-to-rule-them-all",
+      "name": "To Rule Them All",
+      "text": "Sauron wins if his yellow story marker has advanced to stage III of the Story Track.",
+      "effectKey": "",
+      "condition": {
+        "kind": "sauronMarkerAtStageIII",
+        "marker": "yellow"
+      }
+    },
+    {
+      "id": "mission-sauron-where-the-shadows-lie",
+      "name": "Where the Shadows Lie",
+      "text": "Sauron wins if his black story marker has advanced to stage III of the Story Track.",
+      "effectKey": "",
+      "condition": {
+        "kind": "sauronMarkerAtStageIII",
+        "marker": "black"
+      }
+    }
+  ]
+}

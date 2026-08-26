@@ -1,0 +1,124 @@
+{
+  "_meta": {
+    "schema": "corruption-v1",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Corruption cards. effectKey drives src/engine/corruption.ts enforcement."
+    ]
+  },
+  "cards": [
+    {
+      "id": "corr-reckless",
+      "name": "Reckless",
+      "ability": "When Sauron draws Peril cards on your turn, he may draw 1 additional card.",
+      "cost": "1",
+      "effectKey": "sauronPerilBonus"
+    },
+    {
+      "id": "corr-indifferent",
+      "name": "Indifferent",
+      "ability": "When you draw Encounter cards, draw 2 instead of 3.",
+      "cost": "1",
+      "effectKey": "encounterDraw-1"
+    },
+    {
+      "id": "corr-distraught",
+      "name": "Distraught",
+      "ability": "You may never have more than 7 hero cards in your hand.",
+      "cost": "2",
+      "effectKey": "handLimit-7"
+    },
+    {
+      "id": "corr-deranged",
+      "name": "Deranged",
+      "ability": "Your wisdom is reduced by 1.",
+      "cost": "2",
+      "effectKey": "stat-wisdom--1"
+    },
+    {
+      "id": "corr-helpless",
+      "name": "Helpless",
+      "ability": "Your agility is reduced by 1.",
+      "cost": "2",
+      "effectKey": "stat-agility--1"
+    },
+    {
+      "id": "corr-weary",
+      "name": "Weary",
+      "ability": "Your fortitude is reduced by 1.",
+      "cost": "2",
+      "effectKey": "stat-fortitude--1"
+    },
+    {
+      "id": "corr-weak",
+      "name": "Weak",
+      "ability": "Your strength is reduced by 1",
+      "cost": "2",
+      "effectKey": "stat-strength--1"
+    },
+    {
+      "id": "corr-despairing",
+      "name": "Despairing",
+      "ability": "You may never have more than 3 favor on your hero sheet.",
+      "cost": "2",
+      "effectKey": "favorCap-3"
+    },
+    {
+      "id": "corr-isolated",
+      "name": "Isolated",
+      "ability": "You may not consult with characters or trade with other heroes.",
+      "cost": "2",
+      "effectKey": "noConsultTrade"
+    },
+    {
+      "id": "corr-hopeless",
+      "name": "Hopeless",
+      "ability": "You may not take more than 3 travel steps during each of your future turns.",
+      "cost": "2",
+      "effectKey": "travelCap-3"
+    },
+    {
+      "id": "corr-mistrusted",
+      "name": "Mistrusted",
+      "ability": "You may not gain more than 1 favor during each future turn.",
+      "cost": "2",
+      "effectKey": "favorGainCap-1"
+    },
+    {
+      "id": "corr-cowardly",
+      "name": "Cowardly",
+      "ability": "At the start of each future combat that you are involved in, you must discard 1 random Hero card.",
+      "cost": "2",
+      "effectKey": "combatStartDiscard-1"
+    },
+    {
+      "id": "corr-greedy",
+      "name": "Greedy",
+      "ability": "When Sauron Plays a Shadow card on your turn, he may then draw a new Shadow card.",
+      "cost": "2",
+      "effectKey": "sauronShadowRedraw"
+    },
+    {
+      "id": "corr-despondent",
+      "name": "Despondent",
+      "ability": "When you rest or are defeated, the left-most Sauron victory marker is advanced 2 spaces (instead of 1)",
+      "cost": "3",
+      "effectKey": "restDefeatMarker-2"
+    },
+    {
+      "id": "corr-careless",
+      "name": "Careless",
+      "ability": "Immediately discard 2 favor from your hero sheet. Then Shuffle this card and the discard pile back into the Corruption deck.",
+      "cost": "0",
+      "effectKey": "immediate-loseFavor-2"
+    },
+    {
+      "id": "corr-wretched",
+      "name": "Wretched",
+      "ability": "Your turn immediately ends, Sauron may than choose to move you to the nearest Haven. Then Shuffle this card and the discard pile back into the Corruption deck.",
+      "cost": "0",
+      "effectKey": "immediate-endTurnMoveHaven"
+    }
+  ]
+}

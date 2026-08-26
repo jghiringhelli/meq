@@ -1,0 +1,83 @@
+{
+  "schema": "minions-v4",
+  "note": "The 5 named elite minions of Sauron. All stats, combat decks, abilities, spawn locations and activation stages are authoritative (owner-provided from the physical minion reference cards; Health caps corroborated by the VASSAL module buildFile). HEALTH = damage tokens needed to defeat the minion (persists between combats; a Sauron monster command can heal up to 4). FORTITUDE = the number of combat cards the minion draws in each combat. Combat decks by melee/ranged ratio: Mouth of Sauron 3 ranged / 2 melee (Zealot); Black Serpent, Gothmog and the Ringwraiths 3 melee / 2 ranged (Ravager); the Witch-king 4 melee / 1 ranged (Behemoth). Minions ACTIVATE onto their designated location when the game reaches their stage (not deployed by choice).",
+  "minions": [
+    {
+      "id": "minion-mouth-of-sauron",
+      "name": "The Mouth Of Sauron",
+      "image": "minion 1.PNG",
+      "health": 9,
+      "fortitude": 6,
+      "strength": 6,
+      "wisdom": 2,
+      "combatDeck": "monster-zealot",
+      "location": "dol-guldur",
+      "stage": 1,
+      "ability": "Emissary of the Dark Tower: each time it begins combat with a hero, that hero gains 1 corruption card from the top of the Corruption deck. Fights with the ranged Zealot deck (3 ranged / 2 melee).",
+      "effectKey": "minion-corruption-on-engage",
+      "copies": 1
+    },
+    {
+      "id": "minion-black-serpent",
+      "name": "The Black Serpent",
+      "image": "minion 4.png",
+      "health": 11,
+      "fortitude": 9,
+      "strength": 8,
+      "wisdom": 1,
+      "combatDeck": "monster-ravager",
+      "location": "near-harad",
+      "stage": 1,
+      "ability": "Lord of Harad: may move two locations during a single command. Monster tokens may be placed within 1 space of the Black Serpent regardless of influence. Fights with the melee Ravager deck (3 melee / 2 ranged).",
+      "effectKey": "minion-double-move",
+      "copies": 1
+    },
+    {
+      "id": "minion-gothmog",
+      "name": "Gothmog of Gorgoroth",
+      "image": "minion 5.PNG",
+      "health": 10,
+      "fortitude": 7,
+      "strength": 7,
+      "wisdom": 2,
+      "combatDeck": "monster-ravager",
+      "location": "mount-gundabad",
+      "stage": 2,
+      "ability": "Lieutenant of Morgul: all non-Haven locations within 1 space of Gothmog are treated as perilous. Fights with the melee Ravager deck (3 melee / 2 ranged).",
+      "effectKey": "minion-perilous-aura",
+      "copies": 1
+    },
+    {
+      "id": "minion-ringwraiths",
+      "name": "The Ringwraiths",
+      "image": "minion 3.PNG",
+      "health": 9,
+      "fortitude": 8,
+      "strength": 8,
+      "wisdom": 0,
+      "combatDeck": "monster-ravager",
+      "location": "minas-morgul",
+      "stage": 2,
+      "ability": "The Nine: may move up to two locations with each command. If defeated they return to Minas Morgul at the start of your Action step. At the Finale they are the Shadow's champions and their attributes scale with Sauron's dominance. Fights with the melee Ravager deck (3 melee / 2 ranged).",
+      "effectKey": "minion-return-morgul",
+      "finale": true,
+      "copies": 1
+    },
+    {
+      "id": "minion-witch-king",
+      "name": "The Witch King",
+      "image": "minion 2.PNG",
+      "health": 13,
+      "fortitude": 10,
+      "strength": 10,
+      "wisdom": 1,
+      "combatDeck": "monster-behemoth",
+      "location": "minas-morgul",
+      "altLocation": "ruins-of-angmar",
+      "stage": 3,
+      "ability": "Lord of the Nazgul: heroes within 1 space of the Witch-king may not rest or heal unless they are in a Haven. Fights with the brutal Behemoth deck (4 melee / 1 ranged).",
+      "effectKey": "minion-no-rest-aura",
+      "copies": 1
+    }
+  ]
+}

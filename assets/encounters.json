@@ -1,0 +1,4225 @@
+{
+  "_meta": {
+    "schema": "encounters-v2",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Encounter cards grouped by region board."
+    ]
+  },
+  "cards": [
+    {
+      "id": "enc-haven-the-court-of-th-oden",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "The Court of Théoden",
+      "location": "Edoras",
+      "regionColor": "Blue",
+      "effect": "Gain 1 favor or discard 1 of your Corruption cards. Then, if your wisdom is greater than the number of monster tokens in your region, gain a \"Horse\" Item card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 1 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Discard 1 of your corruption cards",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "discardCorruption",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "gt",
+              "left": {
+                "stat": "wisdom"
+              },
+              "right": {
+                "count": "monstersInRegion"
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "gainItem",
+                "item": "Horse"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-intrigue-within-meduseld",
+      "regionGroup": "Haven",
+      "priority": "2",
+      "name": "Intrigue Within Meduseld",
+      "location": "Edoras",
+      "regionColor": "Blue",
+      "effect": "If your wisdom is equal to or greater than the number of influence in your region, gain 2 favor.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "gainFavor",
+            "n": 2
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-houses-of-healing",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "The Houses of Healing",
+      "location": "Minas Tirith",
+      "regionColor": "Light Blue",
+      "effect": "Shuffle your rest pool and your damage pool into your life pool, or gain 1 favor and discard 1 of your Corruption cards.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Shuffle your rest pool and your damage pool into your life pool,",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          },
+          {
+            "label": "Gain 1 favor and discard 1 of your corruption cards",
+            "cost": null,
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "discardCorruption",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-palantirs",
+      "regionGroup": "Haven",
+      "priority": "2",
+      "name": "The Palantirs",
+      "location": "Minas Tirith",
+      "regionColor": "Light Blue",
+      "effect": "You may choose to receive 1 Corruption card to remove 1 influence from the Shadow Pool and then look at Sauron's hand of Plot cards.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "Receive 1 Corruption card to remove 1 influence from the Shadow Pool and then look at Sauron's hand of Plot cards",
+        "cost": {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        "eff": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "lookSauronHand"
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-halls-of-an-elven-king",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "The Halls of an Elven King",
+      "location": "The Woodland Realm",
+      "regionColor": "Light Green",
+      "effect": "Gain 1 favor or discard 1 of your Corruption cards. Then, if your wisdom is equal to or greater than the number of influence in your region, gain a \"Boat\" Item card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 1 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Discard 1 of your corruption cards",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "discardCorruption",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "stat": "wisdom"
+              },
+              "right": {
+                "count": "influenceInRegion"
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "gainItem",
+                "item": "Boat"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-enchanted-stream",
+      "regionGroup": "Haven",
+      "priority": "2",
+      "name": "The Enchanted Stream",
+      "location": "The Woodland Realm",
+      "regionColor": "Light Green",
+      "effect": "If your agility is less than the number of influence in your region, discard 1 favor and draw 1 Corruption card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "loseFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "agility"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "gainCorruption",
+            "n": 1
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-lonely-mountain",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "The Lonely Mountain",
+      "location": "Erebor",
+      "regionColor": "Grey",
+      "effect": "Gain 1 favor. Then, if your fortitude is greater than the number of influence in the Shadow Pool, discard all Corruption cards from your hero.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 1
+            }
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "gt",
+              "left": {
+                "stat": "fortitude"
+              },
+              "right": {
+                "count": "influenceShadowPool"
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "discardAllCorruption"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-ancient-greed",
+      "regionGroup": "Haven",
+      "priority": "2",
+      "name": "Ancient Greed",
+      "location": "Erebor",
+      "regionColor": "Grey",
+      "effect": "You may choose to receive 1 Corruption card to gain 2 favor and receive training. Otherwise gain 1 favor.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        },
+        {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Optional",
+        "options": [
+          {
+            "label": "Accept",
+            "cost": {
+              "op": "gainCorruption",
+              "n": 1
+            },
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 2
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Otherwise",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-northern-fortress",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "The Northern Fortress",
+      "location": "Fornost",
+      "regionColor": "Orange",
+      "effect": "Gain 1 favor or discard 1 of your Corruption cards. Then, if your wisdom is equal to or greater than the number of Corruption cards on your hero, receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 1 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Discard 1 of your corruption cards",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "discardCorruption",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "stat": "wisdom"
+              },
+              "right": {
+                "count": "corruptionOnHero"
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-deadmen-s-dike",
+      "regionGroup": "Haven",
+      "priority": "2",
+      "name": "Deadmen's Dike",
+      "location": "Fornost",
+      "regionColor": "Orange",
+      "effect": "Your hero is dealt 4 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 2 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 4 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 4
+            },
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 2
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Take 4 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 4
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-golden-wood",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "The Golden Wood",
+      "location": "Lothlórien",
+      "regionColor": "Green",
+      "effect": "Gain 1 favor or discard 1 of your Corruption cards. Then, if you wisdom is equal to or greater than the number of Plot cards in play, gain an \"Elven Cloak\" Item card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 1 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Discard 1 of your corruption cards",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "discardCorruption",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "stat": "wisdom"
+              },
+              "right": {
+                "count": "plotsInPlay"
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "gainItem",
+                "item": "Elven Cloak"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-inladris",
+      "regionGroup": "Haven",
+      "priority": "1",
+      "name": "Inladris",
+      "location": "Rivendell",
+      "regionColor": "Green",
+      "effect": "Gain 1 favor or discard 1 of your Corruption cards. Then, if you do not have any Corruption cards, shuffle your damage pool and rest pool into your life pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 1 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Discard 1 of your corruption cards",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "discardCorruption",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "noCorruption"
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-redeemed-by-grace",
+      "regionGroup": "Haven",
+      "priority": "3",
+      "name": "Redeemed by Grace",
+      "location": "Any Location",
+      "regionColor": "",
+      "effect": "Gain 1 favor or spend any number of favor to discard an equal number of Corruption cards from your hero.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Gain 1 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Spend 1 favor to discard 1 Corruption card",
+            "cost": {
+              "op": "loseFavor",
+              "n": 1
+            },
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardCorruption",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-the-steadfast-defender",
+      "regionGroup": "Haven",
+      "priority": "4",
+      "name": "The Steadfast Defender",
+      "location": "Any Location",
+      "regionColor": "",
+      "effect": "Remove 1 influence from the Shadow Pool or spend 2 favor to gain 1 level of fortitude, strength, agility, or wisdom.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 2
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-haven-i-will-not-say-the-day-is-done",
+      "regionGroup": "Haven",
+      "priority": "5",
+      "name": "I Will not Say the Day is Done",
+      "location": "Any Location",
+      "regionColor": "",
+      "effect": "Gain 2 favor. Then shuffle this card and the matching discard pile into its Encounter deck.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "reusable"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-the-faces-in-the-water",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "1",
+      "name": "The Faces in the Water",
+      "location": "The Dead Marshes",
+      "regionColor": "Brown",
+      "effect": "You must discard 1 Item card. Your hero is then dealt 1 damage for each Corruption card on him.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardItem",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "damagePer",
+              "n": 1,
+              "per": "corruptionOnHero"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-shapes-in-the-mist",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "1",
+      "name": "Shapes in the Mist",
+      "location": "Emyn Muil",
+      "regionColor": "Brown",
+      "effect": "Your hero is dealt 6 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 1 favor or a \"Horse\" Item card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 6 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 6
+            },
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Take 6 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 6
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-sauron-s-road",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "1",
+      "name": "Sauron's Road",
+      "location": "Mount Doom",
+      "regionColor": "Red",
+      "effect": "If your hero's agility equals or exceeds the number of monster tokens in your region, you may move your hero to an adjacent location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "agility"
+          },
+          "right": {
+            "count": "monstersInRegion"
+          }
+        },
+        "then": {
+          "k": "optional",
+          "prompt": "You may move your hero to an adjacent location",
+          "cost": null,
+          "eff": {
+            "k": "op",
+            "atom": {
+              "op": "moveAdjacent"
+            }
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-thirst-and-despair",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "3",
+      "name": "Thirst and Despair",
+      "location": "Any Location in Mordor",
+      "regionColor": "Red",
+      "effect": "Your hero is dealt 6 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 1 favor or receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 6 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 6
+            },
+            "eff": {
+              "k": "choice",
+              "prompt": "Choose one",
+              "options": [
+                {
+                  "label": "Gain 1 favor",
+                  "cost": null,
+                  "eff": {
+                    "k": "op",
+                    "atom": {
+                      "op": "gainFavor",
+                      "n": 1
+                    }
+                  }
+                },
+                {
+                  "label": "Receive training",
+                  "cost": null,
+                  "eff": {
+                    "k": "op",
+                    "atom": {
+                      "op": "training",
+                      "n": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Take 6 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 6
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-quest-isildur-s-heir",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "4",
+      "name": "Quest: Isildur's Heir",
+      "location": "Any Location in Mordor",
+      "regionColor": "Red",
+      "effect": "Place Aragorn in Rhûn. Explore Rhûn. Reward: Gain 1 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Aragorn",
+              "location": "Rhûn"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Rhûn"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-heavy-rains",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "3",
+      "name": "Heavy Rains",
+      "location": "Any Location in Braown Lands",
+      "regionColor": "Brown",
+      "effect": "You must discard 3 cards from your hand or allow Sauron to move your hero to an adjacent location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You must discard 3 cards from your hand",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardHand",
+                "n": 3
+              }
+            }
+          },
+          {
+            "label": "Allow sauron to move your hero to an adjacent location",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "moveAdjacent"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-quest-smoke-on-the-horizon",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "4",
+      "name": "Quest: Smoke on the Horizon",
+      "location": "Any Location in Braown Lands",
+      "regionColor": "Brown",
+      "effect": "Explore the Plains of Gorgoroth. Reward: Gain 2 favor and remove 1 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        },
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "the Plains of Gorgoroth"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "removeInfluence",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-the-nest-is-stirred",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "5",
+      "name": "The Nest is Stirred",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "Sauron may place 1 influence in any 2 locations in your region, or 1 influence in the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "addInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "addInfluence",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-the-olog-hai",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "6",
+      "name": "The Olog-hai",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "Your hero is dealt 8 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 1 favor and receive training twice.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 8 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 8
+            },
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 2
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Take 8 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 8
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-a-hidden-path",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "7",
+      "name": "A Hidden Path",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "If your hero's wisdom is equal to or greater than the number of monster tokens in your region, remove 1 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "monstersInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "removeInfluence",
+            "n": 1
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-sting-of-the-west",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "8",
+      "name": "Sting of the West",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "If your hero's agility equals or exceeds the number of monster tokens in your region, discard up to 3 influence tokens from your region.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "agility"
+          },
+          "right": {
+            "count": "monstersInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "discardRegionInfluence",
+            "n": 3
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-a-shadow-under-the-shadow",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "9",
+      "name": "A Shadow Under the Shadow",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "If your hero's strength equals or exceeds the influence in your region, gain 1 favor or discard 2 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "strength"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "choice",
+          "prompt": "Choose one",
+          "options": [
+            {
+              "label": "Gain 1 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              }
+            },
+            {
+              "label": "Discard 2 influence from the shadow pool",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "removeInfluence",
+                  "n": 2
+                }
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-the-land-of-the-great-eye",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "10",
+      "name": "The Land of the Great Eye",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "If your hero's fortitude is less than the total influence in your region, place the top 5 cards from your life pool on top of your rest pool.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "fortitude"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "damage",
+            "n": 5
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-quest-the-seat-of-sauron-s-power",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "11",
+      "name": "Quest: The Seat of Sauron's Power",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "Explore Barad-dûr. Reward: Gain 2 favor. You may then discard all Corruption cards from your hero or discard 1 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Barad-dûr"
+            }
+          },
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 2 favor. you may then discard all corruption cards from your hero",
+                "cost": null,
+                "eff": {
+                  "k": "seq",
+                  "steps": [
+                    {
+                      "k": "op",
+                      "atom": {
+                        "op": "gainFavor",
+                        "n": 2
+                      }
+                    },
+                    {
+                      "k": "optional",
+                      "prompt": "You may then discard all Corruption cards from your hero",
+                      "cost": null,
+                      "eff": {
+                        "k": "op",
+                        "atom": {
+                          "op": "discardAllCorruption"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Discard 1 influence from the shadow pool",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "removeInfluence",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mordor-and-brown-lands-where-the-shadows-lie",
+      "regionGroup": "Mordor and Brown Lands",
+      "priority": "12",
+      "name": "Where the Shadows Lie",
+      "location": "Any Location",
+      "regionColor": "Brown",
+      "effect": "Remove 1 influence from the Shadow Pool. Then shuffle this card and the matching discard pile into its Encounter deck.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "removeInfluence",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "reusable"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-the-key-to-the-anduin",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "1",
+      "name": "The Key to the Anduin",
+      "location": "Osgiliath",
+      "regionColor": "Light Blue",
+      "effect": "You must choose to either be dealt 5 damage or receive 1 Corruption card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          },
+          {
+            "label": "Receive 1 corruption card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-prince-imrahil",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "1",
+      "name": "Prince Imrahil",
+      "location": "Belfalas",
+      "regionColor": "Light Blue",
+      "effect": "If your hero's wisdom equals or exceeds the amount of Corruption cards you have, gain 2 favor or a \"Boat\" item card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "corruptionOnHero"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "gainFavor",
+            "n": 2
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-the-seat-of-seeing",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "1",
+      "name": "The Seat of Seeing",
+      "location": "Amon Hen",
+      "regionColor": "Blue",
+      "effect": "Examine all monster tokens adjacent to Amon Hen. You may then spend 1 favor to remove 2 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "examineTokens"
+            }
+          },
+          {
+            "k": "optional",
+            "prompt": "You may then spend 1 favor to remove 2 influence from the Shadow Pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-sweet-words-bitter-dreams",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "1",
+      "name": "Sweet Words, Bitter Dreams",
+      "location": "Isengard",
+      "regionColor": "Blue",
+      "effect": "You must shuffle your hand into your life pool. Your hero is then dealt 2 damage for each Corruption card on him.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardHand",
+              "n": 99
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "damagePer",
+              "n": 2,
+              "per": "corruptionOnHero"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-they-come-from-umbar",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "3",
+      "name": "They Come from Umbar",
+      "location": "Any Location in Gondor",
+      "regionColor": "Light Blue",
+      "effect": "Your hero is dealt 6 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 1 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 6 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 6
+            },
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Take 6 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 6
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-the-ored",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "3",
+      "name": "The Éored",
+      "location": "Any Location in Rohan",
+      "regionColor": "Blue",
+      "effect": "Shuffle the rest pool into your life pool or spend 1 favor to move immediately to Edoras and encounter that location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Shuffle the rest pool into your life pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          },
+          {
+            "label": "Spend 1 favor to move immediately to edoras and encounter that location",
+            "cost": null,
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "loseFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "moveToEncounter",
+                    "location": "edoras"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-quest-the-mounts-of-the-haradrim",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "4",
+      "name": "Quest: The Mounts of the Haradrim",
+      "location": "Any Location in Rohan",
+      "regionColor": "Blue",
+      "effect": "Explore Near Harad. Reward: Gain 2 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Near Harad"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-quest-the-palantir-of-orthanc",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "4",
+      "name": "Quest: The Palantir of Orthanc",
+      "location": "Any Location in Gondor",
+      "regionColor": "Light Blue",
+      "effect": "Explore Isengard. Reward: Gain 1 favor and discard 1 of your Corruption cards.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Isengard"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "discardCorruption",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-lies-and-deceit",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "5",
+      "name": "Lies and Deceit",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "If your wisdom equals or exceeds the total influence in your region, gain 1 favor or force Sauron to discard 1 random Shadow card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "choice",
+          "prompt": "Choose one",
+          "options": [
+            {
+              "label": "Gain 1 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              }
+            },
+            {
+              "label": "Force sauron to discard 1 random shadow card",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "forceSauronDiscard",
+                  "n": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-smugglers",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "6",
+      "name": "Smugglers",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "You may receive 1 Corruption card to remove 1 influence from the Shadow Pool and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "You may remove 1 influence from the Shadow Pool and receive training",
+        "cost": {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        "eff": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-allies-of-the-dark-lord",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "7",
+      "name": "Allies of the Dark Lord",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "You must choose to either be dealt 4 damage or allow Sauron to draw a Plot card.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Be dealt 4 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 4
+              }
+            }
+          },
+          {
+            "label": "Allow sauron to draw a plot card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "sauronDrawPlot"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-dangers-both-real-and-imagined",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "8",
+      "name": "Dangers, Both Real and Imagined",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "If your hero's is less than the number of monster tokens in your region, gain a Corruption card.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-words-spoken-from-the-heart",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "9",
+      "name": "Words Spoken from the Heart",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "Gain 1 favor if your hero does not have any corruption cards. Otherwise, you may spend 1 favor to discard 1 of your Corruption cards.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "noCorruption"
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "gainFavor",
+            "n": 1
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-quest-captain-of-the-white-tower",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "10",
+      "name": "Quest: Captain of the White Tower",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "Place Boromir in Minas Tirith. Explore Minas Tirith. Reward: Gain 1 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Boromir",
+              "location": "Minas Tirith"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Minas Tirith"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rohan-and-gondor-the-days-have-gones-down-in-the-west",
+      "regionGroup": "Rohan and Gondor",
+      "priority": "11",
+      "name": "The Days Have Gones Down in the West",
+      "location": "Any Location",
+      "regionColor": "Blue",
+      "effect": "You may discard 2 cards from your hand to gain 2 favor. Then Shuffle this card and the matching discard pile into its Encounter deck.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "optional",
+            "prompt": "You may gain 2 favor",
+            "cost": {
+              "op": "discardHand",
+              "n": 2
+            },
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 2
+              }
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "reusable"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-radagast-the-brown",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "1",
+      "name": "Radagast the Brown",
+      "location": "Rhosgobel",
+      "regionColor": "Green",
+      "effect": "If your hero's wisdom equals or exceeds the amount of influence in your region, gain 1 favor and place Gandalf in any Haven location.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "placeCharacter",
+                "who": "Gandalf",
+                "location": "any haven location"
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-the-beornings-ask-for-help",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "1",
+      "name": "The Beornings Ask for Help",
+      "location": "High Pass",
+      "regionColor": "Green",
+      "effect": "You may spend 1 favor to remove 2 influence from the Shadow Pool and remove all influence and monster tokens within 1 space of your location.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "You may remove 2 influence from the Shadow Pool and remove all influence and monster tokens within 1 space of your location",
+        "cost": {
+          "op": "loseFavor",
+          "n": 1
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "removeInfluence",
+            "n": 2
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-the-town-of-dale",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "1",
+      "name": "The Town of Dale",
+      "location": "Lake Esgaroth",
+      "regionColor": "Light Green",
+      "effect": "For each point of wisdom your hero has, move 1 card from the top of your damage pool to the top of your rest pool. Then Shuffle your rest poll into your life pool.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "heal"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "heal"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-agents-of-saruman",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "1",
+      "name": "Agents of Saruman",
+      "location": "Gladden Fields",
+      "regionColor": "Green",
+      "effect": "You must choose to either be dealt 5 damage or advance Sauron's yellow marker 1 space up the Story Track.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          },
+          {
+            "label": "Advance sauron's yellow marker 1 space up the story track",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "advanceStory",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-do-not-stray-from-the-path",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "1",
+      "name": "Do Not Stray from the Path",
+      "location": "The Forest Trail",
+      "regionColor": "Light Green",
+      "effect": "Your hero is dealt 7 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 2 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 7 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 7
+            },
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 2
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Take 7 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 7
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-saruman-s-fires",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "1",
+      "name": "Saruman's Fires",
+      "location": "Fangorn",
+      "regionColor": "Green",
+      "effect": "If your hero's agility is less than the number of monster tokens in your region, Sauron may deal you 2 damage or add 1 influence to the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "addInfluence",
+          "n": 1
+        },
+        {
+          "op": "damage",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "agility"
+          },
+          "right": {
+            "count": "monstersInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "addInfluence",
+            "n": 1
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-quest-a-shadow-connection",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "3",
+      "name": "Quest: A Shadow Connection",
+      "location": "Any Location in the Misty Mountains",
+      "regionColor": "Green",
+      "effect": "Explore the South Eaves. Reward: Gain 2 favor and shuffle your rest pool into your life pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "the South Eaves"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "heal"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-lost-in-the-shadows",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "3",
+      "name": "Lost in the Shadows",
+      "location": "Any Location in Mirkwood",
+      "regionColor": "Light Green",
+      "effect": "You must discard 2 cards from your hand or allow Sauron to move your hero to an adjacent location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You must discard 2 cards from your hand",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardHand",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Allow sauron to move your hero to an adjacent location",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "moveAdjacent"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-trapped-by-a-terrible-storm",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "4",
+      "name": "Trapped by a Terrible Storm",
+      "location": "Any Location in the Misty Mountains",
+      "regionColor": "Green",
+      "effect": "Shuffle all cards from your hand into your life pool and your turn ends.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "endTurn"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-quest-the-evenstar-is-called-home",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "4",
+      "name": "Quest: The Evenstar is Called Home",
+      "location": "Any Location in Mirkwood",
+      "regionColor": "Light Green",
+      "effect": "Place Aragorn in Rivendell. Explore Rivendell. Reward: Gain the \"Elven Cloak\" Item card.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Aragorn",
+              "location": "Rivendell"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Rivendell"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainItem",
+              "item": "Elven Cloak"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-escorted-by-the-wood-elves",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "5",
+      "name": "Escorted by the Wood-elves",
+      "location": "Any Location",
+      "regionColor": "Green",
+      "effect": "Shuffle your rest pool into your life pool or spend 1 favor to move immediately to the Woodland Realm and encounter that location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Shuffle your rest pool into your life pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          },
+          {
+            "label": "Spend 1 favor to move immediately to the woodland realm and encounter that location",
+            "cost": null,
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "loseFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "moveToEncounter",
+                    "location": "the woodland realm"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-conquered-by-fear",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "6",
+      "name": "Conquered by Fear",
+      "location": "Any Location",
+      "regionColor": "Green",
+      "effect": "If your hero's wisdom is less than the amount of influence in your region, spend 1 favor or gain 1 Corruption card.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "choice",
+          "prompt": "Choose one",
+          "options": [
+            {
+              "label": "Spend 1 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "loseFavor",
+                  "n": 1
+                }
+              }
+            },
+            {
+              "label": "Gain 1 corruption card",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainCorruption",
+                  "n": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-a-desperate-bargain",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "7",
+      "name": "A Desperate Bargain",
+      "location": "Any Location",
+      "regionColor": "Green",
+      "effect": "You may receive 1 Corruption card to remove 2 influence from the Shadow Pool and force Sauron to discard 1 random Shadow card from his hand.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        {
+          "op": "removeInfluence",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "You may remove 2 influence from the Shadow Pool and force Sauron to discard 1 random Shadow card from his hand",
+        "cost": {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        "eff": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 2
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "forceSauronDiscard",
+                "n": 1
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-quest-greenleaf",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "8",
+      "name": "Quest: Greenleaf",
+      "location": "Any Location",
+      "regionColor": "Green",
+      "effect": "Explore the Woodland Realm. Reward: Gain 2 favor or 1 level of agility.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "the Woodland Realm"
+            }
+          },
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 2 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 2
+                  }
+                }
+              },
+              {
+                "label": "1 level of agility",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainStat",
+                    "stat": "agility",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-mist-mountains-and-mirkwood-i-sang-of-leaves-of-leaves-of-gold",
+      "regionGroup": "Mist Mountains and Mirkwood",
+      "priority": "9",
+      "name": "I Sang of Leaves, of Leaves of Gold",
+      "location": "Any Location",
+      "regionColor": "Green",
+      "effect": "Remove 1 influence from the Shadow Pools or receive training. Then shuffle this card and the matching discard pile into the Encounter deck.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Remove 1 influence from the shadow pool",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "removeInfluence",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Receive training",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "reusable"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-hill-of-the-wind",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "1",
+      "name": "Hill of the Wind",
+      "location": "Weathertop",
+      "regionColor": "Purple",
+      "effect": "You may look at the face of any monster tokens adjacent to Weathertop. Then remove 1 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "You may look at the face of any monster tokens adjacent to Weathertop. Then remove 1 influence from the Shadow Pool",
+        "cost": null,
+        "eff": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "examineTokens"
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 1
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-the-ruains-of-amon-s-l",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "2",
+      "name": "The Ruains of Amon Sûl",
+      "location": "Weathertop",
+      "regionColor": "Purple",
+      "effect": "For each point of wisdom your hero has, move 1 card from the top of your damage pool to the top of your rest pool. Then Shuffle your rest pool into your life pool.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "heal"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "heal"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-tom-bert-and-william-huggins",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "1",
+      "name": "Tom, Bert, and William Huggins",
+      "location": "The Trollshaws",
+      "regionColor": "Purple",
+      "effect": "If your hero's wisdom equals or exceeds the number of Corruption cards he has, remove 1 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "corruptionOnHero"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "removeInfluence",
+            "n": 1
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-emyn-engrin",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "1",
+      "name": "Emyn Engrin",
+      "location": "The Iron Hills",
+      "regionColor": "Grey",
+      "effect": "Remove 2 influence from the Shadow Pool or receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Remove 2 influence from the shadow pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Receive training",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-above-the-withered-heath",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "1",
+      "name": "Above the Withered Heath",
+      "location": "Ered Mithrin",
+      "regionColor": "Grey",
+      "effect": "Sauron must discard 1 random Shadow card. You may then discard 1 monster token from your region.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "forceSauronDiscard",
+              "n": 1
+            }
+          },
+          {
+            "k": "optional",
+            "prompt": "You may then discard 1 monster token from your region",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardMonsterToken",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-forodwaith",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "1",
+      "name": "Forodwaith",
+      "location": "The Northern Waste",
+      "regionColor": "Grey",
+      "effect": "If your hero's fortitude is less than the total influence in the regions of the Grey Mountains and Rhudaur, you are dealt 3 damage.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "fortitude"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "damage",
+            "n": 3
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-quest-beyond-the-dark-lord-s-reach",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "4",
+      "name": "Quest: Beyond the Dark Lord's Reach",
+      "location": "Any Location in Rhudaur",
+      "regionColor": "Purple",
+      "effect": "Explore The Northern Waste. Reward: Gain 2 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "The Northern Waste"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-carn-d-m-reborn",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "3",
+      "name": "Carn Dûm Reborn",
+      "location": "Any Location in Rhudaur",
+      "regionColor": "Purple",
+      "effect": "You must choose to either be dealt 5 damage or allow Sauron to place 1 influence in the Shadow Pool and 3 influence in extension of Mount Gundabad.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "addInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          },
+          {
+            "label": "Allow sauron to place 1 influence in the shadow pool and 3 influence in extension of mount gundabad",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "addInfluence",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-a-path-through-the-mountains",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "3",
+      "name": "A Path Through the Mountains",
+      "location": "Any Location in The Grey Mountains",
+      "regionColor": "Grey",
+      "effect": "Gain 1 favor. You may then move to an adjacent location.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 1
+            }
+          },
+          {
+            "k": "optional",
+            "prompt": "You may then move to an adjacent location",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "moveAdjacent"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-quest-the-haunted-ruins",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "4",
+      "name": "Quest: The Haunted Ruins",
+      "location": "Any Location in The Grey Mountains",
+      "regionColor": "Grey",
+      "effect": "Explore The Ruins of Angmar. Reward: Gain 2 favor and discard 1 of your Corruption cards.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "The Ruins of Angmar"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "discardCorruption",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-lost-in-the-wild",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "5",
+      "name": "Lost in the Wild",
+      "location": "Any Location",
+      "regionColor": "Purple",
+      "effect": "You must discard 2 cards from your hand or allow Sauron to move your hero to an adjacent location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You must discard 2 cards from your hand",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardHand",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Allow sauron to move your hero to an adjacent location",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "moveAdjacent"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-the-iron-will-of-the-dwarves",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "6",
+      "name": "The Iron Will of the Dwarves",
+      "location": "Any Location",
+      "regionColor": "Purple",
+      "effect": "Gain1 favor or spend 1 favor to receive training and discard 1 of your Corruption cards.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Gain 1 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Spend 1 favor to receive training and discard 1 of your corruption cards",
+            "cost": null,
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "loseFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "seq",
+                  "steps": [
+                    {
+                      "k": "op",
+                      "atom": {
+                        "op": "training",
+                        "n": 1
+                      }
+                    },
+                    {
+                      "k": "op",
+                      "atom": {
+                        "op": "discardCorruption",
+                        "n": 1
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-a-commom-purpose",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "7",
+      "name": "A Commom Purpose",
+      "location": "Any Location",
+      "regionColor": "Purple",
+      "effect": "If your hero's wisdom equals or exceeds the amount of influence in your region, gain 2 favor.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "gainFavor",
+            "n": 2
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-quest-the-son-of-gl-in",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "8",
+      "name": "Quest: The Son of Glóin",
+      "location": "Any Location",
+      "regionColor": "Purple",
+      "effect": "Explore Erebor. Reward: Gain 1 favor and 1 level of fortitude.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Erebor"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainStat",
+                  "stat": "fortitude",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-rhudaur-and-grey-mountains-the-world-is-grey-the-mountains-old",
+      "regionGroup": "Rhudaur and Grey Mountains",
+      "priority": "9",
+      "name": "The World is Grey, the Mountains Old",
+      "location": "Any Location",
+      "regionColor": "Purple",
+      "effect": "Gain 1 favor or discard 1 influence from the Shadow Pool. Then shuffle this card and the matching discard pile into its Encounter deck.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "choice",
+            "prompt": "Choose one",
+            "options": [
+              {
+                "label": "Gain 1 favor",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Discard 1 influence from the shadow pool",
+                "cost": null,
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "removeInfluence",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "reusable"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-pipeweed-seven-meals-a-day",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "1",
+      "name": "Pipeweed & Seven Meals a Day",
+      "location": "The Shire",
+      "regionColor": "Orange",
+      "effect": "For each point of wisdom your hero has, move 1 card from the top of your damage pool to the top of your rest pool. Then Shuffle your rest pool into your life pool.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "heal"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "heal"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-cirdan-the-shipwright",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "1",
+      "name": "Cirdan the Shipwright",
+      "location": "The Grey Havens",
+      "regionColor": "Orange",
+      "effect": "If your hero's wisdom equals or exceeds the amount of influence in your region, discard all Corruption cards from your hero or gain a \"Boat\" Item card.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "choice",
+          "prompt": "Choose one",
+          "options": [
+            {
+              "label": "Discard all corruption cards from your hero",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "discardAllCorruption"
+                }
+              }
+            },
+            {
+              "label": "Gain a \"boat\" item card",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainItem",
+                  "item": "Boat"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-the-grey-company",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "1",
+      "name": "The Grey Company",
+      "location": "Bree",
+      "regionColor": "Orange",
+      "effect": "You may discard 2 cards from your hand to gain 1 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "You may gain 1 favor and receive training",
+        "cost": {
+          "op": "discardHand",
+          "n": 2
+        },
+        "eff": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-cold-be-hand-and-heart-and-bone",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "1",
+      "name": "Cold be Hand and Heart and Bone",
+      "location": "Old Forest",
+      "regionColor": "Orange",
+      "effect": "Your hero is dealt 4 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you are dealt 0 damage, gain 1 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 4 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 4
+            },
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Take 4 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 4
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-a-merry-fellow",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "2",
+      "name": "A Merry Fellow",
+      "location": "Old Forest",
+      "regionColor": "Orange",
+      "effect": "Discard 1 Corruption card from your hero. Then discard 1 monster token from your region, and gain 1 favor.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardCorruption",
+              "n": 1
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "discardMonsterToken",
+                  "n": 1
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-remmants-of-the-north-south-road",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "1",
+      "name": "Remmants of the North-South Road",
+      "location": "Enedwaith Plains",
+      "regionColor": "Yellow",
+      "effect": "For each point of fortitude your hero has, move 1 card from the top of your damage pool to the top of your rest pool.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "heal"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-the-city-by-the-greyflood",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "1",
+      "name": "The City by the Greyflood",
+      "location": "Tharbad",
+      "regionColor": "Yellow",
+      "effect": "If your hero's fortitude is less than the total influence in the regions of Eriador and Enedwaith, discard 1 of your Item cards and your turn ends.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "fortitude"
+          },
+          "right": {
+            "count": "influenceInRegion"
+          }
+        },
+        "then": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "discardItem",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "endTurn"
+              }
+            }
+          ]
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-the-riaders-in-the-hills",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "3",
+      "name": "The Riaders in the Hills",
+      "location": "Any Location in Enedwaith",
+      "regionColor": "Yellow",
+      "effect": "Your hero is dealt 5 damage. You may discard any number of cards from your hand to reduce the damage by 1 for each shield icon discarded. If you reduce the damage to 0, discard 2 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "A blow lands — discard cards to block it?",
+        "options": [
+          {
+            "label": "Discard 5 card(s) to negate the damage",
+            "cost": {
+              "op": "discardHand",
+              "n": 5
+            },
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Take 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-quest-find-the-grey-pilgrim",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "4",
+      "name": "Quest: Find the Grey Pilgrim",
+      "location": "Any Location in Enedwaith",
+      "regionColor": "Yellow",
+      "effect": "Place Gandalf in Bree. Explore Bree. Reward: Gain 1 favor and remove 1 influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Gandalf",
+              "location": "Bree"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Bree"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "removeInfluence",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-the-mad-baggins",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "3",
+      "name": "The Mad Baggins",
+      "location": "Any Location in Eriador",
+      "regionColor": "Orange",
+      "effect": "You may gain 1 Corruption card to draw a number of Hero cards equal to your fortitude from your life pool. If you choose not do this, you may instead gain 1 favor.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        },
+        {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "Gain 1 Corruption to draw Hero cards equal to your fortitude (else gain 1 favor)",
+        "cost": {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "drawPer",
+            "per": "fortitude"
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-quest-the-squint-eyed-southerner",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "4",
+      "name": "Quest: The Squint-eyed Southerner",
+      "location": "Any Location in Eriador",
+      "regionColor": "Orange",
+      "effect": "Sauron places 1 influence in any location in the region of Enedwaith. Explore Dunland. Reward: Remove 2 Influence from the Shadow Pool.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Dunland"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "removeInfluence",
+              "n": 2
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-quest-the-black-pit",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "7",
+      "name": "Quest: The Black Pit",
+      "location": "Any Location",
+      "regionColor": "Orange",
+      "effect": "Place 1 influence in the Shadow Pool. Explore Moria. Reward: Gain 2 favor and receive training.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        },
+        {
+          "op": "addInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "explore",
+              "location": "Moria"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-saruman-s-agents",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "5",
+      "name": "Saruman's Agents",
+      "location": "Any Location",
+      "regionColor": "Orange",
+      "effect": "You may choose to receive 1 Corruption card. If you do, the Sauron player must then choose 1 Plot card to discard from his hand.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "optional",
+        "prompt": "You may the Sauron player must then choose 1 Plot card to discard from his hand",
+        "cost": {
+          "op": "gainCorruption",
+          "n": 1
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "forceSauronDiscard",
+            "n": 1,
+            "pile": "plot"
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-the-ranger",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "6",
+      "name": "The Ranger",
+      "location": "Any Location",
+      "regionColor": "Orange",
+      "effect": "Shuffle the rest pool into your life pool or spend 1 favor to move immediately to Fornost and encounter that location.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Shuffle the rest pool into your life pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          },
+          {
+            "label": "Spend 1 favor to move immediately to fornost and encounter that location",
+            "cost": null,
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "loseFavor",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "moveToEncounter",
+                    "location": "fornost"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "enc-eriador-and-enedwaith-the-road-goes-ever-on-and-on",
+      "regionGroup": "Eriador and Enedwaith",
+      "priority": "8",
+      "name": "The Road Goes Ever On and On",
+      "location": "Any Location",
+      "regionColor": "Orange",
+      "effect": "Gain 2 favor. Then shuffle this card and the matching discard pile into its Encounter deck.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 2
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "reusable"
+            }
+          }
+        ]
+      },
+      "partial": false
+    }
+  ]
+}

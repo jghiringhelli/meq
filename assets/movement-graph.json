@@ -1,0 +1,1060 @@
+{
+  "schema": "movement-graph-v3-review",
+  "_meta": {
+    "rule": "MEQ Move (manual): each connecting path shows a movement icon = a terrain symbol with a number. To cross, discard EITHER one Hero card matching the terrain, OR 'anyCost' Hero cards of any type (the number on the icon). An 'any card' icon (terrain='') costs 1 any-card. With a Boat Item you may cross water/blue paths (boat=true) by discarding any one card regardless of icon.",
+    "taxonomy": [
+      "cost is an integer 1..4.",
+      "cost 1  => terrain '' (no type); it always costs one card.",
+      "cost >=2 => exactly one terrain of woods|swamp|mountain|plains|hill.",
+      "horse applies iff NOT a boat edge (derived; horse = !boat).",
+      "edges are symmetric: each stored once, under the earlier (region, node).",
+      "the map background usually matches the terrain type; the icon is consistent."
+    ],
+    "howToCorrect": "Walk region by region, node by node. Same-region edges are listed under the earlier node; cross-region edges under the earlier region's node (see toRegion). Fix any edge carrying _flags. Run scripts/verify-movement-graph.mjs for the worklist.",
+    "regionOrder": [
+      "eriador-and-enedwaith",
+      "rhudaur-and-grey-mountains",
+      "mist-mountains-and-mirkwood",
+      "rohan-and-gondor",
+      "mordor-and-brown-lands",
+      "haven"
+    ],
+    "edgeCount": 96,
+    "isolated": [],
+    "provenance": "Transcribed from files/tiles by 4 explore passes; HAND-CORRECT against the board."
+  },
+  "regions": {
+    "eriador-and-enedwaith": {
+      "regionName": "Eriador and Enedwaith",
+      "nodes": {
+        "the-shire": {
+          "name": "The Shire",
+          "edges": [
+            {
+              "to": "the-grey-havens",
+              "toName": "The Grey Havens",
+              "cost": 1,
+              "terrain": "",
+              "boat": true,
+              "horse": false,
+              "confidence": "high"
+            },
+            {
+              "to": "old-forest",
+              "toName": "Old Forest",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "the-grey-havens": {
+          "name": "The Grey Havens",
+          "edges": [
+            {
+              "to": "blue-mountains",
+              "toName": "Blue Mountains",
+              "cost": 2,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "harlindon",
+              "toName": "Harlindon",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": true,
+              "horse": false,
+              "confidence": "high"
+            }
+          ]
+        },
+        "bree": {
+          "name": "Bree",
+          "edges": [
+            {
+              "to": "weathertop",
+              "toName": "Weathertop",
+              "toRegion": "rhudaur-and-grey-mountains",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "the-trollshaws",
+              "toName": "The Trollshaws",
+              "toRegion": "rhudaur-and-grey-mountains",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "fornost",
+              "toName": "Fornost",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            }
+          ]
+        },
+        "old-forest": {
+          "name": "Old Forest",
+          "edges": [
+            {
+              "to": "the-trollshaws",
+              "toName": "The Trollshaws",
+              "toRegion": "rhudaur-and-grey-mountains",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "enedwaith-plains": {
+          "name": "Enedwaith Plains",
+          "edges": [
+            {
+              "to": "tharbad",
+              "toName": "Tharbad",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "mouth-of-the-greyflood",
+              "toName": "Mouth of the Greyflood",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "weathertop",
+              "toName": "Weathertop",
+              "toRegion": "rhudaur-and-grey-mountains",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "tharbad": {
+          "name": "Tharbad",
+          "edges": [
+            {
+              "to": "eregion",
+              "toName": "Eregion",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "mouth-of-the-greyflood",
+              "toName": "Mouth of the Greyflood",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "blue-mountains": {
+          "name": "Blue Mountains",
+          "edges": []
+        },
+        "harlindon": {
+          "name": "Harlindon",
+          "edges": []
+        },
+        "hills-of-evendim": {
+          "name": "Hills of Evendim",
+          "edges": [
+            {
+              "to": "fornost",
+              "toName": "Fornost",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "eregion": {
+          "name": "Eregion",
+          "edges": [
+            {
+              "to": "moria",
+              "toName": "Moria",
+              "cost": 2,
+              "terrain": "hill",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "rivendell",
+              "toName": "Rivendell",
+              "toRegion": "haven",
+              "cost": 3,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "dunland": {
+          "name": "Dunland",
+          "edges": [
+            {
+              "to": "fangorn",
+              "toName": "Fangorn",
+              "toRegion": "mist-mountains-and-mirkwood",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "gap-of-rohan",
+              "toName": "Gap of Rohan",
+              "toRegion": "rohan-and-gondor",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "mouth-of-the-greyflood": {
+          "name": "Mouth of the Greyflood",
+          "edges": []
+        },
+        "moria": {
+          "name": "Moria",
+          "edges": []
+        }
+      }
+    },
+    "rhudaur-and-grey-mountains": {
+      "regionName": "Rhudaur and Grey Mountains",
+      "nodes": {
+        "weathertop": {
+          "name": "Weathertop",
+          "edges": [
+            {
+              "to": "the-trollshaws",
+              "toName": "The Trollshaws",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "the-trollshaws": {
+          "name": "The Trollshaws",
+          "edges": [
+            {
+              "to": "ered-mithrin",
+              "toName": "Ered Mithrin",
+              "cost": 4,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "rivendell",
+              "toName": "Rivendell",
+              "toRegion": "haven",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "the-iron-hills": {
+          "name": "The Iron Hills",
+          "edges": [
+            {
+              "to": "the-withered-heath",
+              "toName": "The Withered Heath",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            },
+            {
+              "to": "rhun",
+              "toName": "Rhun",
+              "toRegion": "mordor-and-brown-lands",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            },
+            {
+              "to": "erebor",
+              "toName": "Erebor",
+              "toRegion": "haven",
+              "cost": 3,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "ered-mithrin": {
+          "name": "Ered Mithrin",
+          "edges": [
+            {
+              "to": "the-northern-waste",
+              "toName": "The Northern Waste",
+              "cost": 4,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "the-northern-waste": {
+          "name": "The Northern Waste",
+          "edges": [
+            {
+              "to": "the-withered-heath",
+              "toName": "The Withered Heath",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "the-north-downs": {
+          "name": "The North Downs",
+          "edges": [
+            {
+              "to": "ettenmoors",
+              "toName": "Ettenmoors",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "fornost",
+              "toName": "Fornost",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "ettenmoors": {
+          "name": "Ettenmoors",
+          "edges": [
+            {
+              "to": "ruins-of-angmar",
+              "toName": "Ruins of Angmar",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            }
+          ]
+        },
+        "ruins-of-angmar": {
+          "name": "Ruins of Angmar",
+          "edges": [
+            {
+              "to": "mount-gundabad",
+              "toName": "Mount Gundabad",
+              "cost": 4,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "mount-gundabad": {
+          "name": "Mount Gundabad",
+          "edges": []
+        },
+        "the-withered-heath": {
+          "name": "The Withered Heath",
+          "edges": []
+        }
+      }
+    },
+    "mist-mountains-and-mirkwood": {
+      "regionName": "Mist Mountains and Mirkwood",
+      "nodes": {
+        "rhosgobel": {
+          "name": "Rhosgobel",
+          "edges": [
+            {
+              "to": "gladden-fields",
+              "toName": "Gladden Fields",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "amon-hen",
+              "toName": "Amon Hen",
+              "toRegion": "rohan-and-gondor",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            }
+          ]
+        },
+        "high-pass": {
+          "name": "High Pass",
+          "edges": [
+            {
+              "to": "the-forest-road",
+              "toName": "The Forest Road",
+              "cost": 3,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "rivendell",
+              "toName": "Rivendell",
+              "toRegion": "haven",
+              "cost": 4,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "lake-esgaroth": {
+          "name": "Esgaroth",
+          "edges": [
+            {
+              "to": "the-forest-trail",
+              "toName": "The Forest Trail",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "rhun",
+              "toName": "Rhun",
+              "toRegion": "mordor-and-brown-lands",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            },
+            {
+              "to": "erebor",
+              "toName": "Erebor",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "gladden-fields": {
+          "name": "Gladden Fields",
+          "edges": [
+            {
+              "to": "the-bight",
+              "toName": "The Bight",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "the-forest-trail": {
+          "name": "The Forest Trail",
+          "edges": [
+            {
+              "to": "the-woodland-realm",
+              "toName": "The Woodland Realm",
+              "toRegion": "haven",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "fangorn": {
+          "name": "Fangorn",
+          "edges": [
+            {
+              "to": "amon-hen",
+              "toName": "Amon Hen",
+              "toRegion": "rohan-and-gondor",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            },
+            {
+              "to": "isengard",
+              "toName": "Isengard",
+              "toRegion": "rohan-and-gondor",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "the-redhorn-gate": {
+          "name": "The Redhorn Gate",
+          "edges": []
+        },
+        "the-forest-road": {
+          "name": "The Forest Road",
+          "edges": [
+            {
+              "to": "the-woodland-realm",
+              "toName": "The Woodland Realm",
+              "toRegion": "haven",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "rivendell",
+              "toName": "Rivendell",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "the-bight": {
+          "name": "The Bight",
+          "edges": [
+            {
+              "to": "south-eaves",
+              "toName": "South Eaves",
+              "cost": 2,
+              "terrain": "woods",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            },
+            {
+              "to": "rhun",
+              "toName": "Rhun",
+              "toRegion": "mordor-and-brown-lands",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            }
+          ]
+        },
+        "south-eaves": {
+          "name": "South Eaves",
+          "edges": []
+        }
+      }
+    },
+    "rohan-and-gondor": {
+      "regionName": "Rohan and Gondor",
+      "nodes": {
+        "osgiliath": {
+          "name": "Osgiliath",
+          "edges": [
+            {
+              "to": "minas-morgul",
+              "toName": "Minas Morgul",
+              "toRegion": "mordor-and-brown-lands",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            },
+            {
+              "to": "minas-tirith",
+              "toName": "Minas Tirith",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "belfalas": {
+          "name": "Belfalas",
+          "edges": [
+            {
+              "to": "pelagir",
+              "toName": "Pelargir",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "amon-hen": {
+          "name": "Amon Hen",
+          "edges": []
+        },
+        "isengard": {
+          "name": "Isengard",
+          "edges": [
+            {
+              "to": "gap-of-rohan",
+              "toName": "Gap of Rohan",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "edoras",
+              "toName": "Edoras",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "gap-of-rohan": {
+          "name": "Gap of Rohan",
+          "edges": [
+            {
+              "to": "helm-s-deep",
+              "toName": "Helm's Deep",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "plains-of-rohan",
+              "toName": "Plains of Rohan",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "edoras",
+              "toName": "Edoras",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "helm-s-deep": {
+          "name": "Helm's Deep",
+          "edges": [
+            {
+              "to": "anfalas",
+              "toName": "Anfalas",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "edoras",
+              "toName": "Edoras",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "plains-of-rohan": {
+          "name": "Plains of Rohan",
+          "edges": [
+            {
+              "to": "the-nindalf",
+              "toName": "The Nindalf",
+              "toRegion": "mordor-and-brown-lands",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "sea-of-udun",
+              "toName": "Plains of UdÃ»n",
+              "toRegion": "mordor-and-brown-lands",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            }
+          ]
+        },
+        "dunharrow": {
+          "name": "Dunharrow",
+          "edges": [
+            {
+              "to": "morthond",
+              "toName": "Morthond",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "edoras",
+              "toName": "Edoras",
+              "toRegion": "haven",
+              "cost": 3,
+              "terrain": "hill",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "anfalas": {
+          "name": "Anfalas",
+          "edges": [
+            {
+              "to": "morthond",
+              "toName": "Morthond",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            },
+            {
+              "to": "edoras",
+              "toName": "Edoras",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            }
+          ]
+        },
+        "morthond": {
+          "name": "Morthond",
+          "edges": [
+            {
+              "to": "pelagir",
+              "toName": "Pelargir",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "pelagir": {
+          "name": "Pelargir",
+          "edges": [
+            {
+              "to": "near-harad",
+              "toName": "Near Harad",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "minas-tirith",
+              "toName": "Minas Tirith",
+              "toRegion": "haven",
+              "cost": 1,
+              "terrain": "",
+              "boat": true,
+              "horse": false,
+              "confidence": "high"
+            }
+          ]
+        },
+        "near-harad": {
+          "name": "Near Harad",
+          "edges": []
+        }
+      }
+    },
+    "mordor-and-brown-lands": {
+      "regionName": "Mordor and Brown Lands",
+      "nodes": {
+        "the-dead-marshes": {
+          "name": "The Dead Marshes",
+          "edges": [
+            {
+              "to": "dagorlad",
+              "toName": "Dagorlad",
+              "cost": 3,
+              "terrain": "swamp",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "the-nindalf",
+              "toName": "The Nindalf",
+              "cost": 3,
+              "terrain": "swamp",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            }
+          ]
+        },
+        "emyn-muil": {
+          "name": "Emyn Muil",
+          "edges": [
+            {
+              "to": "dagorlad",
+              "toName": "Dagorlad",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "mount-doom": {
+          "name": "Mount Doom",
+          "edges": [
+            {
+              "to": "plains-of-gorgoroth",
+              "toName": "Plains of Gorgoroth",
+              "cost": 3,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "barad-dur",
+              "toName": "Barad-Dur",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "img-firstpass"
+            },
+            {
+              "to": "sea-of-udun",
+              "toName": "Plains of Udûn",
+              "cost": 2,
+              "terrain": "plains",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            }
+          ]
+        },
+        "rhun": {
+          "name": "Rhun",
+          "edges": [
+            {
+              "to": "dagorlad",
+              "toName": "Dagorlad",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            }
+          ]
+        },
+        "dol-guldur": {
+          "name": "Dol Guldur",
+          "edges": [
+            {
+              "to": "dagorlad",
+              "toName": "Dagorlad",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "high"
+            }
+          ]
+        },
+        "dagorlad": {
+          "name": "Dagorlad",
+          "edges": [
+            {
+              "to": "sea-of-udun",
+              "toName": "Plains of UdÃ»n",
+              "cost": 1,
+              "terrain": "",
+              "boat": false,
+              "horse": true,
+              "confidence": "med"
+            }
+          ]
+        },
+        "the-nindalf": {
+          "name": "The Nindalf",
+          "edges": []
+        },
+        "minas-morgul": {
+          "name": "Minas Morgul",
+          "edges": [
+            {
+              "to": "sea-of-udun",
+              "toName": "Plains of Udûn",
+              "cost": 3,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            },
+            {
+              "to": "plains-of-gorgoroth",
+              "toName": "Plains of Gorgoroth",
+              "cost": 2,
+              "terrain": "mountain",
+              "boat": false,
+              "horse": true,
+              "confidence": "user-confirmed"
+            }
+          ]
+        },
+        "plains-of-gorgoroth": {
+          "name": "Plains of Gorgoroth",
+          "edges": []
+        },
+        "sea-of-udun": {
+          "name": "Plains of UdÃ»n",
+          "edges": []
+        },
+        "barad-dur": {
+          "name": "Barad-Dur",
+          "edges": []
+        }
+      }
+    },
+    "haven": {
+      "regionName": "Haven",
+      "nodes": {
+        "edoras": {
+          "name": "Edoras",
+          "edges": []
+        },
+        "minas-tirith": {
+          "name": "Minas Tirith",
+          "edges": []
+        },
+        "the-woodland-realm": {
+          "name": "The Woodland Realm",
+          "edges": []
+        },
+        "erebor": {
+          "name": "Erebor",
+          "edges": []
+        },
+        "fornost": {
+          "name": "Fornost",
+          "edges": []
+        },
+        "lothl-rien": {
+          "name": "Lothlorien",
+          "edges": []
+        },
+        "rivendell": {
+          "name": "Rivendell",
+          "edges": []
+        }
+      }
+    }
+  }
+}

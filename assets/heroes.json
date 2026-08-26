@@ -1,0 +1,98 @@
+{
+  "_meta": {
+    "schema": "heroes-v2",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "5 base heroes with stats + named ability."
+    ]
+  },
+  "heroes": [
+    {
+      "id": "thalin",
+      "name": "Thálin",
+      "fortitude": 5,
+      "strength": 7,
+      "agility": 2,
+      "wisdom": 1,
+      "ratioRanged": 1,
+      "ratioMelee": 4,
+      "startLocation": "erebor",
+      "startLocationName": "Erebor",
+      "abilityName": "Iron Will",
+      "abilityText": "Your turn does not end after failing to defeat an opponent in combat.",
+      "deck": "hero-thalin",
+      "image": "",
+      "copies": 1
+    },
+    {
+      "id": "argalad",
+      "name": "Argalad",
+      "fortitude": 5,
+      "strength": 5,
+      "agility": 3,
+      "wisdom": 2,
+      "ratioRanged": 4,
+      "ratioMelee": 1,
+      "startLocation": "the-woodland-realm",
+      "startLocationName": "Woodland Realm",
+      "abilityName": "Scout",
+      "abilityText": "once per turn, you may look at the faces of all monster tokens in an adjacent location.",
+      "deck": "hero-argalad",
+      "image": "",
+      "copies": 1
+    },
+    {
+      "id": "eleanor",
+      "name": "Eleanor",
+      "fortitude": 6,
+      "strength": 5,
+      "agility": 1,
+      "wisdom": 3,
+      "ratioRanged": 3,
+      "ratioMelee": 2,
+      "startLocation": "minas-tirith",
+      "startLocationName": "Minas Tirith",
+      "abilityName": "Noble Bloodline",
+      "abilityText": "Once per turn, gain 1 favor when you complete a Quest or consult a character.",
+      "deck": "hero-eleanor",
+      "image": "",
+      "copies": 1
+    },
+    {
+      "id": "eometh",
+      "name": "Eometh",
+      "fortitude": 6,
+      "strength": 6,
+      "agility": 1,
+      "wisdom": 2,
+      "ratioRanged": 2,
+      "ratioMelee": 3,
+      "startLocation": "edoras",
+      "startLocationName": "Edoras",
+      "abilityName": "Expert Rider",
+      "abilityText": "You start the game with a \"Horse\" Item card.",
+      "deck": "hero-eometh",
+      "startItems": ["item-horse"],
+      "image": "",
+      "copies": 1
+    },
+    {
+      "id": "beravor",
+      "name": "Beravor",
+      "fortitude": 6,
+      "strength": 5,
+      "agility": 2,
+      "wisdom": 2,
+      "ratioRanged": 3,
+      "ratioMelee": 2,
+      "startLocation": "fornost",
+      "startLocationName": "Fornost",
+      "abilityName": "Survivalist",
+      "abilityText": "When you rest in a non-Haven location, you may heal or receive training.",
+      "deck": "hero-beravor",
+      "image": "",
+      "copies": 1
+    }
+  ]
+}

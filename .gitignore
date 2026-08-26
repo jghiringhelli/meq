@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+dist/
+
+# Reference clone (study only, not part of this project)
+reference-swr/
+
+# FFG-owned assets — never committed (fan/non-commercial, local only)
+vmod_extracted/
+public/dev-assets/
+*.vmod
+*.pdf
+
+# Local
+.env
+game-logs/
+
+# Transient tooling artifacts
+.playwright-mcp/
+test-results/
+*.log

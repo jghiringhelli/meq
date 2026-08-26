@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "schema": "scenario-v2",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Default base-box scenario wiring."
+    ]
+  },
+  "scenario": {
+    "storyTrackLength": 18,
+    "heroMission": "mission-hero-noble-blood",
+    "sauronMission": "mission-sauron-his-dark-throne",
+    "setup": {
+      "sauronInfluence": 2,
+      "sauronStartLocation": "rivendell"
+    }
+  }
+}

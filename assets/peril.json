@@ -1,0 +1,467 @@
+{
+  "_meta": {
+    "schema": "peril-v1",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Sauron Peril cards."
+    ]
+  },
+  "cards": [
+    {
+      "id": "peril-the-hounds-of-sauron",
+      "name": "The Hounds of Sauron",
+      "location": "Any Location",
+      "effect": "The hero is dealt 6 damage. He may discard any number of hero cards from his hand, reducing the damage by 1 for each shield icon discarded, If he reduces the damage to 0, he gains 1 favor or training.",
+      "region": "",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "damage",
+              "n": 6
+            }
+          },
+          {
+            "k": "optional",
+            "prompt": "You may discard any number of hero cards from your hand, reducing the damage by 1 for each shield icon discarded, If you reduces the damage to 0, you gain 1 favor or training",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-an-unexpected-betrayal",
+      "name": "An unexpected Betrayal",
+      "location": "Any Location",
+      "effect": "The hero must choose to either be dealt 5 damage or allow Sauron to draw 1 Plot card and 1 Shadow card.",
+      "region": "",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "damage",
+          "n": 5
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-a-shadow-in-the-background-of-their-memories",
+      "name": "A Shadow in the Background of Their Memories",
+      "location": "Any Location",
+      "effect": "If the hero's wisdom is less than or equal to the number of adjacent locations containing influence, he gains 1 Corruption card and loses 1 favor.",
+      "region": "",
+      "effectKey": "",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "le",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "adjacentInfluencedLocations"
+          }
+        },
+        "then": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 1
+              }
+            }
+          ]
+        },
+        "else": {
+          "k": "none"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-orc-scouts",
+      "name": "Orc Scouts",
+      "location": "Any Location",
+      "effect": "The hero gains 1 Corruption card. Then shuffle this card and the discard pile into the peril deck.",
+      "region": "",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-ill-met-company",
+      "name": "Ill-met Company",
+      "location": "Any Location",
+      "effect": "The hero must choose to either lose 2 favor or have Sauron draw 2 corruption cards and choose 1 for the hero to receive, discarding the other.",
+      "region": "",
+      "effectKey": "",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You choose to either lose 2 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Have sauron draw 2 corruption cards and choose 1 for you to receive, discarding the other",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 2
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-armies-underground",
+      "name": "Armies Underground",
+      "location": "Mount Gundabad",
+      "effect": "The hero must discard 1 random card from his hand for each Corruption card on him. He must then combat an Orc.",
+      "region": "grey",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardHand",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "forceCombat",
+              "monster": "orc"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-the-hill-of-black-magic",
+      "name": "The Hill of Black Magic",
+      "location": "Dol Guldur",
+      "effect": "If the hero's wisdom is less than or equal to the number of plot cards in play, he is dealt 5 damage and his turn immediately ends.",
+      "region": "brown",
+      "effectKey": "",
+      "tree": {
+        "k": "if",
+        "cond": {
+          "cmp": "lt",
+          "left": {
+            "stat": "wisdom"
+          },
+          "right": {
+            "count": "plotsInPlay"
+          }
+        },
+        "then": {
+          "k": "op",
+          "atom": {
+            "op": "damage",
+            "n": 5
+          }
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-the-dark-tower",
+      "name": "The Dark Tower",
+      "location": "Barad-Dûr",
+      "effect": "The minion immediately combats the hero. If the minion is defeated, the hero gains 2 favor. The hero may continue his turn even if he fails to defeat the minion.",
+      "region": "red",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "spawnMonster",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 2
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-khazad-d-m",
+      "name": "khazad-dûm",
+      "location": "Moria",
+      "effect": "The hero must combat a Balrog. If he defeats the Balrog, he gains 2 favor and receives training.",
+      "region": "yellow",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "forceCombat",
+              "monster": "balrog"
+            }
+          },
+          {
+            "k": "seq",
+            "steps": [
+              {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              },
+              {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-an-enduring-evil",
+      "name": "An Enduring Evil",
+      "location": "Ruins of Angmar",
+      "effect": "If there is at least 1 influence on this location, the hero receives 1 corruption card, and his turn immediately ends.",
+      "region": "purple",
+      "effectKey": "",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-trapped",
+      "name": "Trapped",
+      "location": "Any Location in The Grey Mountains or Rhudaur",
+      "effect": "Add 2 influence to the Shadow Pool. The hero must then discard 2 cards from his hand.",
+      "region": "purple",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardHand",
+              "n": 2
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-the-weakness-of-men",
+      "name": "The Weakness of Men",
+      "location": "Any Location in Rohan or Gondor",
+      "effect": "The hero must choose to either be dealt 5 damage or advance Sauron's black story marker 1 space up the track.",
+      "region": "blue",
+      "effectKey": "",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "You choose to either be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          },
+          {
+            "label": "Advance sauron's black story marker 1 space up the track",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "advanceMarker",
+                "marker": "black",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-it-s-a-dangerous-business-walking-out-your-front-door",
+      "name": "It's a Dangerous Business, Walking out your Front Door",
+      "location": "Any Location in Eriador or Enedwaith",
+      "effect": "Add 2 influence to the Shadow Pool. Sauron may then place 1 influence token on any 3 locations in the hero's region.",
+      "region": "orange",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeInfluence",
+              "where": "region",
+              "n": 1
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-undying-regret",
+      "name": "Undying Regret",
+      "location": "Any Location in The Misty Mountains or Mirkwood",
+      "effect": "Add 2 influence to the Shadow Pool. Sauron may then place 1 influence and monster token on any locations in the hero's current region (excluding the hero's current location).",
+      "region": "green",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "addInfluence",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeInfluence",
+              "where": "region",
+              "n": 1
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "peril-nine-for-mortal-men-doomed-to-die",
+      "name": "Nine for Mortal Men Doomed to Die",
+      "location": "Any Location in The Bown Lands or Mordor",
+      "effect": "The hero receives 1 corruption card. Sauron may then either command 1 minion or draw 1 Plot card. If the minion is moved into the hero's location, he must immediately fight it, The hero's turn does not end if he fails to defeat the minion.",
+      "region": "brown",
+      "effectKey": "",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainCorruption",
+              "n": 1
+            }
+          },
+          {
+            "k": "choice",
+            "prompt": "Sauron commands a minion, or draws a Plot",
+            "options": [
+              {
+                "label": "Command a minion",
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "spawnMonster",
+                    "n": 1
+                  }
+                }
+              },
+              {
+                "label": "Draw a Plot",
+                "eff": {
+                  "k": "op",
+                  "atom": {
+                    "op": "sauronDrawPlot"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "partial": false
+    }
+  ]
+}

@@ -1,0 +1,1324 @@
+{
+  "_meta": {
+    "schema": "events-v1",
+    "provenance": "owner-verified",
+    "source": "text/*.xls (owner-supplied MEQ fulltext)",
+    "notes": [
+      "Sauron event/plot deck, organized by turn."
+    ]
+  },
+  "events": [
+    {
+      "id": "event-t1-messengers-of-the-stormcrow",
+      "turn": "1",
+      "cardNo": "1",
+      "name": "MESSENGERS OF THE STORMCROW",
+      "favor1": "BREE",
+      "favor2": "",
+      "character": "THEODEN",
+      "characterLocation": "HELMS DEEP",
+      "questLocation": "",
+      "text": "Each hero must spend 1 favor or gain 1 corruptioncard",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Each hero spend 1 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Gain 1 corruption card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-tempted-by-power",
+      "turn": "1",
+      "cardNo": "2",
+      "name": "TEMPTED BY POWER",
+      "favor1": "EMYN MUIL",
+      "favor2": "",
+      "character": "SARUMAN",
+      "characterLocation": "FANGORN",
+      "questLocation": "",
+      "text": "Sauron choose one hero. The hero must gain one \ncorruptioncard and get training, or allow Sauron\nto draw a Plotcard",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Gain 1 Corruption and train, or allow Sauron to draw a Plot",
+        "options": [
+          {
+            "label": "Gain 1 Corruption and train",
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainCorruption",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "training",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Allow Sauron to draw a Plot",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "sauronDrawPlot"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-trust-in-friendship",
+      "turn": "1",
+      "cardNo": "3",
+      "name": "TRUST IN FRIENDSHIP",
+      "favor1": "OSGILIATH",
+      "favor2": "",
+      "character": "DAIN II",
+      "characterLocation": "LAKE ESGARGOTH",
+      "questLocation": "",
+      "text": "Each hero lose 1 favor and place on this card. Sauron then\nplace them on this card. After this hero explores a location\nw/a Hero or a Character, he gains these favors.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "loseFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-the-thieves-of-tharbad",
+      "turn": "1",
+      "cardNo": "4",
+      "name": "THE THIEVES OF THARBAD",
+      "favor1": "THARBAD",
+      "favor2": "THE BIGHT",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Sauron must choose a Character. That character\nmust move to Mouth of the Greyflood",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "sauronMoveCharacter",
+          "location": "mouth-of-the-greyflood"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-eomer-eowyn-are-orphaned",
+      "turn": "1",
+      "cardNo": "5",
+      "name": "EOMER & EOWYN ARE ORPHANED",
+      "favor1": "RHOSGOBEL",
+      "favor2": "",
+      "character": "DENETHOR",
+      "characterLocation": "PELARGIR",
+      "questLocation": "",
+      "text": "Sauron may discard 1 favor or 1 Character from Rohan",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "loseFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-beorning-the-skin-changers",
+      "turn": "1",
+      "cardNo": "6",
+      "name": "BEORNING THE SKIN CHANGERS",
+      "favor1": "HIGH PASS",
+      "favor2": "",
+      "character": "DAIN II",
+      "characterLocation": "IRON HILLS",
+      "questLocation": "",
+      "text": "Heroes may remove up to 2 monstertokens or deal\n2 damage to a minion in Mirkwood",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardMonsterToken",
+          "n": 2
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-the-dunadan-guards-the-shire",
+      "turn": "1",
+      "cardNo": "7",
+      "name": "THE DUNADAN GUARDS THE SHIRE",
+      "favor1": "NORTH DOWNS",
+      "favor2": "DEAD MARSHES",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Heroes may remove 4 influence/monstertokens\nfrom any Location in Eriador, OR place 1 favor in Shire",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 4
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Heroes may remove 4 influence/monster tokens\nfrom any location in eriador,",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardRegionInfluence",
+                "n": 4
+              }
+            }
+          },
+          {
+            "label": "Place 1 favor in shire",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-the-courage-of-ekenbrand",
+      "turn": "1",
+      "cardNo": "8",
+      "name": "THE COURAGE OF EKENBRAND",
+      "favor1": "DUNLAND",
+      "favor2": "",
+      "character": "THEODEN",
+      "characterLocation": "PLAINS OF ROHAN",
+      "questLocation": "",
+      "text": "Heroes may remove up to 1 monstertokens OR place\n1 favor in Helm's Deep",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardMonsterToken",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-from-argonath-to-the-sea",
+      "turn": "1",
+      "cardNo": "9",
+      "name": "FROM ARGONATH TO THE SEA",
+      "favor1": "ETTENMOORS",
+      "favor2": "",
+      "character": "THRANDUIL",
+      "characterLocation": "THE FOREST TRAIL",
+      "questLocation": "MINAS TIRITH",
+      "text": "Explore to remove 1 influence from each adjacent\nlocation.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardRegionInfluence",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-lady-of-the-golden-wood",
+      "turn": "1",
+      "cardNo": "10",
+      "name": "LADY OF THE GOLDEN WOOD",
+      "favor1": "WITHERED HEATH",
+      "favor2": "",
+      "character": "BOROMIR",
+      "characterLocation": "DUNHARROW",
+      "questLocation": "LOTHLORIEN",
+      "text": "Explore to gain \"Boat\" item or remove 1 influence from \nShadowpool",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Explore to gain \"boat\" item",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainItem",
+                "item": "Boat"
+              }
+            }
+          },
+          {
+            "label": "Remove 1 influence from shadow pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardRegionInfluence",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-arwens-message-to-her-beloved",
+      "turn": "1",
+      "cardNo": "11",
+      "name": "ARWENS MESSAGE TO HER BELOVED",
+      "favor1": "LOTHLORIEN",
+      "favor2": "",
+      "character": "ARAGORN",
+      "characterLocation": "WEATHERTOP",
+      "questLocation": "WEATHERTOP",
+      "text": "Explore to gain 1 favor OR receive training",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Explore to gain 1 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Receive training",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-imladris",
+      "turn": "1",
+      "cardNo": "12",
+      "name": "IMLADRIS",
+      "favor1": "ERED MITHRIN",
+      "favor2": "GAP OF ROHAN",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "RIVENDELL",
+      "text": "Explore to gain +1 Fortitude or Discard 1 Corruptioncard",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardCorruption",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-not-all-those-who-wanders-are-lost",
+      "turn": "1",
+      "cardNo": "13",
+      "name": "NOT ALL THOSE WHO WANDERS ARE LOST",
+      "favor1": "THE ROREST ROAD",
+      "favor2": "",
+      "character": "ARAGORN",
+      "characterLocation": "RHÛN",
+      "questLocation": "RHÛN",
+      "text": "After a hero explores, move to any location on the board",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "moveAnywhere"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t1-gandalf-visits-frodo",
+      "turn": "1",
+      "cardNo": "14",
+      "name": "GANDALF VISITS FRODO",
+      "favor1": "EREGION",
+      "favor2": "",
+      "character": "GANDALF",
+      "characterLocation": "THE SHIRE",
+      "questLocation": "THE SHIRE",
+      "text": "After a hero explores, spend 3 favor to move the Hero\nStory Marker one space up the Story Track",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 3
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-of-serpents-and-sand",
+      "turn": "2",
+      "cardNo": "1",
+      "name": "OF SERPENTS AND SAND",
+      "favor1": "GLADDEN FIELDS",
+      "favor2": "",
+      "character": "BOROMIR",
+      "characterLocation": "THE NINDALF",
+      "questLocation": "NEAR HARAD",
+      "text": "While this card is in play, advance the Red Story Marker 1\nspace during each Story Step. Explore to Discard.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "none"
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-the-glades-of-orthanc-darken",
+      "turn": "2",
+      "cardNo": "2",
+      "name": "THE GLADES OF ORTHANC DARKEN",
+      "favor1": "NORTHERN WASTE",
+      "favor2": "",
+      "character": "SARUMAN",
+      "characterLocation": "ISENGARD",
+      "questLocation": "GAP OF ROHAN",
+      "text": "While this card is in play, advance the Red Story Marker 1\nspace during each Story Step. Explore to Discard.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "none"
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-stone-figures-in-the-trollshaws",
+      "turn": "2",
+      "cardNo": "3",
+      "name": "STONE FIGURES IN THE TROLLSHAWS",
+      "favor1": "NORTH DOWNS",
+      "favor2": "THARBAD",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Sauron may place a monstertoken in any 2 locations in \nRhudaur (influence is not a prerequisite)",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "spawnMonster",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-there-is-strength-yet",
+      "turn": "2",
+      "cardNo": "4",
+      "name": "THERE IS STRENGTH YET",
+      "favor1": "MOUTH OF GREYFLOOD",
+      "favor2": "AMON HEN",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "empty",
+      "tree": {
+        "k": "none"
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-cirdan-the-shipwrigth",
+      "turn": "2",
+      "cardNo": "5",
+      "name": "CIRDAN THE SHIPWRIGTH",
+      "favor1": "ANFALAS",
+      "favor2": "OLD FOREST",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "GREY HAVENS",
+      "text": "Explore to gain \"Boat\" item and may move to Belfalas",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainItem",
+              "item": "Boat"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "moveToEncounter",
+              "location": "belfalas"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-the-foe-hammer",
+      "turn": "2",
+      "cardNo": "6",
+      "name": "THE FOE-HAMMER",
+      "favor1": "THE IRON HILLS",
+      "favor2": "",
+      "character": "GANDALF",
+      "characterLocation": "TROLLSHAWS",
+      "questLocation": "",
+      "text": "Explore to place Gandalf in any location containing\ninfluence. Then remove all monstertokens from Gandalfs\nlocation.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "clearMonstersAt",
+          "location": "the-trollshaws"
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-under-the-shadow",
+      "turn": "2",
+      "cardNo": "7",
+      "name": "UNDER THE SHADOW",
+      "favor1": "SEA OF UDÛN",
+      "favor2": "",
+      "character": "ARAGORN",
+      "characterLocation": "RIVENDELL",
+      "questLocation": "",
+      "text": "Sauron choose a Hero. That hero must receive either 1 \nCorruptioncard, and then move to any location, or allow \nSauron to Draw a Plotcard",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Take 1 Corruption and move anywhere, or allow Sauron to draw a Plot",
+        "options": [
+          {
+            "label": "1 Corruption then move anywhere",
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "gainCorruption",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "moveAnywhere"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": "Allow Sauron to draw a Plot",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "sauronDrawPlot"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-brand-becomes-king-of-dale",
+      "turn": "2",
+      "cardNo": "8",
+      "name": "BRAND BECOMES KING OF DALE",
+      "favor1": "ENEDWAITH PLAINS",
+      "favor2": "",
+      "character": "DAIN II",
+      "characterLocation": "THE FOREST ROAD",
+      "questLocation": "",
+      "text": "Heroes may remove 2 monstertokens within 1 space from\nLake Esgaroth, OR place 1 favor in Lake Esgaroth",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Heroes may remove 2 monster tokens within 1 space from\nlake esgaroth,",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardMonsterToken",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Place 1 favor in lake esgaroth",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-commander-of-edoras",
+      "turn": "2",
+      "cardNo": "9",
+      "name": "COMMANDER OF EDORAS",
+      "favor1": "MORTHOND",
+      "favor2": "",
+      "character": "THEODEN",
+      "characterLocation": "EDORAS",
+      "questLocation": "",
+      "text": "Heroes may remove 1 monstertoken & 1 influence within\n1 space from Edoras, or place 1 favor in Edoras",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Heroes may remove 1 monster token and 1 influence within\n1 space from edoras,",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardMonsterToken",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Place 1 favor in edoras",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-iarwain-ben-adar",
+      "turn": "2",
+      "cardNo": "10",
+      "name": "IARWAIN BEN-ADAR",
+      "favor1": "HILLS OF EVENDIM",
+      "favor2": "SOUTH EAVES",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "OLD FOREST",
+      "text": "Explore to discard 1 Corruptioncard or shuffle damagepool\ninto Restpool",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Discard 1 Corruption, or shuffle damage pool into rest pool",
+        "options": [
+          {
+            "label": "Discard 1 Corruption",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardCorruption",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Recover damage into life pool",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-athelas-kingsfoil",
+      "turn": "2",
+      "cardNo": "11",
+      "name": "ATHELAS, KINGSFOIL",
+      "favor1": "REDHORN GATE",
+      "favor2": "",
+      "character": "THRANDUIL",
+      "characterLocation": "WOODLAND REALM",
+      "questLocation": "RHOSGOBEL",
+      "text": "Explore to discard 1 Corruptioncard OR shuffle damagepool\ninto Restpool",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "choice",
+        "prompt": "Discard 1 Corruption, or shuffle damage pool into rest pool",
+        "options": [
+          {
+            "label": "Discard 1 Corruption",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardCorruption",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Recover damage into life pool",
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "heal"
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-aragorn-meets-w-gandalf",
+      "turn": "2",
+      "cardNo": "12",
+      "name": "ARAGORN MEETS W/GANDALF",
+      "favor1": "NEAR HARAD",
+      "favor2": "DAGORLAD",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Place or move both Aragorn & Gandalf to Bree",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Aragorn",
+              "location": "bree"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Gandalf",
+              "location": "bree"
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-aragorn-hunts-gollum",
+      "turn": "2",
+      "cardNo": "13",
+      "name": "ARAGORN HUNTS GOLLUM",
+      "favor1": "ERED MITHRIN",
+      "favor2": "",
+      "character": "ARAGORN",
+      "characterLocation": "DEAD MARSHES",
+      "questLocation": "DEAD MARSHES",
+      "text": "After a hero explores, spend 3 favor to move the Hero\nStory Marker one space up the Story Track",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 3
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t2-beregond-guard-of-the-citadel",
+      "turn": "2",
+      "cardNo": "14",
+      "name": "BEREGOND, GUARD OF THE CITADEL",
+      "favor1": "THE GREY HAVENS",
+      "favor2": "",
+      "character": "DENETHOR",
+      "characterLocation": "MINAS TIRITH",
+      "questLocation": "",
+      "text": "A hero may discard 3 favors to discard an active Plot \naffecting a Haven",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "loseFavor",
+          "n": 3
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 3
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-dark-news-from-erebor",
+      "turn": "3",
+      "cardNo": "1",
+      "name": "DARK NEWS FROM EREBOR",
+      "favor1": "BLUE MOUNTAIN",
+      "favor2": "",
+      "character": "SARUMAN",
+      "characterLocation": "ISENGARD",
+      "questLocation": "EREBOR",
+      "text": "While this card is in play, advance the Black Story Marker\n1 space during each Story Step. Explore to Discard.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "none"
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-the-blood-of-rh-n",
+      "turn": "3",
+      "cardNo": "2",
+      "name": "THE BLOOD OF RHÛN",
+      "favor1": "HARLINDON",
+      "favor2": "",
+      "character": "DAIN II",
+      "characterLocation": "EREBOR",
+      "questLocation": "DAGORLAD",
+      "text": "While this card is in play, advance the Red Story Marker 1\nspace during each Story Step. Explore to Discard.",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "none"
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-radagast-the-brown",
+      "turn": "3",
+      "cardNo": "3",
+      "name": "RADAGAST THE BROWN",
+      "favor1": "PLAINS OF GORGORTH",
+      "favor2": "RHOSGOBEL",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Each hero w/4+ favors must discard 1 favor, then if \nGandalf is in play, move him to Isengard",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "loseFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-he-has-at-least-heard",
+      "turn": "3",
+      "cardNo": "3",
+      "name": "HE HAS AT LEAST HEARD",
+      "favor1": "MOUNT GUNDABAD",
+      "favor2": "DUNLAND",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Place 1 influence in each space adjacent to The Shire, then\nSauron may move a minion to The Shire",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "addInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "placeInfluence",
+          "where": "shire",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-warrior-of-the-lidless-eye",
+      "turn": "3",
+      "cardNo": "4",
+      "name": "WARRIOR OF THE LIDLESS EYE",
+      "favor1": "ETTENMOORS",
+      "favor2": "BELFALAS",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Sauron may place 1 monster & 1 influence in each space\nadjacent to Gothmog",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "spawnMonster",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-the-trees-of-fangorn",
+      "turn": "3",
+      "cardNo": "6",
+      "name": "THE TREES OF FANGORN",
+      "favor1": "GAP OF ROHAN",
+      "favor2": "MINAS MORGUL",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "FANGORN",
+      "text": "Explore to gain 1 favor and remove all monsters within 1 \nspace of Fangorn.",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "gainFavor",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "gainFavor",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-gandalf-stormcrow",
+      "turn": "3",
+      "cardNo": "7",
+      "name": "GANDALF STORMCROW",
+      "favor1": "RUINS OF ANGMAR",
+      "favor2": "",
+      "character": "GANDALF",
+      "characterLocation": "PLAINS OF ROHAN",
+      "questLocation": "PLAINS OF ROHAN",
+      "text": "Explore to move Gandalf to any location at least 4 spaces\naway. Then remove 1 influence from Shadowpool",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-arnor-that-was-of-old",
+      "turn": "3",
+      "cardNo": "8",
+      "name": "ARNOR, THAT WAS OF OLD",
+      "favor1": "",
+      "favor2": "",
+      "character": "ARAGORN",
+      "characterLocation": "FORNOST",
+      "questLocation": "DOL GOLDUR",
+      "text": "Heroes may remove all influence & monstertoken within\n1 space of Fornost, or place 1 favor in Fornost",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Heroes may remove all influence and monster token within\n1 space of fornost,",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardRegionInfluence",
+                "n": 99
+              }
+            }
+          },
+          {
+            "label": "Place 1 favor in fornost",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-boromir-s-dream",
+      "turn": "3",
+      "cardNo": "9",
+      "name": "BOROMIR'S DREAM",
+      "favor1": "EMYN MUIL",
+      "favor2": "",
+      "character": "BOROMIR",
+      "characterLocation": "OSGILIATH",
+      "questLocation": "",
+      "text": "Each hero w no favor, gets 1 favor. Then, if Sauron's yellow\nstory marker is closest marker to the start space, advance\nit 1 space up the Story Track",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "advanceMarker",
+              "marker": "yellow",
+              "n": 1
+            }
+          }
+        ]
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-elladan-elrohir",
+      "turn": "3",
+      "cardNo": "10",
+      "name": "ELLADAN & ELROHIR",
+      "favor1": "MOUTH OF GREYFLOOD",
+      "favor2": "",
+      "character": "THRANDUIL",
+      "characterLocation": "THE FOREST ROAD",
+      "questLocation": "ETTENMOORS",
+      "text": "+2 favors & remove 1 monstertoken from board",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardMonsterToken",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-eowyn-sister-daughter",
+      "turn": "3",
+      "cardNo": "11",
+      "name": "EOWYN SISTER-DAUGHTER",
+      "favor1": "LAKE ESGAROTH",
+      "favor2": "MORTHOND",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "",
+      "text": "Place or move  Theoden to Edoras, and remove 1 influence\nfrom each location adjacent to Edoras",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeInfluence",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardRegionInfluence",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-the-argonath",
+      "turn": "3",
+      "cardNo": "12",
+      "name": "THE ARGONATH",
+      "favor1": "FANGORN",
+      "favor2": "MOUNT DOOM",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "AMON HEN",
+      "text": "Explore to discard 1 Corruptioncard or gain +1 Fortitude",
+      "effectKey": "",
+      "ops": [
+        {
+          "op": "removeCorruption",
+          "n": 1
+        }
+      ],
+      "effectKind": "mechanical",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "discardCorruption",
+          "n": 1
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-theoden-warned-of-saruman",
+      "turn": "3",
+      "cardNo": "13",
+      "name": "THEODEN WARNED OF SARUMAN",
+      "favor1": "WITHERED HEATH",
+      "favor2": "EREGION",
+      "character": "",
+      "characterLocation": "",
+      "questLocation": "EDORAS",
+      "text": "Hero explore and may spend 2 favors to move the black \nstory marker 1 space left on the Story Track",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 2
+        }
+      },
+      "partial": false
+    },
+    {
+      "id": "event-t3-the-account-of-isildur",
+      "turn": "3",
+      "cardNo": "14",
+      "name": "THE ACCOUNT OF ISILDUR",
+      "favor1": "MORIA",
+      "favor2": "",
+      "character": "GANDALF",
+      "characterLocation": "MINAS TIRITH",
+      "questLocation": "MINAS TIRITH",
+      "text": "After a hero explores, spend 3 favor to move the Hero\nStory Marker one space up the Story Track",
+      "effectKey": "",
+      "ops": [],
+      "effectKind": "flavor",
+      "tree": {
+        "k": "op",
+        "atom": {
+          "op": "loseFavor",
+          "n": 3
+        }
+      },
+      "partial": false
+    }
+  ]
+}
