@@ -70,11 +70,16 @@ export function raiseAttribute(
 /** Ambush (hero turn, step 2): a monster or minion at the hero's location forces
  *  combat before the hero may Travel (Move/Explore). Returns true while a foe is
  *  present and the hero must engage it first. */
-export function ambushPending(state: GameState, hero: HeroState): boolean {
+export function ambushPending(state: GameState, hero: HeroState, cat?: Catalog): boolean {
   if (hero.skipAmbush) return false;
   // M3: if Sauron chose Peril (not combat) when the hero entered this location
   // during a Travel step, the foe here does not force a fight this turn.
   if (hero.perilResolvedAt?.includes(hero.location)) return false;
+  // Haven (rulebook p.22): "If the current hero is in a Haven location, combat
+  // only takes place if the hero allows it" — a foe here never forces a fight.
+  // Monsters can't occupy Havens (no influence there), but minions/Ringwraiths
+  // can. Needs the catalog to resolve the location's kind.
+  if (cat && cat.locations[hero.location]?.kind === 'haven') return false;
   const monsters = state.map.monstersAt[hero.location]?.length ?? 0;
   const minions = state.map.minionsAt?.[hero.location]?.length ?? 0;
   return monsters + minions > 0;

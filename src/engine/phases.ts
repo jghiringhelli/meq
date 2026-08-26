@@ -36,7 +36,7 @@ function requireHeroTurn(state: GameState, heroId: HeroId): HeroState {
 export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: LocationId): GameState {
   const s = clone(state);
   const hero = requireHeroTurn(s, heroId);
-  if (ambushPending(s, hero)) throw new Error('Ambush: a foe here must be fought before travelling');
+  if (ambushPending(s, hero, cat)) throw new Error('Ambush: a foe here must be fought before travelling');
   // Travel steps repeat as many times as the hero is able (rulebook p.22),
   // limited only by the Hero cards in hand — plus any temporary caps: the
   // "Hopeless" Corruption card and a restrictMovement encounter effect.
@@ -348,7 +348,7 @@ function runEncounterStep(s: GameState, cat: Catalog, heroId: HeroId): boolean {
 export function heroExplore(state: GameState, cat: Catalog, heroId: HeroId): GameState {
   const s = clone(state);
   const hero = requireHeroTurn(s, heroId);
-  if (ambushPending(s, hero)) throw new Error('Ambush: a foe here must be fought before exploring');
+  if (ambushPending(s, hero, cat)) throw new Error('Ambush: a foe here must be fought before exploring');
   // "Explore to Discard": if an event-deck plot sits here, exploring removes it
   // (and its character) from the board instead of drawing an encounter.
   const ep = (s.sauron.activeEventPlots ?? []).find((m) => m.location === hero.location);
@@ -688,15 +688,15 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   for (const e of chosen) if (!eventDeckPlotFor(cat, e)) s.sauron.eventDiscard!.push(e.id);
   s.phase = 'SauronMinions';
   log(s, 'phase', 'Sauron', `event step for turn ${turn}: ${chosen.length} card(s) resolved`);
-  // === Action Step setup === for a human Sauron, prep the interactive action
-  // step: the base war-chest income, a shadow draw, and the action budget
-  // (2 actions, or 3 with three heroes). The human then performs the commands.
+  // === Action Step setup === for a human Sauron, set the action budget (2, or 3
+  // with three heroes). Unlike the automa, the human gets NO free war-chest income
+  // or card draws here: pool influence and cards come ONLY from spending actions
+  // on the Eye's Place Influence and Draw tracks — exactly the rules the automa
+  // plays by (rulebook pp.16-19).
   if (s.humanSide === 'Sauron') {
-    s.sauron.influence += 2;
-    drawShadow(s, cat, 2);
-    drawPlots(s, cat, 2);
     const activeHeroes = s.heroes.filter((h) => h.status === 'active').length;
     s.sauronActionsLeft = activeHeroes >= 3 ? 3 : 2;
+    s.sauronPending = undefined;
     log(s, 'phase', 'Sauron', `action step: ${s.sauronActionsLeft} actions (chest ${s.sauron.influence})`);
   }
   return s;
@@ -1299,6 +1299,7 @@ export function sauronEndActionStep(state: GameState, cat: Catalog): GameState {
   if (state.phase !== 'SauronMinions') return state;
   const s = clone(state);
   s.sauronActionsLeft = undefined;
+  s.sauronPending = undefined;
   s.phase = 'StoryAdvance';
   return runStoryAdvance(s, cat);
 }

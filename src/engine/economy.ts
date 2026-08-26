@@ -13,12 +13,12 @@ import {
   gainCorruption, cleanseAtRest, corruptionBlocksSocial, grantFavor,
 } from './corruption';
 
-function requireHeroTurn(state: GameState, heroId: HeroId): HeroState {
+function requireHeroTurn(state: GameState, cat: Catalog, heroId: HeroId): HeroState {
   if (state.phase !== 'HeroActions') throw new Error(`Not HeroActions phase (${state.phase})`);
   const hero = state.heroes[state.activeHeroIndex];
   if (hero.id !== heroId) throw new Error(`Not ${heroId}'s turn`);
   if (hero.actionsRemaining <= 0) throw new Error(`${heroId} has no actions left`);
-  if (ambushPending(state, hero)) throw new Error('Ambush: fight the foe here before exploring');
+  if (ambushPending(state, hero, cat)) throw new Error('Ambush: fight the foe here before exploring');
   return hero;
 }
 
@@ -110,7 +110,7 @@ export function otherHeroesHere(state: GameState, heroId: HeroId): HeroState[] {
  *  3 or fewer corruption, and at most once per hero turn. */
 export function heroDarkPath(state: GameState, cat: Catalog, heroId: HeroId): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, heroId);
+  const hero = requireHeroTurn(s, cat, heroId);
   if (hero.corruption > 3) throw new Error('Dark path needs 3 or fewer corruption');
   if (hero.darkPathUsedThisTurn) throw new Error('Dark path already taken this turn');
   grantFavor(cat, hero, 1);
@@ -123,7 +123,7 @@ export function heroDarkPath(state: GameState, cat: Catalog, heroId: HeroId): Ga
 /** Retrieve favor: take the favor token(s) on the hero's location. */
 export function heroRetrieveFavor(state: GameState, cat: Catalog, heroId: HeroId): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, heroId);
+  const hero = requireHeroTurn(s, cat, heroId);
   const n = s.map.favorAt?.[hero.location] ?? 0;
   if (n <= 0) throw new Error('No favor to retrieve here');
   grantFavor(cat, hero, n);
@@ -148,7 +148,7 @@ export function heroConsultCharacter(
   state: GameState, cat: Catalog, heroId: HeroId, character: string, choice: 'favor' | 'ability' = 'favor',
 ): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, heroId);
+  const hero = requireHeroTurn(s, cat, heroId);
   if (corruptionBlocksSocial(cat, hero)) throw new Error('Isolated: this hero may not consult characters');
   const here = s.map.charactersAt?.[hero.location] ?? [];
   const idx = here.indexOf(character);
@@ -185,7 +185,7 @@ export function heroConsultCharacter(
  *  quest foe; this action lets the player claim it explicitly. */
 export function heroCompleteQuest(state: GameState, cat: Catalog, heroId: HeroId): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, heroId);
+  const hero = requireHeroTurn(s, cat, heroId);
   const done = completeCurrentQuest(s, cat, hero);
   if (!done) throw new Error('No pending quest to complete');
   return s;
@@ -196,7 +196,7 @@ export function heroCompleteQuest(state: GameState, cat: Catalog, heroId: HeroId
  *  scroll value (favorToCounter). Counters marker pressure toward Sauron. */
 export function heroDiscardPlot(state: GameState, cat: Catalog, heroId: HeroId): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, heroId);
+  const hero = requireHeroTurn(s, cat, heroId);
   const target = targetablePlot(s, cat, heroId);
   if (!target) throw new Error('No plot to discard here');
   const plot = cat.plots.find((p) => p.id === target.eventId);
@@ -256,7 +256,7 @@ export function heroTradeItem(state: GameState, cat: Catalog, fromId: HeroId, to
 /** Cleanse: at a haven, pay favor to discard one Corruption card. */
 export function heroCleanseCorruption(state: GameState, cat: Catalog, heroId: HeroId): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, heroId);
+  const hero = requireHeroTurn(s, cat, heroId);
   if (!canCleanse(s, cat, heroId)) throw new Error('Cannot cleanse corruption here');
   if (hero.corruptionCards?.length) {
     const removed = cleanseAtRest(s, cat, heroId);
@@ -327,4 +327,5 @@ export function resolveSurveyChoice(s: GameState, cat: Catalog, optionId: string
   revealMonsters(s, [loc]);
   log(s, 'hero-ability', 'argalad', `Survivalist: examined the monster tokens in ${cat.locations[loc]?.name ?? loc}`);
 }
+
 

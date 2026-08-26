@@ -670,6 +670,11 @@ export interface GameState {
   /** M15: actions remaining in the interactive Sauron Action Step (2, or 3 with
    *  three heroes). Set when a human-Sauron turn enters SauronMinions. */
   sauronActionsLeft?: number;
+  /** M15: an Eye Action Track action in progress. A Place Influence action can
+   *  yield several board tokens and a Command action several commands; the human
+   *  resolves them one at a time. `remaining` counts the sub-effects still owed
+   *  by the current action. Cleared when spent or when the turn ends. */
+  sauronPending?: { track: 'influence' | 'command'; remaining: number };
   /** Two-player game (a single hero): the hero takes 2 turns per Sauron turn.
    *  True once the hero has taken his first of the two turns this round. */
   heroSecondTurnPending?: boolean;

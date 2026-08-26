@@ -20,7 +20,7 @@ import { SHADOW_FALLS, STORY_FINALE } from './types';
 import {
   advance, endHeroActions, encounterPlan, chooseEncounter, resolveEncounter, resolveChoice,
   sauronEndActionStep, sauronStoryStep, sauronResolveEvents,
-  sauronPlayPlot, sauronPlayShadow, sauronMoveFigure, sauronHealMinion,
+  sauronPlayPlot, sauronPlayShadow,
   playablePlots, playableShadow, woundedMinions, boardFigures, moveTargets,
 } from './game';
 import { newGame } from './setup';
@@ -123,14 +123,26 @@ export function applySauronAction(s: GameState, cat: Catalog, act: SauronAction)
   switch (act.kind) {
     case 'plot': return sauronPlayPlot(s, cat, act.plotId);
     case 'pass-plot': return s;
-    case 'heal': return sauronHealMinion(s, cat, act.minionId);      // self-spends
-    case 'move': return sauronMoveFigure(s, cat, act.figKind, act.id, act.from, act.to); // self-spends
     case 'shadow': return sauronPlayShadow(s, cat, act.cardId);      // self-spends
     case 'end': return s;                                            // driver ends the step
     case 'influence': { const c = clone(s); eyePlaceInfluenceOnce(c, cat, noop); spendBudget(c); return c; }
     case 'deploy': { const c = clone(s); deployMinion(c, cat); spendBudget(c); return c; }
     case 'spawn': { const c = clone(s); eyeSpawnMonsterOnce(c, cat, noop); spendBudget(c); return c; }
     case 'draw': { const c = clone(s); drawShadow(c, cat, 2); drawPlots(c, cat, 2); spendBudget(c); return c; }
+    case 'heal': {
+      const c = clone(s);
+      if (c.map.minionHealth && c.map.minionHealth[act.minionId] !== undefined) delete c.map.minionHealth[act.minionId];
+      spendBudget(c);
+      return c;
+    }
+    case 'move': {
+      const c = clone(s);
+      const map = act.figKind === 'monster' ? (c.map.monstersAt ||= {}) : (c.map.minionsAt ||= {});
+      const at = map[act.from];
+      if (at) { const i = at.indexOf(act.id); if (i >= 0) { at.splice(i, 1); (map[act.to] ||= []).push(act.id); } }
+      spendBudget(c);
+      return c;
+    }
   }
 }
 function spendBudget(s: GameState): void {

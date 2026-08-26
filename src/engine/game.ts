@@ -13,7 +13,8 @@ export {
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep, resolveCombatOrPeril,
 } from './phases';
 export {
-  sauronPlayPlot, sauronPlaceInfluence, sauronSpawnMonster, sauronDeployMinion,
+  sauronPlayPlot, sauronBeginAction, sauronActionYields,
+  sauronPlaceInfluence, sauronSpawnMonster, sauronDeployMinion,
   sauronMoveFigure, sauronHealMinion, sauronPlayShadow,
   playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
   moveTargets, adjacentLocations,

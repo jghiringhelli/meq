@@ -5,10 +5,10 @@
 // Spawn command. The automatic Story, Event, Hero-Draw and Story-Advance steps
 // are handled by the phase machine (see phases.ts sauron* wrappers).
 import type { Catalog, GameState, LocationId, MinionId, MonsterId, Plot } from './types';
-import { clone } from './mechanics';
+import { clone, gameStage } from './mechanics';
 import { log } from './log';
 import { autoResolveTree } from './encounter';
-import { applyPlotCard } from './sauronmech';
+import { applyPlotCard, drawShadow, drawPlots, eyePlaceToken, eyeTrackYield, type EyeTrack } from './sauronmech';
 import { influenceAt, canPlaceInfluence, placeInfluenceAction, monsterPlaceable } from './influence';
 
 const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v) || 0);
@@ -40,11 +40,71 @@ export function sauronPlayPlot(state: GameState, cat: Catalog, plotId: string): 
 }
 
 // ---- Action Step -------------------------------------------------------
-function canAct(s: GameState): boolean {
-  return s.phase === 'SauronMinions' && (s.sauronActionsLeft ?? 0) > 0;
+// Faithful Eye Action Track model (rulebook pp.16-19): each of the turn's 2 (or
+// 3) actions places an Eye token on one of three tracks — Place Influence (yields
+// 6/5/4), Draw (2/2/1) or Command (3/2/1) — exactly the tracks the automa uses.
+// A human "begins" a track action (sauronBeginAction); Draw resolves at once,
+// while Place Influence and Command owe several sub-effects the human resolves
+// one at a time (tracked in state.sauronPending).
+
+/** May the human START a new track action right now (an action to spend, no other
+ *  action still owing sub-effects)? */
+function canBegin(s: GameState): boolean {
+  return s.phase === 'SauronMinions' && (s.sauronActionsLeft ?? 0) > 0 && !s.sauronPending;
 }
 function spend(s: GameState): void {
   s.sauronActionsLeft = Math.max(0, (s.sauronActionsLeft ?? 0) - 1);
+}
+/** A Command action is mid-flight with commands still owed. */
+function canCommand(s: GameState): boolean {
+  return s.phase === 'SauronMinions' && s.sauronPending?.track === 'command' && s.sauronPending.remaining > 0;
+}
+function spendCommand(s: GameState): void {
+  if (s.sauronPending?.track === 'command') {
+    s.sauronPending.remaining -= 1;
+    if (s.sauronPending.remaining <= 0) s.sauronPending = undefined;
+  }
+}
+
+/** The yield each Action Track would grant if chosen now (null = track full). For
+ *  the UI to label the Place Influence / Draw / Command buttons. */
+export function sauronActionYields(s: GameState): Record<EyeTrack, number | null> {
+  return {
+    influence: eyeTrackYield(s, 'influence'),
+    draw: eyeTrackYield(s, 'draw'),
+    command: eyeTrackYield(s, 'command'),
+  };
+}
+
+/** Begin one Action-Step action on the chosen Eye track. Draw resolves fully;
+ *  Place Influence banks up to 2 to the Shadow Pool (capped at 4× stage) and owes
+ *  the rest as board placements; Command owes its yield in commands. */
+export function sauronBeginAction(state: GameState, cat: Catalog, track: EyeTrack): GameState {
+  if (!canBegin(state)) return state;
+  if (eyeTrackYield(state, track) === null) return state; // this track's 3 spaces are covered
+  const s = clone(state);
+  const yld = eyePlaceToken(s, track, (m) => log(s, 'sauron', 'Sauron', m))!;
+  spend(s);
+  if (track === 'draw') {
+    drawShadow(s, cat, yld);
+    drawPlots(s, cat, yld);
+    log(s, 'sauron', 'Sauron', `Draw action (space ${yld}): drew ${yld} Shadow & ${yld} Plot card(s)`);
+    return s;
+  }
+  if (track === 'influence') {
+    // Bank UP TO TWO in the Shadow Pool (capped at 4× stage); the rest extend the
+    // board. Pool income is never free — it costs this action (rulebook pp.15-16).
+    const stage = gameStage(s);
+    const bank = Math.max(0, Math.min(2, yld, 4 * stage - s.sauron.influence));
+    s.sauron.influence += bank;
+    const remaining = yld - bank;
+    if (remaining > 0) s.sauronPending = { track: 'influence', remaining };
+    log(s, 'sauron', 'Sauron', `Place Influence action (space ${yld}): banked ${bank} to pool, ${remaining} to place on the board`);
+    return s;
+  }
+  s.sauronPending = { track: 'command', remaining: yld };
+  log(s, 'sauron', 'Sauron', `Command action (space ${yld}): issue up to ${yld} command(s)`);
+  return s;
 }
 
 /** Locations adjacent to `from`. */
@@ -85,43 +145,45 @@ export function moveTargets(s: GameState, cat: Catalog, kind: 'monster' | 'minio
   return nbrs.filter((loc) => influenceAt(s, loc) > 0);
 }
 
-/** Place-influence command: lay one influence on a legal extension location
- *  (board pressure that drives peril draws and encounter conditions). */
+/** Place one owed board token from the current Place Influence action onto a legal
+ *  extension location (board pressure that drives peril draws and encounter
+ *  conditions). Only valid while a Place Influence action still owes placements. */
 export function sauronPlaceInfluence(state: GameState, cat: Catalog, loc: LocationId): GameState {
-  if (!canAct(state)) return state;
+  const p = state.sauronPending;
+  if (state.phase !== 'SauronMinions' || p?.track !== 'influence' || p.remaining <= 0) return state;
   if (!canPlaceInfluence(state, cat, loc)) return state;
   const s = clone(state);
   const placed = placeInfluenceAction(s, cat, loc, 1);
   if (placed <= 0) return state;
-  spend(s);
+  s.sauronPending!.remaining -= 1;
+  if (s.sauronPending!.remaining <= 0) s.sauronPending = undefined;
   log(s, 'sauron', 'Sauron', `places influence on ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
   return s;
 }
 
-/** Spawn command: field a monster from the reserve at a location, funded from
- *  the war chest. */
+/** Spawn command: field a monster from the reserve at a legal location. Costs one
+ *  command of the current Command action (rulebook p.18 — NOT Shadow-Pool influence). */
 export function sauronSpawnMonster(state: GameState, cat: Catalog, monsterId: MonsterId, loc: LocationId): GameState {
-  if (!canAct(state)) return state;
+  if (!canCommand(state)) return state;
   if (!cat.monsters[monsterId]) return state;
   // Monster tokens may only be placed on an influenced location without a hero.
-  // Placement costs a command (an action), NOT Shadow-Pool influence (rulebook p.18).
   if (!monsterPlaceable(state, loc)) return state;
   const s = clone(state);
   (s.map.monstersAt[loc] ||= []).push(monsterId);
-  spend(s);
+  spendCommand(s);
   log(s, 'sauron', 'Sauron', `fields ${cat.monsters[monsterId].name} at ${loc}`);
   return s;
 }
 
 /** Deploy command: bring a reserve minion into play at a location. */
 export function sauronDeployMinion(state: GameState, cat: Catalog, minionId: MinionId, loc: LocationId): GameState {
-  if (!canAct(state)) return state;
+  if (!canCommand(state)) return state;
   if (!cat.minions[minionId]) return state;
   if (!reserveMinions(state, cat).includes(minionId)) return state;
   const s = clone(state);
   (s.map.minionsAt ||= {});
   (s.map.minionsAt[loc] ||= []).push(minionId);
-  spend(s);
+  spendCommand(s);
   log(s, 'sauron', 'Sauron', `deploys ${cat.minions[minionId].name} at ${loc}`);
   return s;
 }
@@ -130,7 +192,7 @@ export function sauronDeployMinion(state: GameState, cat: Catalog, minionId: Min
 export function sauronMoveFigure(
   state: GameState, cat: Catalog, kind: 'monster' | 'minion', id: string, from: LocationId, to: LocationId,
 ): GameState {
-  if (!canAct(state)) return state;
+  if (!canCommand(state)) return state;
   if (!moveTargets(state, cat, kind, from).includes(to)) return state;
   const s = clone(state);
   const map = kind === 'monster' ? (s.map.monstersAt ||= {}) : (s.map.minionsAt ||= {});
@@ -140,7 +202,7 @@ export function sauronMoveFigure(
   if (i < 0) return state;
   at.splice(i, 1);
   (map[to] ||= []).push(id);
-  spend(s);
+  spendCommand(s);
   const name = kind === 'monster' ? cat.monsters[id]?.name : cat.minions[id]?.name;
   log(s, 'sauron', 'Sauron', `moves ${name ?? id} to ${to}`);
   return s;
@@ -155,11 +217,11 @@ export function woundedMinions(s: GameState, cat: Catalog): MinionId[] {
 
 /** Heal command: fully restore a wounded minion (clears its carried damage). */
 export function sauronHealMinion(state: GameState, cat: Catalog, minionId: MinionId): GameState {
-  if (!canAct(state)) return state;
+  if (!canCommand(state)) return state;
   const s = clone(state);
   if (!s.map.minionHealth || s.map.minionHealth[minionId] === undefined) return state;
   delete s.map.minionHealth[minionId];
-  spend(s);
+  spendCommand(s);
   log(s, 'sauron', 'Sauron', `heals ${cat.minions[minionId]?.name ?? minionId}`);
   return s;
 }
@@ -167,7 +229,7 @@ export function sauronHealMinion(state: GameState, cat: Catalog, minionId: Minio
 /** Play-shadow command: resolve a shadow card from Sauron's hand (gated on the
  *  shadow pool = current influence) against the most-corrupted hero. */
 export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string): GameState {
-  if (!canAct(state)) return state;
+  if (!canBegin(state)) return state;
   const card = cat.shadow[cardId];
   if (!card || !state.sauron.shadowHand.includes(cardId)) return state;
   if (num(card.poolRequirement) > state.sauron.influence) return state;

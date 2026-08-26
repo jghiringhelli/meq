@@ -532,7 +532,7 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
   if (act.kind === 'explore' && !canExplore(s, cat, heroId)) act = { kind: 'end' };
   // Ambush: while a foe stands on the hero, Travel is illegal — coerce any
   // move/explore/counter-plot into engaging the foe first (rules-faithful).
-  if (ambushPending(s, hero) && (act.kind === 'move' || act.kind === 'explore' || act.kind === 'counter-plot' || act.kind === 'retrieve-favor')) {
+  if (ambushPending(s, hero, cat) && (act.kind === 'move' || act.kind === 'explore' || act.kind === 'counter-plot' || act.kind === 'retrieve-favor')) {
     const foes = engageableMonsters(s, heroId);
     if (foes.length) act = { kind: 'engage', monsterId: foes[0] };
   }
