@@ -769,15 +769,8 @@ function runSauronMinions(s: GameState, cat: Catalog): GameState {
   // influence, drawing for better plots, or moving/healing a minion again.
   const activeHeroes = s.heroes.filter((h) => h.status === 'active').length;
   const budget = activeHeroes >= 3 ? 3 : 2;
-  const stage = gameStage(s);
   const frac = s.story.sauronProgress / Math.max(1, s.story.length);
   const late = frac > 2 / 3;
-
-  // War-chest income (economy, not one of the 2 actions). The Place-Influence
-  // action feeds up to 2 tokens per turn into the Shadow Pool; board influence
-  // tokens come from the (unlimited) Influence area, NOT the Pool. The Pool is
-  // capped at 4× the current game stage (MEQ) and funds spawns/plots.
-  s.sauron.influence = Math.min(4 * stage, s.sauron.influence + 2);
 
   const logMsg = (msg: string) => log(s, 'sauron-ai', 'Sauron', msg);
   for (let a = 0; a < budget; a++) {
@@ -828,9 +821,16 @@ function eyeTakeBestAction(s: GameState, cat: Catalog, frac: number, logMsg: (m:
     if (yld == null) continue;
     switch (track) {
       case 'influence': {
+        // Rulebook p.15-16: a Place Influence action yields `yld` tokens; Sauron
+        // may bank UP TO TWO in the Shadow Pool (capped at 4× stage) and lays the
+        // REST in extension of his Strongholds (on the board). Pool income is NOT
+        // free — it costs this action, competing with Draw and Command.
+        const stage = gameStage(s);
+        const toPool = Math.max(0, Math.min(2, yld, 4 * stage - s.sauron.influence));
+        s.sauron.influence += toPool;
         let placed = 0;
-        for (let i = 0; i < yld; i++) if (eyePlaceInfluenceOnce(s, cat, placed === 0 ? logMsg : undefined)) placed++;
-        logMsg(`Place Influence action (space ${yld}): laid ${placed} influence`);
+        for (let i = 0; i < yld - toPool; i++) if (eyePlaceInfluenceOnce(s, cat, placed === 0 ? logMsg : undefined)) placed++;
+        logMsg(`Place Influence action (space ${yld}): banked ${toPool} to pool, laid ${placed} on board`);
         return `influence×${yld}`;
       }
       case 'draw': {

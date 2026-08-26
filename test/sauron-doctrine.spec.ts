@@ -6,14 +6,20 @@ import type { SauronDoctrine } from '../src/engine/types';
 
 // Locks the Sauron automa "doctrine" plumbing and its faithful semantics:
 //  - the doctrine field is honoured (games still terminate under each);
-//  - the 'attrition' doctrine (which leans on corruption/hand-dump Shadow cards
-//    and favour-draining plots) grinds MORE corruption onto the heroes than the
-//    'balanced' default — its whole point is wearing them down.
-// The corruption edge is measured against the plain `heuristic` hero, NOT the
-// mission-aware brain: mission-aware now weaves around the perilised corridor,
-// shuns needless combat and banks turns on havens, so it largely RESISTS the
-// attrition grind (that resistance is the point of the hero-AI work) — which
-// makes the doctrine's mechanism only observable against a non-dodging hero.
+//  - the 'attrition' doctrine (which prizes favour-draining plots and
+//    corruption/hand-dump Shadow cards) wears the heroes' FAVOUR down harder than
+//    the 'balanced' default — favour is the heroes' plot-breaking currency, so
+//    starving it is attrition's whole point.
+// NOTE: this used to assert attrition grinds more *corruption*. Removing the two
+// invented Shadow-Pool costs (playing a Plot / placing a monster no longer spends
+// pool influence — rulebook p.13/p.18) made the faithful games shorter and more
+// Sauron-dominated, which collapsed the corruption differential between doctrines.
+// The favour-drain differential, which is what attrition literally optimises
+// (fav*40 in plotPriority), stays large and robust — so we measure that instead.
+// It is checked against the plain `heuristic` hero, NOT the mission-aware brain:
+// mission-aware weaves around the perilised corridor and banks turns on havens,
+// so it largely RESISTS the grind (that resistance is the point of the hero-AI
+// work) — making the doctrine's mechanism only observable against a non-dodging hero.
 describe('sauron doctrine', () => {
   it('newGame seats the Eye on the tempo doctrine by default', () => {
     expect(newGame(cat, 1).sauron.doctrine).toBe('tempo');
@@ -26,18 +32,18 @@ describe('sauron doctrine', () => {
     }
   });
 
-  it('attrition grinds more hero corruption than balanced (vs a non-dodging hero)', () => {
-    const totalCorruption = (doctrine: SauronDoctrine): number => {
-      let corr = 0;
+  it('attrition drains more hero favor than balanced (vs a non-dodging hero)', () => {
+    const totalFavor = (doctrine: SauronDoctrine): number => {
+      let favor = 0;
       for (const h of ['thalin', 'eleanor']) {
         for (const base of [1000, 2000]) {
           for (let i = 0; i < 12; i++) {
-            corr += playoutGame(cat, base + 13 * i, heuristic, 20000, { heroIds: [h], doctrine }).finalCorruption;
+            favor += playoutGame(cat, base + 13 * i, heuristic, 20000, { heroIds: [h], doctrine }).finalFavor;
           }
         }
       }
-      return corr;
+      return favor;
     };
-    expect(totalCorruption('attrition')).toBeGreaterThan(totalCorruption('balanced'));
+    expect(totalFavor('attrition')).toBeLessThan(totalFavor('balanced'));
   }, 60000);
 });

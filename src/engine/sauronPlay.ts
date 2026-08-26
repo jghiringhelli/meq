@@ -9,7 +9,6 @@ import { clone } from './mechanics';
 import { log } from './log';
 import { autoResolveTree } from './encounter';
 import { applyPlotCard } from './sauronmech';
-import { AI_ECONOMY } from './ai';
 import { influenceAt, canPlaceInfluence, placeInfluenceAction, monsterPlaceable } from './influence';
 
 const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v) || 0);
@@ -24,16 +23,17 @@ export function playablePlots(s: GameState, cat: Catalog): Plot[] {
     !p.starting && hand.has(p.id) && !active.has(p.id) && s.sauron.influence >= num(p.influenceCost));
 }
 
-/** Plot Step: play a plot card, paying its influence cost. Phase stays in
- *  SauronEvents; the caller then resolves the Event Step. */
+/** Plot Step: play a plot card. Its influence figure is only a THRESHOLD Sauron
+ *  must meet in the Shadow Pool (rulebook p.13: "playing the card does not cause
+ *  Sauron to discard any influence from the Shadow Pool") — it is never spent.
+ *  Phase stays in SauronEvents; the caller then resolves the Event Step. */
 export function sauronPlayPlot(state: GameState, cat: Catalog, plotId: string): GameState {
   if (state.phase !== 'SauronEvents') return state;
   const p = cat.plots.find((x) => x.id === plotId);
   if (!p) return state;
   const cost = num(p.influenceCost);
-  if (state.sauron.influence < cost) return state;
+  if (state.sauron.influence < cost) return state; // threshold gate only — not a spend
   const s = clone(state);
-  s.sauron.influence -= cost;
   s.sauron.plotHand = (s.sauron.plotHand ?? []).filter((id) => id !== plotId);
   applyPlotCard(s, cat, p, cost, (msg) => log(s, 'sauron', 'Sauron', msg));
   return s;
@@ -103,11 +103,10 @@ export function sauronPlaceInfluence(state: GameState, cat: Catalog, loc: Locati
 export function sauronSpawnMonster(state: GameState, cat: Catalog, monsterId: MonsterId, loc: LocationId): GameState {
   if (!canAct(state)) return state;
   if (!cat.monsters[monsterId]) return state;
-  if (state.sauron.influence < AI_ECONOMY.spawnCost) return state;
   // Monster tokens may only be placed on an influenced location without a hero.
+  // Placement costs a command (an action), NOT Shadow-Pool influence (rulebook p.18).
   if (!monsterPlaceable(state, loc)) return state;
   const s = clone(state);
-  s.sauron.influence -= AI_ECONOMY.spawnCost;
   (s.map.monstersAt[loc] ||= []).push(monsterId);
   spend(s);
   log(s, 'sauron', 'Sauron', `fields ${cat.monsters[monsterId].name} at ${loc}`);

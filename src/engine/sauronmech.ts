@@ -171,7 +171,7 @@ function plotPriority(s: GameState, p: Plot): number {
  *  the most), advancing that plot's colored marker and — per the hoard/spend
  *  doctrine — commits influence when flush or the game is late. Plays into a plot
  *  slot (max 3 active) that heroes can then counter. Returns true if it played. */
-export function advancePlots(s: GameState, cat: Catalog, late: boolean, log?: Logger): boolean {
+export function advancePlots(s: GameState, cat: Catalog, _late: boolean, log?: Logger): boolean {
   if (!cat.plots.length) return false;
   // Plots are Sauron's primary win engine: every active plot advances its
   // coloured story marker each Story Step, and a higher marker at the Finale is
@@ -194,13 +194,8 @@ export function advancePlots(s: GameState, cat: Catalog, late: boolean, log?: Lo
     .sort((a, b) => plotPriority(s, b.p) - plotPriority(s, a.p));
   const pick = ranked[0];
   if (!pick) return false;
-  // Economy: free plots are always played. Paid plots are played when affordable
-  // while keeping a small reserve (one spawn's worth) so board pressure doesn't
-  // starve early; late game the hoard is spent down aggressively.
-  if (!late && pick.cost > 0 && s.sauron.influence < pick.cost + 4) return false;
 
   const p = pick.p;
-  s.sauron.influence -= pick.cost;
   s.sauron.plotHand = hand.filter((id) => id !== p.id); // leaves the hand into a slot
   applyPlotCard(s, cat, p, pick.cost, log);
   return true;
@@ -262,7 +257,7 @@ export function applyPlotCard(s: GameState, cat: Catalog, p: Plot, paidCost: num
   const marker = (p.marker ?? 'red') as StoryMarkerColor;
   const advance = p.advance ?? p.track.length;
   active.push({ eventId: p.id, step: p.track.length, location: (p.affects || undefined) as never });
-  log?.(`plays plot ${p.name} — feeds the ${marker} marker (+${advance}/turn, paid ${paidCost}, counter ${p.favorToCounter ?? 0} favor)`);
+  log?.(`plays plot ${p.name} — feeds the ${marker} marker (+${advance}/turn, req ${paidCost}, counter ${p.favorToCounter ?? 0} favor)`);
 
   // Gollum plots discard other active Gollum plots when they enter play.
   if (p.gollum) {

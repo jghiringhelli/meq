@@ -181,7 +181,6 @@ export function chooseMonsterCard(state: GameState, cat: Catalog): CardId | null
 // In the final third it spends the chest down (heavier pressure / "reset").
 export const AI_ECONOMY = {
   influencePerHeroRegion: 1,  // late-game pressure pushed into each hero's current region
-  spawnCost: 4,               // shadow-pool influence spent to field a new monster
   maxSpawnsPerTurn: 1,        // early/mid cap; the late phase lifts this to spend down
   lateMaxSpawnsPerTurn: 2,
   pathBlockCost: 1,           // influence placed on a hero's projected path node
@@ -370,7 +369,7 @@ export function drawMonsterToken(s: GameState, cat: Catalog, regionId: string): 
  *  A blank draw is a "false rumor" — the command is still spent (returns true)
  *  but no monster reaches the board. Returns true if the command executed. */
 export function eyeSpawnMonsterOnce(s: GameState, cat: Catalog, log?: (msg: string) => void): boolean {
-  if (!Object.keys(cat.monsters).length || s.sauron.influence < AI_ECONOMY.spawnCost) return false;
+  if (!Object.keys(cat.monsters).length) return false;
   const onBoard = Object.values(s.map.monstersAt).reduce((n, a) => n + a.length, 0)
     + Object.values(s.map.rumorsAt ?? {}).reduce((n, c) => n + c, 0);
   if (onBoard >= AI_ECONOMY.maxBoardMonsters) return false;
@@ -399,7 +398,6 @@ export function eyeSpawnMonsterOnce(s: GameState, cat: Catalog, log?: (msg: stri
     const seatRegion = cat.locations[guard.seat]?.regionId ?? '';
     const token = drawMonsterToken(s, cat, seatRegion);
     if (token !== null) {
-      s.sauron.influence -= AI_ECONOMY.spawnCost;
       if (token === 'blank') {
         (s.map.rumorsAt ||= {})[guard.seat] = (s.map.rumorsAt[guard.seat] ?? 0) + 1;
         log?.(`plants a face-down token at ${guard.seat} to guard a plot — a false rumor (blank)`);
@@ -422,7 +420,6 @@ export function eyeSpawnMonsterOnce(s: GameState, cat: Catalog, log?: (msg: stri
     const seatRegion = cat.locations[seat]?.regionId ?? region;
     const token = drawMonsterToken(s, cat, seatRegion);
     if (token === null) continue;
-    s.sauron.influence -= AI_ECONOMY.spawnCost;
     if (token === 'blank') {
       (s.map.rumorsAt ||= {})[seat] = (s.map.rumorsAt[seat] ?? 0) + 1;
       log?.(`plants a face-down token near ${h.id} at ${seat} — a false rumor (blank)`);

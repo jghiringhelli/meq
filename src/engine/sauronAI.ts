@@ -80,7 +80,6 @@ function canDeploy(s: GameState, cat: Catalog): boolean {
 /** A hero stands on (or the Eye can reach) an influenced, hero-free location so
  *  eyeSpawnMonsterOnce can seat a token there — the rules prerequisite. */
 function canSpawn(s: GameState, cat: Catalog): boolean {
-  if (s.sauron.influence < AI_ECONOMY.spawnCost) return false;
   const onBoard = Object.values(s.map.monstersAt).reduce((n, a) => n + a.length, 0);
   if (onBoard >= AI_ECONOMY.maxBoardMonsters) return false;
   return s.heroes.some((h) => {

@@ -109,14 +109,15 @@ const MISMATCH_W = 0.75; // a move with no matching-terrain card (must burn any 
 // gauntlet. This scales that path-exposure against a plot's danger score.
 const EXPOSURE_W = 25;
 
-function nodePenalty(s: GameState, cat: Catalog, loc: LocationId, wisdom: number): number {
+function nodePenalty(s: GameState, cat: Catalog, loc: LocationId, hero: HeroState): number {
   let p = 0;
-  if (isPerilous(s, cat, loc, wisdom)) p += PERIL_W;
+  if (isPerilous(s, cat, loc, heroWisdom(cat, hero))) p += PERIL_W;
   // A real monster is a genuine obstacle. An unrevealed blank ("false rumor") is
   // indistinguishable from a monster to a hero, so it deters routing just the same
   // (the bluff) — but a blank the hero has SEEN (Argalad's Survivalist or a reveal
   // card) is known to be empty and no longer deters him.
-  const realMon = (s.map.monstersAt[loc]?.length ?? 0) > 0;
+  const mons = s.map.monstersAt[loc] ?? [];
+  const realMon = mons.length > 0;
   const known = (s.map.revealedMonstersAt ?? []).includes(loc);
   const bluff = (s.map.rumorsAt?.[loc] ?? 0) > 0 && !known;
   if (realMon || bluff) p += MONSTER_W;
@@ -138,7 +139,7 @@ function sauronThreatUrgent(s: GameState): boolean {
  *  peril/monster penalty; the target itself is never "entered" (dist 0). This is
  *  what lets the hero prefer a slightly longer SAFE route over the direct
  *  perilous corridor — the core human tactic. */
-function weightedDistField(s: GameState, cat: Catalog, targets: Set<LocationId>, wisdom: number): Map<LocationId, number> {
+function weightedDistField(s: GameState, cat: Catalog, targets: Set<LocationId>, hero: HeroState): Map<LocationId, number> {
   const dist = new Map<LocationId, number>();
   const pq: { id: LocationId; d: number }[] = [];
   for (const t of targets) { dist.set(t, 0); pq.push({ id: t, d: 0 }); }
@@ -147,7 +148,7 @@ function weightedDistField(s: GameState, cat: Catalog, targets: Set<LocationId>,
     for (let i = 1; i < pq.length; i++) if (pq[i].d < pq[bi].d) bi = i;
     const { id, d } = pq.splice(bi, 1)[0];
     if (d > (dist.get(id) ?? Infinity)) continue;
-    const stepInto = 1 + nodePenalty(s, cat, id, wisdom); // cost a neighbour pays to enter `id`
+    const stepInto = 1 + nodePenalty(s, cat, id, hero); // cost a neighbour pays to enter `id`
     for (const e of cat.edges) {
       const nb = e.a === id ? e.b : e.b === id ? e.a : null;
       if (!nb) continue;
@@ -165,8 +166,7 @@ function weightedDistField(s: GameState, cat: Catalog, targets: Set<LocationId>,
  *  cost more than crossing it (or the target itself is perilous). Returns null if
  *  no legal move makes progress toward the target. */
 function legalStepToward(s: GameState, cat: Catalog, hero: HeroState, targets: Set<LocationId>): LocationId | null {
-  const wis = heroWisdom(cat, hero);
-  const field = weightedDistField(s, cat, targets, wis);
+  const field = weightedDistField(s, cat, targets, hero);
   const here = field.get(hero.location);
   if (here === undefined || !isFinite(here) || here === 0) return null;
   let best: LocationId | null = null;
@@ -174,7 +174,7 @@ function legalStepToward(s: GameState, cat: Catalog, hero: HeroState, targets: S
   for (const mv of legalMoves(cat, hero)) {
     const onward = field.get(mv.to);
     if (onward === undefined || onward >= here) continue; // must make progress
-    const score = onward + 1 + nodePenalty(s, cat, mv.to, wis)
+    const score = onward + 1 + nodePenalty(s, cat, mv.to, hero)
       + MISMATCH_W * (mv.viaAnyCards ? 1 : 0) + 0.25 * (mv.cost - 1)
       - (cat.locations[mv.to]?.kind === 'haven' ? 0.5 : 0); // prefer safe haven waypoints on ties
     if (score < bestScore) { bestScore = score; best = mv.to; }
@@ -228,7 +228,6 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
   const plotSlots = new Set<LocationId>(
     Object.values(cat.locations).filter((l) => l.plotSlot).map((l) => l.id),
   );
-  const wis = heroWisdom(cat, hero);
   type Cand = { loc: LocationId | null; cost: number; urgency: number };
   const cands: Cand[] = [];
   for (const e of active) {
@@ -242,7 +241,7 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
     // Path exposure: the weighted cost (peril + monster/bluff nodes) to reach the
     // plot from where the hero stands — 0 if already on it. Deducted so that, all
     // else near-equal, the hero breaks the plot he can reach with the least risk.
-    const field = weightedDistField(s, cat, loc ? new Set<LocationId>([loc]) : plotSlots, wis);
+    const field = weightedDistField(s, cat, loc ? new Set<LocationId>([loc]) : plotSlots, hero);
     const exposure = field.get(hero.location) ?? 0;
     // danger dominates; path exposure steers among comparable plots; favor cost is
     // a mild tiebreak (prefer cheaper breaks).
@@ -290,18 +289,18 @@ function restAdvancesThreatB(s: GameState): boolean {
 }
 
 /** Favor is the currency that breaks plots, and plots are the win path, so the
- *  heroes must bank favor. Favor tokens sit on the board (every Haven starts
- *  with one; event cards add more). This retrieves the token underfoot, or —
- *  when the hero holds no favor and Sauron has active plots to break — steps
- *  toward the nearest token. Returns null when there is nothing to gain. */
+ *  heroes must bank favor. Favor tokens sit on the board (every Haven starts with
+ *  one; event cards add more). This retrieves the token underfoot, or — when
+ *  Sauron has plots to break — steps (on a peril/monster-weighted route) toward
+ *  the nearest favor token. Returns null when there is nothing to gain. */
 function planEarnFavor(s: GameState, cat: Catalog, hero: HeroState): HeroAction | null {
   if (favorHere(s, hero.id) > 0) return { kind: 'retrieve-favor' };
-  if (!(s.sauron.activePlots ?? []).length) return null; // no plots to break => no urgency
-  const tokens = new Set<LocationId>(
-    Object.entries(s.map.favorAt ?? {}).filter(([, n]) => (n ?? 0) > 0).map(([l]) => l as LocationId),
-  );
-  if (!tokens.size) return null;
-  const step = legalStepToward(s, cat, hero, tokens);
+  const active = s.sauron.activePlots ?? [];
+  if (!active.length) return null; // no plots to break => no urgency
+  const tokenLocs = Object.entries(s.map.favorAt ?? {})
+    .filter(([, n]) => (n ?? 0) > 0).map(([l]) => l as LocationId);
+  if (!tokenLocs.length) return null;
+  const step = legalStepToward(s, cat, hero, new Set(tokenLocs));
   return step ? { kind: 'move', to: step } : null;
 }
 
