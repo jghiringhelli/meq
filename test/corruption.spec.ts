@@ -159,7 +159,10 @@ describe('ongoing effect: Isolated blocks social actions', () => {
     expect(corruptionBlocksSocial(cat, h)).toBe(true);
     expect(() => heroConsultCharacter(s, cat, h.id, 'anyone')).toThrow(/Isolated/);
     const other = s.heroes.find((o) => o.id !== h.id);
-    if (other) expect(() => heroTradeFavor(s, cat, h.id, other.id, 1)).toThrow(/Isolated/);
+    if (other) {
+      other.location = h.location;
+      expect(() => heroTradeFavor(s, cat, h.id, other.id, 1)).toThrow(/Isolated/);
+    }
   });
 });
 

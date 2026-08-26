@@ -288,7 +288,12 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
     }
     case 'heal': { healHero(s, hero); return 'healed (damage pool → life pool)'; }
     case 'training': grantTraining(s, cat, hero, atom.n); return `+${atom.n} training`;
-    case 'gainItem': hero.items.push(atom.item); return `gain item ${atom.item}`;
+    case 'gainItem': {
+      // One of each Item title at a time (rulebook p.26): skip a duplicate.
+      if (hero.items.includes(atom.item)) return `already holds ${atom.item}`;
+      hero.items.push(atom.item);
+      return `gain item ${atom.item}`;
+    }
     case 'discardItem': { for (let i = 0; i < atom.n && hero.items.length; i++) hero.items.pop(); return `discard ${atom.n} item`; }
     case 'gainStat': {
       const stat = atom.stat === 'choice' ? 'wisdom' : atom.stat;

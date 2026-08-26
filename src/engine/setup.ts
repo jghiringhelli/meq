@@ -103,7 +103,6 @@ export function newGame(cat: Catalog, seed: number, heroIds?: HeroId[], humanSid
   // monster tokens are placed at setup — per the rulebook, monsters only enter
   // via Sauron's Command actions onto influenced locations.
   placeStartingMinions(state, cat);
-  seedFavorAndCharacters(state, cat);
   seedStartingPlot(state, cat);
   seedSauronHands(state, cat);
 
@@ -164,19 +163,6 @@ function placeStartingMinions(state: GameState, cat: Catalog): void {
     (state.map.minionsAt[loc] ||= []).push(m.id);
     log(state, 'setup', 'Sauron', `${m.name} activates at ${cat.locations[loc]?.name ?? loc}`);
   }
-}
-
-/** Seed a handful of favor tokens and Characters onto the board so the hero
- *  economy (retrieve favor / consult characters) has something to interact with
- *  from turn 1. Events place more over the game. Deterministic. */
-/** Seed a favor token on each haven so the hero economy (retrieve favor) has
- *  something to interact with from turn 1. Characters are NOT seeded here — the
- *  event cards place each Character at its own designated location. */
-function seedFavorAndCharacters(state: GameState, cat: Catalog): void {
-  const havens = Object.values(cat.locations).filter((l) => l.kind === 'haven');
-  havens.forEach((loc) => {
-    (state.map.favorAt ||= {})[loc.id] = 1;
-  });
 }
 
 /** Place Sauron's starting plot (the setup difference tied to his mission). The

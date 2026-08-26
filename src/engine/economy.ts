@@ -208,31 +208,46 @@ export function heroDiscardPlot(state: GameState, cat: Catalog, heroId: HeroId):
   return s;
 }
 
-/** Trade favor from the active hero to another hero at the same location. */
+/** Trade favor between two heroes at the active hero's location. Rulebook p.24:
+ *  "All heroes in the current hero's location may freely trade favor, Item cards,
+ *  and Quests with each other" — so the giver need NOT be the active hero (the
+ *  canonical example is Beravor freely giving her favor to Argalad, who is the one
+ *  taking his turn). Both participants must share the active hero's location. */
 export function heroTradeFavor(state: GameState, cat: Catalog, fromId: HeroId, toId: HeroId, n: number): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, fromId);
-  if (corruptionBlocksSocial(cat, hero)) throw new Error('Isolated: this hero may not trade with heroes');
+  if (s.phase !== 'HeroActions') throw new Error(`Not HeroActions phase (${s.phase})`);
+  const active = s.heroes[s.activeHeroIndex];
+  const from = heroAt(s, fromId);
   const to = heroAt(s, toId);
-  if (to.location !== hero.location) throw new Error('Heroes must share a location to trade');
-  const amt = Math.min(n, hero.favor);
+  if (from.location !== active.location || to.location !== active.location) {
+    throw new Error("Heroes must be at the active hero's location to trade");
+  }
+  if (corruptionBlocksSocial(cat, from)) throw new Error('Isolated: this hero may not trade with heroes');
+  const amt = Math.min(n, from.favor);
   if (amt <= 0) throw new Error('No favor to trade');
-  hero.favor -= amt;
+  from.favor -= amt;
   grantFavor(cat, to, amt);
   log(s, 'hero-trade', fromId, `traded ${amt} favor to ${toId}`);
   return s;
 }
 
-/** Trade an item from the active hero to another hero at the same location. */
+/** Trade an item between two heroes at the active hero's location (see
+ *  heroTradeFavor for the rulebook basis — any co-located hero may give). */
 export function heroTradeItem(state: GameState, cat: Catalog, fromId: HeroId, toId: HeroId, item: string): GameState {
   const s = clone(state);
-  const hero = requireHeroTurn(s, fromId);
-  if (corruptionBlocksSocial(cat, hero)) throw new Error('Isolated: this hero may not trade with heroes');
+  if (s.phase !== 'HeroActions') throw new Error(`Not HeroActions phase (${s.phase})`);
+  const active = s.heroes[s.activeHeroIndex];
+  const from = heroAt(s, fromId);
   const to = heroAt(s, toId);
-  if (to.location !== hero.location) throw new Error('Heroes must share a location to trade');
-  const idx = hero.items.indexOf(item);
+  if (from.location !== active.location || to.location !== active.location) {
+    throw new Error("Heroes must be at the active hero's location to trade");
+  }
+  if (corruptionBlocksSocial(cat, from)) throw new Error('Isolated: this hero may not trade with heroes');
+  const idx = from.items.indexOf(item);
   if (idx < 0) throw new Error(`${fromId} has no ${item}`);
-  hero.items.splice(idx, 1);
+  // One-of-each-title rule (p.26): don't hand over a duplicate the recipient holds.
+  if (to.items.includes(item)) throw new Error(`${toId} already has ${item}`);
+  from.items.splice(idx, 1);
   to.items.push(item);
   log(s, 'hero-trade', fromId, `gave ${item} to ${toId}`);
   return s;
