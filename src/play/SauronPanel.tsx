@@ -108,7 +108,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
                   </button>
                 ))}
                 <button className={`sauron-mode-btn${mode === 'shadow' ? ' active' : ''}`}
-                  disabled={(s.sauronActionsLeft ?? 0) <= 0}
+                  disabled={playableShadow(s, cat).length === 0}
                   onClick={() => setMode(mode === 'shadow' ? null : 'shadow')}>
                   Play shadow
                 </button>

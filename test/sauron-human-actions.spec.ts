@@ -6,8 +6,9 @@ import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
 import {
   sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronDeployMinion,
-  reserveMinions,
+  sauronPlayShadow, playableShadow, reserveMinions,
 } from '../src/engine/game';
+import { shadowWindow } from '../src/engine/sauronmech';
 import { placementTargets, influenceAt } from '../src/engine/influence';
 import type { GameState } from '../src/engine/types';
 
@@ -90,5 +91,28 @@ describe('X-1 — human Sauron Action Step uses the Eye Action Tracks', () => {
     expect(sauronActionYields(s).influence).toBeNull();
     const out = sauronBeginAction(s, cat, 'influence');
     expect(out).toBe(s); // no-op
+  });
+
+  it('plays at most ONE own-turn Shadow card, for free (no Eye action), action-window only', () => {
+    const s = actionStep();
+    const actionCard = Object.values(cat.shadow).find((c) => shadowWindow(c.timing) === 'action')!;
+    s.sauron.shadowHand = [actionCard.id];
+    s.sauron.influence = Number(actionCard.poolRequirement) || 0;
+    expect(playableShadow(s, cat)).toEqual([actionCard.id]);
+    const out = sauronPlayShadow(s, cat, actionCard.id);
+    expect(out.shadowPlayedThisSauronTurn).toBe(true);
+    expect(out.sauronActionsLeft).toBe(s.sauronActionsLeft); // free — no action spent
+    expect(out.sauron.shadowHand).not.toContain(actionCard.id);
+    expect(playableShadow(out, cat)).toEqual([]); // the one own-turn play is used up
+  });
+
+  it('refuses a reaction-window Shadow card during the Action Step', () => {
+    const reaction = Object.values(cat.shadow).find((c) => shadowWindow(c.timing) !== 'action');
+    if (!reaction) return;
+    const s = actionStep();
+    s.sauron.shadowHand = [reaction.id];
+    s.sauron.influence = Number(reaction.poolRequirement) || 0;
+    expect(playableShadow(s, cat)).toEqual([]);
+    expect(sauronPlayShadow(s, cat, reaction.id)).toBe(s); // no-op: waits for its window
   });
 });

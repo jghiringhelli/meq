@@ -697,6 +697,7 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
     const activeHeroes = s.heroes.filter((h) => h.status === 'active').length;
     s.sauronActionsLeft = activeHeroes >= 3 ? 3 : 2;
     s.sauronPending = undefined;
+    s.shadowPlayedThisSauronTurn = false;
     log(s, 'phase', 'Sauron', `action step: ${s.sauronActionsLeft} actions (chest ${s.sauron.influence})`);
   }
   return s;

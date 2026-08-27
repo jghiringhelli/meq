@@ -670,6 +670,10 @@ export interface GameState {
   /** M15: actions remaining in the interactive Sauron Action Step (2, or 3 with
    *  three heroes). Set when a human-Sauron turn enters SauronMinions. */
   sauronActionsLeft?: number;
+  /** M15: true once the human Sauron has played his ONE own-turn Shadow card this
+   *  Sauron turn (rulebook: one Shadow on your turn + one per hero turn). Reset at
+   *  the start of each Sauron Action Step. */
+  shadowPlayedThisSauronTurn?: boolean;
   /** M15: an Eye Action Track action in progress. A Place Influence action can
    *  yield several board tokens and a Command action several commands; the human
    *  resolves them one at a time. `remaining` counts the sub-effects still owed

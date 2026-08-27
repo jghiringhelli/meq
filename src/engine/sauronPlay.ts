@@ -8,7 +8,7 @@ import type { Catalog, GameState, LocationId, MinionId, MonsterId, Plot } from '
 import { clone, gameStage } from './mechanics';
 import { log } from './log';
 import { autoResolveTree } from './encounter';
-import { applyPlotCard, drawShadow, drawPlots, eyePlaceToken, eyeTrackYield, type EyeTrack } from './sauronmech';
+import { applyPlotCard, drawShadow, drawPlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
 import { influenceAt, canPlaceInfluence, placeInfluenceAction, monsterPlaceable } from './influence';
 
 const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v) || 0);
@@ -228,10 +228,17 @@ export function sauronHealMinion(state: GameState, cat: Catalog, minionId: Minio
 
 /** Play-shadow command: resolve a shadow card from Sauron's hand (gated on the
  *  shadow pool = current influence) against the most-corrupted hero. */
+/** Play-shadow: resolve ONE own-turn Shadow card from Sauron's hand against the
+ *  most-corrupted hero. Only "Play during your Action step." (action-window) cards
+ *  qualify, at most ONE per Sauron turn, and — like the automa — it is a free play
+ *  that does NOT cost an Eye action. Gated on the Shadow Pool (= influence). */
 export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string): GameState {
-  if (!canBegin(state)) return state;
+  if (state.phase !== 'SauronMinions' || state.sauronPending) return state;
+  if (state.shadowPlayedThisSauronTurn) return state;      // one own-turn Shadow per Sauron turn
+  if (state.story.finale) return state;                     // Errata: no Shadow cards in the Finale
   const card = cat.shadow[cardId];
   if (!card || !state.sauron.shadowHand.includes(cardId)) return state;
+  if (shadowWindow(card.timing) !== 'action') return state; // reaction cards wait for their window
   if (num(card.poolRequirement) > state.sauron.influence) return state;
   const s = clone(state);
   const target = s.heroes.filter((h) => h.status === 'active')
@@ -240,15 +247,17 @@ export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string)
   s.sauron.shadowHand = s.sauron.shadowHand.filter((x) => x !== cardId);
   s.sauron.shadowDiscard.push(cardId);
   autoResolveTree(s, cat, target.id, card.tree, `shadow ${card.name}`, 'sauron');
-  spend(s);
+  s.shadowPlayedThisSauronTurn = true;
   log(s, 'sauron', 'Sauron', `plays shadow ${card.name} on ${target.id}`);
   return s;
 }
 
-/** Shadow cards the human may currently play (in hand and pool-affordable). */
+/** Shadow cards the human may play on his OWN turn now: in hand, action-window,
+ *  pool-affordable, and only while he has not yet played his one own-turn card. */
 export function playableShadow(s: GameState, cat: Catalog): string[] {
+  if (s.shadowPlayedThisSauronTurn || s.story.finale) return [];
   return s.sauron.shadowHand.filter((id) => {
     const c = cat.shadow[id];
-    return c && num(c.poolRequirement) <= s.sauron.influence;
+    return c && shadowWindow(c.timing) === 'action' && num(c.poolRequirement) <= s.sauron.influence;
   });
 }
