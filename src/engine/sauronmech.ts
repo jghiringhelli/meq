@@ -416,10 +416,11 @@ export function playSpecificShadow(
   s.sauron.shadowHand = s.sauron.shadowHand.filter((x) => x !== cid);
   s.sauron.shadowDiscard.push(cid);
   const actor = treeActor('shadow', cid);
-  // Sauron's own printed choices become interactive when a human plays the Eye;
-  // everything else (AI Sauron, or a hero-owned choice like Dark Promises whose
-  // hero is AI here) auto-resolves optimally for the deciding side.
-  if (actor === 'sauron' && treeActorIsHuman(s, 'sauron')) {
+  // A printed choice becomes interactive when its deciding side is the human:
+  // Sauron's own choices when a human plays the Eye, or a hero-owned choice like
+  // Dark Promises when a human hero is the target. Otherwise it auto-resolves
+  // optimally for the deciding side.
+  if (treeActorIsHuman(s, actor)) {
     stepResolveTree(s, cat, card.tree, {
       sourceKind: 'shadow', cardId: cid, source: `shadow ${card.name}`,
       heroId: target.id, actor, resumeCombat: opts?.resumeCombat,
@@ -445,6 +446,7 @@ export function playSpecificShadow(
 export function playShadowReaction(
   s: GameState, cat: Catalog, window: ShadowWindow,
   ctx: { heroId?: HeroId; isMinionCombat?: boolean }, log?: Logger,
+  opts?: { resumeCombat?: boolean },
 ): boolean {
   if (s.story.finale) return false;              // Errata: no Shadow cards in the Finale
   if (s.shadowPlayedThisHeroTurn) return false;  // one Shadow card per hero turn
@@ -452,7 +454,7 @@ export function playShadowReaction(
   if (!target) return false;
   const cands = reactionCandidates(s, cat, window, ctx, target);
   if (!cands.length) return false;
-  playSpecificShadow(s, cat, cands[0], target, window, log);
+  playSpecificShadow(s, cat, cands[0], target, window, log, opts);
   return true;
 }
 

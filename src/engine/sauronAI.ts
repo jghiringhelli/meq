@@ -208,7 +208,7 @@ function runToSauronDecision(s: GameState, cat: Catalog, hero: HeroStrategy, rng
   while (!s.winner && steps < maxSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, hero.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
-    if (s.pendingCombat) { s = advance(s, cat); continue; }
+    if (s.pendingCombat && !s.pendingTree) { s = advance(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, hero.encounterOption(s, plan.pending!.options, rng)); continue; }
@@ -271,7 +271,7 @@ function rollout(s: GameState, cat: Catalog, hero: HeroStrategy, rng: Rng, maxDe
   while (!s.winner && steps < maxSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, hero.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
-    if (s.pendingCombat) { s = advance(s, cat); continue; }
+    if (s.pendingCombat && !s.pendingTree) { s = advance(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, hero.encounterOption(s, plan.pending!.options, rng)); continue; }
@@ -413,7 +413,7 @@ export function playoutGameSauron(
   while (!s.winner && steps < maxSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, hero.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
-    if (s.pendingCombat) { s = advance(s, cat); continue; }
+    if (s.pendingCombat && !s.pendingTree) { s = advance(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, hero.encounterOption(s, plan.pending!.options, rng)); continue; }

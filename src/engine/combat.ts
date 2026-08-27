@@ -109,7 +109,8 @@ export function beginCombat(
   // require the fight to involve a minion). A human Sauron chooses interactively
   // (pause before Preparation); the automa auto-plays the best card.
   if (sauronAuto(s)) {
-    playShadowReaction(s, cat, 'combat-start', { heroId, isMinionCombat: !!min }, (m) => log(s, 'sauron', 'Sauron', m));
+    playShadowReaction(s, cat, 'combat-start', { heroId, isMinionCombat: !!min }, (m) => log(s, 'sauron', 'Sauron', m), { resumeCombat: true });
+    if (s.pendingTree) return s; // hero-owned combat-start Shadow (Dark Promises) paused for the human hero
   } else if (raiseShadowReaction(s, cat, 'combat-start', { heroId, isMinionCombat: !!min }, true)) {
     return s; // paused for the human Sauron; Preparation runs once he resolves it
   }

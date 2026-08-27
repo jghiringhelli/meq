@@ -12,6 +12,7 @@ import { maybeDrawPeril } from '../src/engine/sauronmech';
 import { sauronPlayShadow } from '../src/engine/sauronPlay';
 import { sauronResolveEvents } from '../src/engine/game';
 import { resolveShadowReaction, resolveTreeDecision, autoResolvePendingTree } from '../src/engine/game';
+import { beginCombat } from '../src/engine/combat';
 import type { GameState } from '../src/engine/types';
 
 const NEW_POWER = 'shadow-a-new-power-is-rising'; // action, choice, pool 4
@@ -143,6 +144,52 @@ describe('Peril "Choose one" is the hero\'s decision', () => {
     expect(s.pendingTree).toBeTruthy();
     const s2 = autoResolvePendingTree(s, cat);
     expect(s2.pendingTree).toBeFalsy();
+  });
+});
+
+describe('Dark Promises at combat start is the HUMAN hero\'s decision', () => {
+  function darkSetup() {
+    const s = freshGame();
+    s.humanSide = 'Hero';                 // AI Sauron plays the card on a human hero
+    s.shadowPlayedThisHeroTurn = false;
+    s.sauron.shadowHand = [DARK_PROMISES];
+    s.sauron.shadowDiscard = [];
+    s.sauron.influence = 12;
+    const heroId = s.heroes[0].id;
+    const loc = s.heroes[0].location;
+    const monsterId = Object.keys(cat.monsters)[0];
+    (s.map.monstersAt[loc] ||= []).push(monsterId);
+    return { s, heroId, loc, monsterId };
+  }
+
+  it('pauses combat for the human hero, owing the Preparation resume', () => {
+    const { s, heroId, loc, monsterId } = darkSetup();
+    const out = beginCombat(s, cat, heroId, monsterId, loc);
+    expect(out.pendingTree?.sourceKind).toBe('shadow');
+    expect(out.pendingTree?.actor).toBe('hero');
+    expect(out.pendingTree?.cardId).toBe(DARK_PROMISES);
+    expect(out.pendingTree?.resumeCombat).toBe(true);
+    expect(out.pendingCombat).toBeTruthy();
+    expect(out.pendingChoice).toBeFalsy(); // Preparation deferred until the hero chooses
+  });
+
+  it('resolving the choice applies it and resumes into the combat step', () => {
+    const { s, heroId, loc, monsterId } = darkSetup();
+    const paused = beginCombat(s, cat, heroId, monsterId, loc);
+    const before = paused.heroes.find((h) => h.id === heroId)!.life;
+    const out = resolveTreeDecision(paused, cat, 1); // "be dealt 5 damage"
+    expect(out.pendingTree).toBeFalsy();
+    expect(out.heroes.find((h) => h.id === heroId)!.life).toBeLessThan(before);
+    expect(out.pendingChoice || out.pendingCombat).toBeTruthy();
+  });
+
+  it('an AI hero (human plays the Eye) auto-resolves with no pause', () => {
+    const { s, heroId, loc, monsterId } = darkSetup();
+    s.humanSide = 'Sauron';
+    s.sauronReactsAuto = true; // automa Eye
+    const out = beginCombat(s, cat, heroId, monsterId, loc);
+    expect(out.pendingTree).toBeFalsy();
+    expect(out.sauron.shadowDiscard).toContain(DARK_PROMISES);
   });
 });
 

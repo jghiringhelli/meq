@@ -493,7 +493,7 @@ export function playoutGame(
   while (!s.winner && steps < maxSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
-    if (s.pendingCombat) { continue; }
+    if (s.pendingCombat && !s.pendingTree) { continue; }
     if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);

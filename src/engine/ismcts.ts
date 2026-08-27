@@ -79,7 +79,7 @@ function runToDecision(s: GameState, cat: Catalog, strat: HeroStrategy, rng: Rng
   while (!s.winner && steps < maxSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
-    if (s.pendingCombat) { s = advance(s, cat); continue; }
+    if (s.pendingCombat && !s.pendingTree) { s = advance(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, strat.encounterOption(s, plan.pending!.options, rng)); continue; }
@@ -103,7 +103,7 @@ function rollout(s: GameState, cat: Catalog, cfg: IsmctsConfig, rng: Rng): numbe
   while (!s.winner && steps < cfg.maxRolloutSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, cfg.rollout.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
-    if (s.pendingCombat) { s = advance(s, cat); continue; }
+    if (s.pendingCombat && !s.pendingTree) { s = advance(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, cfg.rollout.encounterOption(s, plan.pending!.options, rng)); continue; }
