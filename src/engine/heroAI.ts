@@ -241,6 +241,90 @@ function planFavorPool(s: GameState, cat: Catalog, hero: HeroState, cost: number
   return { kind: 'trade-favor', fromId: donor.id, toId: hero.id, n };
 }
 
+/** Multi-hero coordination — the core cooperative tactic experienced players use.
+ *  Rather than every hero charging the single most-dangerous plot (double-teaming
+ *  one break while other threats climb), assign each AFFORDABLE plot to the hero
+ *  best placed to break it (least peril/monster-weighted distance), so the party
+ *  COVERS several plots at once. Then, for the most dangerous plot that no single
+ *  hero can solo-afford but the party's pooled favor CAN, converge the two nearest
+ *  heroes on it (breaker + feeder) to meet and pool favor for a last-moment break
+ *  (rulebook p.24 — heroes at one location trade favor freely). The plan is a
+ *  deterministic function of shared state, so every hero derives the same
+ *  assignment without communicating. Returns THIS hero's target (a plot location,
+ *  or the plot-slot set for an off-board plot), or null when the hero has no plot
+ *  role this step (it should bank favor instead). */
+export function coordinatedPlotTarget(
+  s: GameState, cat: Catalog, hero: HeroState,
+  st: { yellow: number; red: number; black: number },
+): Set<LocationId> | null {
+  const active = s.sauron.activePlots ?? [];
+  if (!active.length) return null;
+  const activeHeroes = s.heroes.filter((h) => h.status === 'active')
+    .slice().sort((a, b) => (a.id < b.id ? -1 : 1));
+  if (activeHeroes.length <= 1) return null; // solo hero: nothing to coordinate
+  const plotSlots = new Set<LocationId>(
+    Object.values(cat.locations).filter((l) => l.plotSlot).map((l) => l.id),
+  );
+  const targetSetFor = (loc: LocationId | null) => (loc ? new Set<LocationId>([loc]) : plotSlots);
+  type P = { loc: LocationId | null; cost: number; danger: number };
+  const plots: P[] = [];
+  for (const e of active) {
+    const plot = cat.plots.find((p) => p.id === e.eventId);
+    if (!plot) continue;
+    const marker = (plot.marker ?? 'red') as 'yellow' | 'red' | 'black';
+    plots.push({
+      loc: (e.location ?? null) as LocationId | null,
+      cost: plot.favorToCounter ?? 2,
+      danger: plotDanger(st, marker, plot.advance ?? 1),
+    });
+  }
+  if (!plots.length) return null;
+  plots.sort((a, b) => b.danger - a.danger);
+
+  // Peril fields are per-hero (they key off wisdom), so cache by hero + target.
+  const distCache = new Map<string, number>();
+  const distTo = (h: HeroState, loc: LocationId | null): number => {
+    const ck = `${h.id}|${loc ?? '#slots'}`;
+    let d = distCache.get(ck);
+    if (d === undefined) {
+      d = weightedDistField(s, cat, targetSetFor(loc), h).get(h.location) ?? Infinity;
+      distCache.set(ck, d);
+    }
+    return d;
+  };
+
+  // 1. Split coverage: hand each affordable plot to its nearest still-free hero.
+  const assign = new Map<HeroId, LocationId | null>();
+  const used = new Set<HeroId>();
+  for (const p of plots) {
+    let best: HeroState | null = null;
+    let bestD = Infinity;
+    for (const h of activeHeroes) {
+      if (used.has(h.id) || h.favor < p.cost) continue;
+      const d = distTo(h, p.loc);
+      if (d < bestD) { bestD = d; best = h; }
+    }
+    if (best) { assign.set(best.id, p.loc); used.add(best.id); }
+  }
+  if (assign.has(hero.id)) return targetSetFor(assign.get(hero.id)!);
+
+  // 2. Converge to pool: the most dangerous plot no one can solo-afford but the
+  //    party's combined favor could cover — send its two nearest heroes to meet.
+  const partyFavor = activeHeroes
+    .filter((h) => !corruptionBlocksSocial(cat, h))
+    .reduce((n, h) => n + h.favor, 0);
+  for (const p of plots) {
+    if (activeHeroes.some((h) => h.favor >= p.cost)) continue; // someone can solo it
+    if (partyFavor < p.cost) continue; // pooling still can't cover it — bank favor
+    const team = activeHeroes.slice()
+      .sort((a, b) => distTo(a, p.loc) - distTo(b, p.loc))
+      .slice(0, 2);
+    if (team.some((h) => h.id === hero.id)) return targetSetFor(p.loc);
+    return null; // not on the pool team → bank favor to become a future feeder
+  }
+  return null;
+}
+
 /** Breaking Sauron's plots is THE hero win path: if his colored markers fill he
  *  wins, and if the heroes never counter plots they almost never win. This plans
  *  the best plot-breaking action for the hero:
@@ -269,6 +353,17 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
       const pool = planFavorPool(s, cat, hero, cost);
       if (pool) return pool;
     }
+  }
+  // Multi-hero coordination: split plot coverage across the party / converge a
+  // feeder on an urgent pooled break (see coordinatedPlotTarget). Replaces the
+  // independent per-hero targeting below so heroes don't all chase one plot.
+  if (s.heroes.filter((h) => h.status === 'active').length > 1) {
+    const target = coordinatedPlotTarget(s, cat, hero, st);
+    if (target) {
+      const step = legalStepToward(s, cat, hero, target);
+      if (step) return { kind: 'move', to: step };
+    }
+    return null; // no productive plot step this turn — the caller banks favor
   }
   const plotSlots = new Set<LocationId>(
     Object.values(cat.locations).filter((l) => l.plotSlot).map((l) => l.id),
