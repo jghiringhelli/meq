@@ -252,9 +252,10 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
           const cell = Math.min(nn[l.id] * 0.5, 210);
           const s = clamp(cell / 140, 0.7, 1.4);
           // Circles printed on the board art are all the SAME size, so the
-          // highlight/hit ring uses a FIXED board-pixel radius (~56px measured
-          // off the art) instead of scaling with neighbour spacing.
-          const rr = 56;
+          // highlight/hit ring uses a FIXED board-pixel radius measured off the
+          // art (~90px to the inner edge of the printed colour ring) instead of
+          // scaling with neighbour spacing.
+          const rr = 90;
           const T = clamp(72 * s, 46, 104);
           const gap = 6 * s;
 
@@ -463,25 +464,23 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
         {/* Story-track markers on the physical track along the board's top edge:
             the Hero (green) marker and Sauron's three story markers — Ring
             (yellow), War/Military (red), Corruption (black). Space 0 = START
-            (~x2837) … space 18 = FINALE (~x5865); cells are evenly spaced so
-            each marker interpolates linearly. Markers are fanned in a 2×2 so a
-            shared space stays legible. */}
+            (~x2867, centred in the START cell) … space 18 = FINALE (~x5865);
+            cells are evenly spaced so each marker interpolates linearly.
+            Markers are fanned in a 2×2 so a shared space stays legible. */}
         {(() => {
-          const xS = 2837, xF = 5865, ty = 165, R = STORY_FINALE;
+          const xS = 2867, xF = 5865, ty = 150, R = STORY_FINALE;
           const st = state.story.sauron ?? { yellow: 0, red: 0, black: 0 };
-          // Linear map: space 0 sits exactly on START (xS), space R on FINALE
-          // (xF). The four markers are kept legible by their 2×2 fan (dx/dy), so
-          // no extra nudge is needed — nudging value-0 markers made them read as
-          // if they were already on space 1.
+          // Linear map: space 0 sits centred in the START cell (xS), space R on
+          // FINALE (xF). The four markers are kept legible by their 2×2 fan.
           const at = (v: number) => xS + (xF - xS) * (Math.max(0, Math.min(R, v)) / R);
           const heroImg = token('heroStoryMarker');
           const markers = [
-            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -20, dy: -20, init: 'H', name: 'Hero', img: heroImg },
-            { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 20, dy: -20, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
-            { k: 'war', v: st.red, fill: '#b23b3b', dx: -20, dy: 20, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
-            { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 20, dy: 20, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
+            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -16, dy: -16, init: 'H', name: 'Hero', img: heroImg },
+            { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 16, dy: -16, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
+            { k: 'war', v: st.red, fill: '#b23b3b', dx: -16, dy: 16, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
+            { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 16, dy: 16, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
           ];
-          const r = 18;
+          const r = 16;
           return (
             <g pointerEvents="none">
               {markers.map((m) => {
