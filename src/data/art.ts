@@ -81,6 +81,7 @@ export const itemArt = (name: string) => withUserArt(art.items?.[norm(name)] || 
 export const shadowArt = (id: string) => withUserArt(art.shadow?.[id] || '');
 export const encounterArt = (id: string) => withUserArt(art.encounters?.[id] || '');
 export const perilArt = (id: string) => withUserArt(art.perils?.[id] || '');
+export const corruptionArt = (id: string) => withUserArt(art.corruption?.[id] || '');
 export const eventArt = (id: string) => withUserArt(art.events?.[id] || '');
 export const heroMissionArt = (id: string) => withUserArt(art.heroMissions?.[id] || '');
 export const sauronMissionArt = (id: string) => withUserArt(art.sauronMissions?.[id] || '');

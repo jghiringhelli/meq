@@ -3,17 +3,18 @@
 // preview (art + stats + rules); clicking opens the full-art card inspector.
 //
 // Two kinds of tab:
-//  • Catalog tabs (Bestiary, Minions, Heroes, Items, Characters, Perils) list
-//    every entry alphabetically — pure reference, no game state.
-//  • Deck tabs (Plots, Shadow, Events, Encounters, Hero decks) show, per deck,
-//    the cards still IN the deck (ALPHABETICAL — the real draw order is secret)
-//    and the public discard pile. Hidden hands are folded into "In deck" so the
-//    exact hand can never be deduced by elimination (only discards are public).
+//  • Catalog tabs (Bestiary, Minions, Heroes, Items, Characters) list every
+//    entry alphabetically — pure reference, no game state.
+//  • Deck tabs (Perils, Plots, Shadow, Corruption, Events, Encounters, Hero
+//    decks) show, per deck, the cards still IN the deck (ALPHABETICAL — the real
+//    draw order is secret) and the public discard pile. Hidden hands are folded
+//    into "In deck" so the exact hand can never be deduced by elimination (only
+//    discards are public).
 import { useEffect, useMemo, useState } from 'react';
 import type { Catalog, GameState, CardId } from '../engine/types';
 import { useInspect } from './CardInspector';
 import {
-  monsterArt, minionArt, plotArt, shadowArt, perilArt, heroArt,
+  monsterArt, minionArt, plotArt, shadowArt, perilArt, corruptionArt, heroArt,
   encounterArt, eventArt, combatCardArt, itemArt, characterArt,
   itemArtKeys, characterArtKeys,
 } from '../data/art';
@@ -55,6 +56,16 @@ function combatItem(cat: Catalog, id: CardId): RefItem {
     ? { id, name: c.name, img: combatCardArt(c), sub: `${c.type} · A${c.attack}/D${c.defense} · ${c.terrain || 'any'}`, text: c.ability }
     : { id, name: id };
 }
+function perilItem(cat: Catalog, id: CardId): RefItem {
+  const c = cat.perils[id];
+  return c
+    ? { id, name: c.name, img: perilArt(id), sub: [c.location, c.region].filter(Boolean).join(' · '), text: c.effect }
+    : { id, name: id };
+}
+function corruptionItem(cat: Catalog, id: CardId): RefItem {
+  const c = cat.corruption[id];
+  return c ? { id, name: c.name, img: corruptionArt(id), sub: `discard cost ${c.cost}`, text: c.ability } : { id, name: id };
+}
 
 /** Group a list of ids into counted, alphabetically-sorted RefItems. */
 function aggregate(ids: CardId[], resolve: (id: CardId) => RefItem): RefItem[] {
@@ -84,11 +95,6 @@ function buildTabs(cat: Catalog, state: GameState): RefTab[] {
     id: h.id, name: h.name, img: heroArt(h.id).portrait || heroArt(h.id).figure,
     sub: `Fort ${h.fortitude} · Str ${h.strength} · Agi ${h.agility} · Wis ${h.wisdom}`,
     lines: [h.abilityName], text: h.abilityText,
-  })).sort(byName);
-
-  const perils = Object.values(cat.perils).map((c) => ({
-    id: c.id, name: c.name, img: perilArt(c.id),
-    sub: [c.location, c.region].filter(Boolean).join(' · '), text: c.effect,
   })).sort(byName);
 
   // Items: names referenced by hero start items + any that have art.
@@ -186,15 +192,57 @@ function buildTabs(cat: Catalog, state: GameState): RefTab[] {
     ],
   }));
 
+  // Perils: In deck = live perilDeck if built, else the full catalog minus the
+  // public discard (order hidden). Discard = perilDiscard.
+  const perilDiscard = sa.perilDiscard ?? [];
+  let perilInDeck: CardId[];
+  if (sa.perilDeck && sa.perilDeck.length) {
+    perilInDeck = sa.perilDeck;
+  } else {
+    const universe = Object.keys(cat.perils);
+    const dc: Record<string, number> = {};
+    for (const id of perilDiscard) dc[id] = (dc[id] ?? 0) + 1;
+    perilInDeck = universe.filter((id) => (dc[id] ? (dc[id]--, false) : true));
+  }
+  const perilsTab: RefGroup[] = [{
+    key: 'all', label: '', sections: [
+      { label: 'In deck', items: aggregate(perilInDeck, (id) => perilItem(cat, id)), empty: 'deck empty' },
+      { label: 'Discard', items: aggregate(perilDiscard, (id) => perilItem(cat, id)), empty: 'discard empty' },
+    ],
+  }];
+
+  // Corruption: In deck = live corruptionDeck if built, else catalog minus the
+  // discard minus the cards currently held by heroes. On heroes = the ongoing
+  // penalties in play. Discard = corruptionDiscard.
+  const corrDiscard = state.corruptionDiscard ?? [];
+  const corrOnHeroes = state.heroes.flatMap((h) => h.corruptionCards ?? []);
+  let corrInDeck: CardId[];
+  if (state.corruptionDeck && state.corruptionDeck.length) {
+    corrInDeck = state.corruptionDeck;
+  } else {
+    const universe = Object.keys(cat.corruption);
+    const dc: Record<string, number> = {};
+    for (const id of [...corrDiscard, ...corrOnHeroes]) dc[id] = (dc[id] ?? 0) + 1;
+    corrInDeck = universe.filter((id) => (dc[id] ? (dc[id]--, false) : true));
+  }
+  const corruptionTab: RefGroup[] = [{
+    key: 'all', label: '', sections: [
+      { label: 'In deck', items: aggregate(corrInDeck, (id) => corruptionItem(cat, id)), empty: 'deck empty' },
+      { label: 'On heroes', items: aggregate(corrOnHeroes, (id) => corruptionItem(cat, id)), empty: 'none in play' },
+      { label: 'Discard', items: aggregate(corrDiscard, (id) => corruptionItem(cat, id)), empty: 'discard empty' },
+    ],
+  }];
+
   return [
     { key: 'monsters', icon: '👹', label: 'Bestiary', groups: one(monsters) },
     { key: 'minions', icon: '☠', label: 'Minions', groups: one(minions) },
     { key: 'heroes', icon: '🛡', label: 'Heroes', groups: one(heroes) },
     { key: 'items', icon: '🎒', label: 'Items', groups: one(items) },
     { key: 'characters', icon: '🧙', label: 'Characters', groups: one(characters) },
-    { key: 'perils', icon: '⚡', label: 'Perils', groups: one(perils) },
+    { key: 'perils', icon: '⚡', label: 'Perils', groups: perilsTab },
     { key: 'plots', icon: '📕', label: 'Plots', groups: plotsTab },
     { key: 'shadow', icon: '👁', label: 'Shadow', groups: shadowTab },
+    { key: 'corruption', icon: '☠', label: 'Corruption', groups: corruptionTab },
     { key: 'events', icon: '📜', label: 'Events', groups: eventGroups },
     { key: 'encounters', icon: '🗺', label: 'Encounters', groups: encGroups },
     { key: 'herodecks', icon: '🂠', label: 'Hero decks', groups: heroGroups },
