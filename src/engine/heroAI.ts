@@ -11,7 +11,7 @@ import {
   advance, heroMove, heroRest, heroExplore, endHeroActions, heroEngage,
   engageableMonsters, canExplore, encounterPlan, resolveChoice, resolveEncounter,
   chooseEncounter, legalMoves, heroDiscardPlot, heroRetrieveFavor, favorHere, targetablePlot,
-  heroSurvey, canSurvey,
+  heroSurvey, canSurvey, autoResolvePendingTree,
 } from './game';
 import { ambushPending } from './mechanics';
 import { isPerilous } from './influence';
@@ -494,6 +494,7 @@ export function playoutGame(
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
     if (s.pendingCombat) { continue; }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, strat.encounterOption(s, plan.pending!.options, rng)); continue; }
@@ -559,7 +560,10 @@ export function advanceHeroSide(
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
     if (s.pendingShadowReaction) { break; }
-    if (s.pendingTree) { break; }
+    if (s.pendingTree) {
+      if (s.pendingTree.actor === 'sauron') break; // human Sauron decides via the UI
+      s = autoResolvePendingTree(s, cat); continue;
+    }
     if (s.pendingCombat) { break; }
     if (s.pendingCombatOrPeril) { break; }
     if (s.pendingEncounter) {

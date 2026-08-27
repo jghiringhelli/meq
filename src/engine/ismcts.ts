@@ -19,7 +19,7 @@ import { SHADOW_FALLS, STORY_FINALE } from './types';
 import {
   advance, endHeroActions, engageableMonsters, canExplore, legalMoves,
   encounterPlan, chooseEncounter, resolveEncounter, resolveChoice,
-  targetablePlot, favorHere,
+  targetablePlot, favorHere, autoResolvePendingTree,
 } from './game';
 import {
   type HeroStrategy, type HeroAction, type Rng,
@@ -66,7 +66,7 @@ const actKey = (a: HeroAction): string =>
 // ---- forward model driver ---------------------------------------------
 /** True at a real hero decision point (the active hero can still act). */
 function isHeroDecision(s: GameState): boolean {
-  if (s.winner || s.phase !== 'HeroActions' || s.pendingChoice || s.pendingCombat || s.pendingEncounter) return false;
+  if (s.winner || s.phase !== 'HeroActions' || s.pendingChoice || s.pendingCombat || s.pendingEncounter || s.pendingTree) return false;
   const hero = s.heroes[s.activeHeroIndex];
   return hero.status === 'active' && hero.actionsRemaining > 0;
 }
@@ -85,6 +85,7 @@ function runToDecision(s: GameState, cat: Catalog, strat: HeroStrategy, rng: Rng
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, strat.encounterOption(s, plan.pending!.options, rng)); continue; }
       s = resolveEncounter(s, cat); continue;
     }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (s.phase === 'HeroActions') {
       const hero = s.heroes[s.activeHeroIndex];
       if (hero.status !== 'active' || hero.actionsRemaining <= 0) { s = endHeroActions(s, cat); continue; }
@@ -108,6 +109,7 @@ function rollout(s: GameState, cat: Catalog, cfg: IsmctsConfig, rng: Rng): numbe
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, cfg.rollout.encounterOption(s, plan.pending!.options, rng)); continue; }
       s = resolveEncounter(s, cat); continue;
     }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (s.phase === 'HeroActions') {
       const hero = s.heroes[s.activeHeroIndex];
       if (hero.status !== 'active' || hero.actionsRemaining <= 0) { s = endHeroActions(s, cat); continue; }

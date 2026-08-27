@@ -53,7 +53,16 @@ export function maybeDrawPeril(s: GameState, cat: Catalog, heroId: HeroId, loc: 
       note: 'Sauron draws three Perils and resolves the applicable one he chooses (the harshest).',
     };
   }
-  autoResolveTree(s, cat, heroId, peril.tree, `peril ${peril.name}`, 'sauron');
+  const actor = treeActor('peril', chosen);
+  if (treeActorIsHuman(s, actor)) {
+    // The affected hero is human: pause for his printed choice (e.g. Ill-met
+    // Company). The surrounding move flow yields on s.pendingTree and resumes.
+    stepResolveTree(s, cat, peril.tree, {
+      sourceKind: 'peril', cardId: chosen, source: `peril ${peril.name}`, heroId, actor,
+    });
+  } else {
+    autoResolveTree(s, cat, heroId, peril.tree, `peril ${peril.name}`, actor);
+  }
 }
 
 /** Draw up to n cards from the Peril deck, lazily built + reshuffled from the

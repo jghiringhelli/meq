@@ -12,7 +12,7 @@ import { log } from './log';
 import { requestChoice } from './choices';
 import { resolveBout } from './effects';
 import { chooseMonsterCard } from './ai';
-import { statValue, stepResolveTree } from './encounter';
+import { statValue, stepResolveTree, bestTreeOption } from './encounter';
 import { gainCorruption, corruptionCombatStartDiscard } from './corruption';
 import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
 import { bestPlacementToward, placeInfluenceAction } from './influence';
@@ -565,7 +565,29 @@ export function resolveTreeDecision(state: GameState, cat: Catalog, optionIndex:
     sourceKind: p.sourceKind, cardId: p.cardId, source: p.source,
     heroId: p.heroId, actor: p.actor, resumeCombat: p.resumeCombat,
   }, [...p.decisions, optionIndex]);
-  if (!paused && p.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
+  if (paused) return s;
+  if (p.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
+  if (p.resumeEnterWindow) {
+    // The hero's Peril decision is done — run the owed "after entering a
+    // non-Haven location" Shadow window, mirroring heroMove's tail: the automa
+    // auto-plays; a human Sauron chooses interactively.
+    const { heroId, loc } = p.resumeEnterWindow;
+    if (cat.locations[loc]?.kind !== 'haven') {
+      if (sauronAuto(s)) playShadowReaction(s, cat, 'enter-nonhaven', { heroId }, (m) => log(s, 'sauron', 'Sauron', m));
+      else if (!s.pendingCombatOrPeril) raiseShadowReaction(s, cat, 'enter-nonhaven', { heroId });
+    }
+  }
+  return s;
+}
+
+/** Auto-resolve any pending card-tree decision (`s.pendingTree`) by picking the
+ *  deciding actor's best option — for the AI drivers and rollouts, which spoof
+ *  `humanSide` and so must never stall on a decision meant for a human. */
+export function autoResolvePendingTree(state: GameState, cat: Catalog): GameState {
+  let s = state;
+  for (let guard = 0; s.pendingTree && guard < 64; guard++) {
+    s = resolveTreeDecision(s, cat, bestTreeOption(s, cat));
+  }
   return s;
 }
 

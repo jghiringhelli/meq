@@ -20,7 +20,7 @@ import { SHADOW_FALLS, STORY_FINALE } from './types';
 import {
   advance, endHeroActions, encounterPlan, chooseEncounter, resolveEncounter, resolveChoice,
   sauronEndActionStep, sauronStoryStep, sauronResolveEvents,
-  sauronPlayPlot, sauronPlayShadow,
+  sauronPlayPlot, sauronPlayShadow, autoResolvePendingTree,
   playablePlots, playableShadow, woundedMinions, boardFigures, moveTargets,
 } from './game';
 import { newGame } from './setup';
@@ -214,6 +214,7 @@ function runToSauronDecision(s: GameState, cat: Catalog, hero: HeroStrategy, rng
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, hero.encounterOption(s, plan.pending!.options, rng)); continue; }
       s = resolveEncounter(s, cat); continue;
     }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (isSauronDecision(s)) return s;
     if (s.phase === 'HeroActions') {
       const h = s.heroes[s.activeHeroIndex];
@@ -276,6 +277,7 @@ function rollout(s: GameState, cat: Catalog, hero: HeroStrategy, rng: Rng, maxDe
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, hero.encounterOption(s, plan.pending!.options, rng)); continue; }
       s = resolveEncounter(s, cat); continue;
     }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (s.phase === 'HeroActions') {
       const h = s.heroes[s.activeHeroIndex];
       if (h.status !== 'active' || h.actionsRemaining <= 0) { s = endHeroActions(s, cat); continue; }
@@ -417,6 +419,7 @@ export function playoutGameSauron(
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, hero.encounterOption(s, plan.pending!.options, rng)); continue; }
       s = resolveEncounter(s, cat); continue;
     }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); continue; }
     if (isSauronDecision(s)) {
       const a = sauron.sauronAction(s, cat, rng);
       if (s.phase === 'SauronEvents') {

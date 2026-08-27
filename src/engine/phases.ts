@@ -112,6 +112,12 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
   // Combat-or-Peril decision here (that resolves first, and the only enter
   // window card merely makes the spot perilous, which is moot in that case).
   if (cat.locations[to]?.kind !== 'haven') {
+    if (s.pendingTree) {
+      // A Peril just paused for the human hero's decision — defer this window
+      // until that decision completes (resolveTreeDecision runs it).
+      s.pendingTree.resumeEnterWindow = { heroId, loc: to };
+      return s;
+    }
     if (sauronAuto(s)) {
       playShadowReaction(s, cat, 'enter-nonhaven', { heroId }, (m) => log(s, 'sauron', 'Sauron', m));
     } else if (!s.pendingCombatOrPeril) {

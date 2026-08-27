@@ -661,6 +661,9 @@ export interface GameState {
     heroId: HeroId;
     actor: 'hero' | 'sauron';
     resumeCombat?: boolean;
+    /** A peril paused mid-move owes the "enter non-Haven" Shadow window once the
+     *  hero's decision completes (see resolveTreeDecision). */
+    resumeEnterWindow?: { heroId: HeroId; loc: LocationId };
     tree: EffTree;
     decisions: number[];
     prompt: string;

@@ -599,6 +599,15 @@ function bestDecision(
   return best >= 0 ? best : Math.max(0, opts.findIndex((o) => o.enabled));
 }
 
+/** Best option index for the CURRENT `s.pendingTree` decision, from the deciding
+ *  actor's perspective — used by the AI drivers/rollouts to auto-resolve a tree
+ *  decision that only paused because a simulation spoofs `humanSide`. */
+export function bestTreeOption(s: GameState, cat: Catalog): number {
+  const p = s.pendingTree;
+  if (!p) return 0;
+  return bestDecision(s, cat, p.heroId, p.tree, p.decisions, p.options, p.actor, p.source);
+}
+
 /** Kind of card whose internal decisions can be owned by a specific side. */
 export type TreeSource = 'encounter' | 'event' | 'peril' | 'shadow';
 

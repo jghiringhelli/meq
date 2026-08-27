@@ -8,8 +8,9 @@ import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
 import { treeActor } from '../src/engine/encounter';
 import { playSpecificShadow, raiseShadowReaction } from '../src/engine/sauronmech';
+import { maybeDrawPeril } from '../src/engine/sauronmech';
 import { sauronPlayShadow } from '../src/engine/sauronPlay';
-import { resolveShadowReaction, resolveTreeDecision } from '../src/engine/game';
+import { resolveShadowReaction, resolveTreeDecision, autoResolvePendingTree } from '../src/engine/game';
 import type { GameState } from '../src/engine/types';
 
 const NEW_POWER = 'shadow-a-new-power-is-rising'; // action, choice, pool 4
@@ -101,6 +102,46 @@ describe('Morgul-Blade at combat start is interactive for the human Eye', () => 
     expect(s3.pendingTree).toBeFalsy();
     const after = s3.heroes.find((h) => h.id === heroId)!;
     expect(after.life).toBeLessThan(before);
+  });
+});
+
+describe('Peril "Choose one" is the hero\'s decision', () => {
+  const ILL_MET = 'peril-ill-met-company';
+  /** A perilous non-Haven location seeded so a hero-choice Peril is drawn. */
+  function perilSetup(human: 'Hero' | 'Sauron'): { s: GameState; heroId: string; loc: string } {
+    const s = freshGame();
+    s.humanSide = human;
+    s.sauronReactsAuto = false;
+    const heroId = s.heroes[0].id;
+    const loc = Object.keys(cat.locations).find((l) => cat.locations[l].kind !== 'haven')!;
+    s.sauron.locationInfluence = { [loc]: 99 }; // influence >> wisdom -> perilous
+    s.sauron.perilDeck = [ILL_MET, ILL_MET, ILL_MET];
+    s.sauron.perilDiscard = [];
+    return { s, heroId, loc };
+  }
+
+  it('pauses for a HUMAN hero with the two printed options', () => {
+    const { s, heroId, loc } = perilSetup('Hero');
+    maybeDrawPeril(s, cat, heroId, loc);
+    expect(s.pendingTree?.actor).toBe('hero');
+    expect(s.pendingTree?.cardId).toBe(ILL_MET);
+    expect(s.pendingTree?.options.length).toBe(2);
+    const s2 = resolveTreeDecision(s, cat, 0); // "lose 2 favor"
+    expect(s2.pendingTree).toBeFalsy();
+  });
+
+  it('auto-resolves (no pause) when the hero is AI', () => {
+    const { s, heroId, loc } = perilSetup('Sauron');
+    maybeDrawPeril(s, cat, heroId, loc);
+    expect(s.pendingTree).toBeFalsy();
+  });
+
+  it('autoResolvePendingTree clears a paused hero Peril decision', () => {
+    const { s, heroId, loc } = perilSetup('Hero');
+    maybeDrawPeril(s, cat, heroId, loc);
+    expect(s.pendingTree).toBeTruthy();
+    const s2 = autoResolvePendingTree(s, cat);
+    expect(s2.pendingTree).toBeFalsy();
   });
 });
 
