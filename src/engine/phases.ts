@@ -12,7 +12,7 @@ import { applyOps } from './noncombat';
 import { planEncounter, applyAtoms, autoResolveTree, statValue, type PlanResult } from './encounter';
 import { eyePlaceInfluenceOnce, eyeSpawnMonsterOnce } from './ai';
 import { evalMission, minionsInPlay } from './missions';
-import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield } from './sauronmech';
+import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, raiseShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield } from './sauronmech';
 import { beginCombat } from './combat';
 import { influenceAt, clearInfluenceAt, enforceInfluenceRules, isPerilous } from './influence';
 import { tryCompleteQuestsOnExplore, questSubstituteMonster } from './quests';
@@ -107,9 +107,16 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
   } else {
     maybeDrawPeril(s, cat, heroId, to);
   }
-  // "After a hero enters a non-Haven location" Shadow window.
-  if (cat.locations[to]?.kind !== 'haven' && sauronAuto(s)) {
-    playShadowReaction(s, cat, 'enter-nonhaven', { heroId }, (m) => log(s, 'sauron', 'Sauron', m));
+  // "After a hero enters a non-Haven location" Shadow window. The automa
+  // auto-plays; a human Sauron chooses interactively — unless he already owes a
+  // Combat-or-Peril decision here (that resolves first, and the only enter
+  // window card merely makes the spot perilous, which is moot in that case).
+  if (cat.locations[to]?.kind !== 'haven') {
+    if (sauronAuto(s)) {
+      playShadowReaction(s, cat, 'enter-nonhaven', { heroId }, (m) => log(s, 'sauron', 'Sauron', m));
+    } else if (!s.pendingCombatOrPeril) {
+      raiseShadowReaction(s, cat, 'enter-nonhaven', { heroId });
+    }
   }
   return s;
 }
@@ -552,9 +559,14 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
   }
   s.phase = 'HeroActions';
   log(s, 'phase', hero.id, `HeroActions (hand ${hero.hand.length}, life pool ${hero.deck.length})`);
-  // Start-of-hero-turn Shadow window (one Shadow card per hero turn).
-  if (hero.status === 'active' && sauronAuto(s)) {
-    playShadowReaction(s, cat, 'hero-turn', { heroId: hero.id }, (m) => log(s, 'sauron', 'Sauron', m));
+  // Start-of-hero-turn Shadow window (one Shadow card per hero turn). The automa
+  // auto-plays; a human Sauron chooses interactively (pauses the phase engine).
+  if (hero.status === 'active') {
+    if (sauronAuto(s)) {
+      playShadowReaction(s, cat, 'hero-turn', { heroId: hero.id }, (m) => log(s, 'sauron', 'Sauron', m));
+    } else {
+      raiseShadowReaction(s, cat, 'hero-turn', { heroId: hero.id });
+    }
   }
   return s;
 }

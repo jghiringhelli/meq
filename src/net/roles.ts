@@ -59,6 +59,8 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
       return action.heroId;
     case 'combatOrPeril':
       return SAURON_ROLE;
+    case 'shadowReaction':
+      return SAURON_ROLE;
     case 'choice':
     case 'chooseEncounter':
     case 'revealEncounter':

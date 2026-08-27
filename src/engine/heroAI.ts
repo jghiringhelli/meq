@@ -558,6 +558,7 @@ export function advanceHeroSide(
   while (!s.winner && s.activeSide === 'Hero' && steps < maxSteps) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
+    if (s.pendingShadowReaction) { break; }
     if (s.pendingCombat) { break; }
     if (s.pendingCombatOrPeril) { break; }
     if (s.pendingEncounter) {

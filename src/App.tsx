@@ -95,7 +95,10 @@ export default function App() {
     if (!catalog || !state || state.winner) return;
     if (net.role === 'client') return;
     if (state.humanSide !== 'Sauron' || state.activeSide !== 'Hero') return;
-    if (state.pendingCombat || state.pendingChoice || state.pendingEncounter || state.pendingCombatOrPeril) return;
+    // Pause the AI hero driver ONLY for the decisions a human Sauron must make;
+    // every other pending (hero choices, combat, encounters) is resolved inside
+    // advanceHeroSide, so it must be allowed to run to reach/resume them.
+    if (state.pendingCombatOrPeril || state.pendingShadowReaction) return;
     const next = advanceHeroSide(state, catalog, missionAware, heroRng.current);
     setState(next);
   }, [catalog, state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -241,6 +244,7 @@ export default function App() {
   const doRest = () => dispatch({ t: 'rest', heroId: activeHero.id });
   const doRestTrain = () => dispatch({ t: 'rest', heroId: activeHero.id, beravorTrain: true });
   const doCombatOrPeril = (choice: 'combat' | 'peril') => dispatch({ t: 'combatOrPeril', choice });
+  const doShadowReaction = (cardId: string | null) => dispatch({ t: 'shadowReaction', cardId });
   const doEngage = (m: MonsterId) => dispatch({ t: 'engage', heroId: activeHero.id, monsterId: m });
   const doEndTurn = () => dispatch({ t: 'endHeroActions' });
   const doChoice = (optId: string) => dispatch({ t: 'choice', optionId: optId });
@@ -352,6 +356,22 @@ export default function App() {
           <span>Combat or Peril at <b>{cat.locations[state.pendingCombatOrPeril.loc]?.name ?? state.pendingCombatOrPeril.loc}</b> — Sauron chooses:</span>
           <button onClick={() => doCombatOrPeril('combat')}>Force combat</button>
           <button onClick={() => doCombatOrPeril('peril')}>Draw Peril</button>
+        </div>
+      )}
+
+      {state.pendingShadowReaction && state.humanSide === 'Sauron' && (
+        <div className="banner shadow-reaction">
+          <span>
+            Shadow reaction (<b>{state.pendingShadowReaction.window}</b>
+            {state.pendingShadowReaction.heroId ? <> vs <b>{cat.heroes[state.pendingShadowReaction.heroId]?.name ?? state.pendingShadowReaction.heroId}</b></> : null})
+            {' '}— Sauron may play one Shadow card:
+          </span>
+          {state.pendingShadowReaction.options.map((o) => (
+            <button key={o.id} onClick={() => doShadowReaction(o.id)}>
+              {cat.shadow[o.id]?.name ?? o.label} (pool {cat.shadow[o.id]?.poolRequirement ?? '?'})
+            </button>
+          ))}
+          <button onClick={() => doShadowReaction(null)}>Pass</button>
         </div>
       )}
 

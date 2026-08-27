@@ -14,7 +14,7 @@ import { resolveBout } from './effects';
 import { chooseMonsterCard } from './ai';
 import { statValue } from './encounter';
 import { gainCorruption, corruptionCombatStartDiscard } from './corruption';
-import { playShadowReaction, sauronAuto } from './sauronmech';
+import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
 import { bestPlacementToward, placeInfluenceAction } from './influence';
 import { tryCompleteQuestsOnDefeat } from './quests';
 import { syncLife, heroDefeated, dealHeroDamage } from './heroLife';
@@ -106,9 +106,12 @@ export function beginCombat(
   };
   log(s, 'combat-begin', heroId, `${attacker.name} (${attacker.life}) vs ${defender.name} (${defender.life}) at ${locationId}`);
   // "Start of combat" Shadow window (one Shadow card per hero turn; some cards
-  // require the fight to involve a minion).
+  // require the fight to involve a minion). A human Sauron chooses interactively
+  // (pause before Preparation); the automa auto-plays the best card.
   if (sauronAuto(s)) {
     playShadowReaction(s, cat, 'combat-start', { heroId, isMinionCombat: !!min }, (m) => log(s, 'sauron', 'Sauron', m));
+  } else if (raiseShadowReaction(s, cat, 'combat-start', { heroId, isMinionCombat: !!min }, true)) {
+    return s; // paused for the human Sauron; Preparation runs once he resolves it
   }
   // Preparation step: the hero splits agility between drawing cards and strength.
   return queuePreparation(s, cat);
@@ -509,6 +512,35 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
     s.phase = 'GameOver';
     log(s, 'game-over', s.winner, s.winReason);
   }
+  // Interactive "after a hero is defeated" Shadow window for a human Sauron:
+  // raised only now, once combat is fully finalized (pendingCombat cleared), so
+  // resolving it cannot corrupt mid-combat state. The automa already played its
+  // card inline above.
+  if (result === 'defender' && !sauronAuto(s) && !s.winner) {
+    raiseShadowReaction(s, cat, 'hero-defeated', { heroId: hero.id });
+  }
+  return s;
+}
+
+/** Resolve a human Sauron's pending reaction Shadow window (rulebook p.20):
+ *  `choice` is the id of the card he plays, or null to pass. Passing plays
+ *  nothing and does NOT spend his once-per-hero-turn window. A `combat-start`
+ *  pause then runs the Preparation step it deferred. */
+export function resolveShadowReaction(state: GameState, cat: Catalog, choice: CardId | null): GameState {
+  const s = clone(state);
+  const pending = s.pendingShadowReaction;
+  if (!pending) throw new Error('No pending Shadow reaction');
+  s.pendingShadowReaction = null;
+  if (choice) {
+    if (!pending.options.some((o) => o.id === choice)) throw new Error(`Illegal Shadow reaction '${choice}'`);
+    const target = pending.heroId
+      ? s.heroes.find((h) => h.id === pending.heroId)
+      : s.heroes.filter((h) => h.status === 'active').sort((a, b) => b.corruption - a.corruption)[0];
+    if (target) playSpecificShadow(s, cat, choice, target, pending.window, (m) => log(s, 'sauron', 'Sauron', m));
+  } else {
+    log(s, 'sauron', 'Sauron', `passes the ${pending.window} Shadow window`);
+  }
+  if (pending.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
   return s;
 }
 

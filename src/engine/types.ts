@@ -638,6 +638,17 @@ export interface GameState {
    *  when the active hero enters a location that is both perilous and holds a
    *  foe. Resolved via the `combatOrPeril` action. */
   pendingCombatOrPeril?: { heroId: HeroId; loc: LocationId } | null;
+  /** A human-controlled Sauron's pending reaction Shadow window (rulebook p.20):
+   *  one Shadow card per hero turn, offered at four windows. `window` is the
+   *  trigger; `options` are the affordable, matching Shadow cards he may play
+   *  (plus an implicit Pass); `resumeCombat` flags a `combat-start` pause that
+   *  must run the Preparation step once resolved. Resolved via the
+   *  `shadowReaction` action. Only set when `sauronAuto` is false. */
+  pendingShadowReaction?: {
+    window: 'action' | 'hero-turn' | 'combat-start' | 'enter-nonhaven' | 'hero-defeated';
+    heroId?: HeroId; isMinionCombat?: boolean; resumeCombat?: boolean;
+    options: { id: CardId; label: string }[];
+  } | null;
   /** locations whose encounter has already been resolved this game. */
   explored: Record<LocationId, boolean>;
   /** #10: per-region Encounter decks + discard piles (keyed by regionGroup,

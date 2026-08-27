@@ -20,6 +20,7 @@ export {
   moveTargets, adjacentLocations,
 } from './sauronPlay';
 export { legalMoves } from './mechanics';
+export { resolveShadowReaction } from './combat';
 export {
   heroDarkPath, heroRetrieveFavor, heroConsultCharacter, heroCompleteQuest,
   heroDiscardPlot, heroTradeFavor, heroTradeItem, heroCleanseCorruption,

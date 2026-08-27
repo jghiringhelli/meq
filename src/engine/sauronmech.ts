@@ -2,7 +2,7 @@
 // payoff), a shadow-card hand, and the late-game counter reset. These complete
 // the Lidless Eye loop so hoarded influence and board pressure actually convert
 // into progress on the dark story track.
-import type { Catalog, GameState, HeroId, LocationId, CardId, Plot, ShadowCard, StoryMarkerColor, SauronDoctrine } from './types';
+import type { Catalog, GameState, HeroId, HeroState, LocationId, CardId, Plot, ShadowCard, StoryMarkerColor, SauronDoctrine } from './types';
 import { autoResolveTree, statValue } from './encounter';
 import { influenceAt, plotMakesPerilous } from './influence';
 import { shuffle } from './rng';
@@ -363,21 +363,21 @@ function shadowScoreFor(
   return v;
 }
 
-/** Fire a hero-turn/reaction Shadow window: if the Eye hasn't already played a
- *  Shadow card this hero activation, play the best affordable card matching
- *  `window` (and its printed sub-condition) on the relevant hero, honouring the
- *  Finale ban and the Elven Cloak (a hero-turn play costs the Eye 1 pool if the
- *  target holds one). Returns true if a card was played. */
-export function playShadowReaction(
-  s: GameState, cat: Catalog, window: ShadowWindow,
-  ctx: { heroId?: HeroId; isMinionCombat?: boolean }, log?: Logger,
-): boolean {
-  if (s.story.finale) return false;              // Errata: no Shadow cards in the Finale
-  if (s.shadowPlayedThisHeroTurn) return false;  // one Shadow card per hero turn
-  const target = ctx.heroId
+/** The hero a reaction `window` targets: the named hero (moves/combat/defeat) or,
+ *  for untargeted windows, the most-corrupted active hero. */
+function reactionTarget(s: GameState, ctx: { heroId?: HeroId }): HeroState | undefined {
+  return ctx.heroId
     ? s.heroes.find((h) => h.id === ctx.heroId && h.status === 'active')
     : s.heroes.filter((h) => h.status === 'active').sort((a, b) => b.corruption - a.corruption)[0];
-  if (!target) return false;
+}
+
+/** The affordable Shadow cards in hand that legally match `window` (and its
+ *  printed sub-condition), ranked best-first against `target`. Shared by the
+ *  automa (auto-plays [0]) and the interactive human (picks from the list). */
+export function reactionCandidates(
+  s: GameState, cat: Catalog, window: ShadowWindow,
+  ctx: { heroId?: HeroId; isMinionCombat?: boolean }, target: HeroState,
+): CardId[] {
   const cands = s.sauron.shadowHand.filter((cid) => {
     const c = cat.shadow[cid];
     if (!c || shadowWindow(c.timing) !== window) return false;
@@ -391,9 +391,17 @@ export function playShadowReaction(
     if (window === 'hero-turn' && t.includes('not in a haven') && cat.locations[target.location]?.kind === 'haven') return false;
     return true;
   });
-  if (!cands.length) return false;
   cands.sort((a, b) => shadowScoreFor(cat.shadow[b], target, s.sauron.doctrine) - shadowScoreFor(cat.shadow[a], target, s.sauron.doctrine));
-  const cid = cands[0];
+  return cands;
+}
+
+/** Play one specific Shadow card `cid` on `target` for a reaction `window`:
+ *  move it to the discard, resolve its effect tree, mark the once-per-hero-turn
+ *  window spent, and apply the Elven Cloak pool drain. Used by both the automa
+ *  (best card) and the interactive human (his chosen card). */
+export function playSpecificShadow(
+  s: GameState, cat: Catalog, cid: CardId, target: HeroState, window: ShadowWindow, log?: Logger,
+): void {
   const card = cat.shadow[cid];
   s.sauron.shadowHand = s.sauron.shadowHand.filter((x) => x !== cid);
   s.sauron.shadowDiscard.push(cid);
@@ -406,6 +414,47 @@ export function playShadowReaction(
     log?.(`${card.name} — ${target.id}'s Elven Cloak drains 1 from the Shadow Pool`);
   }
   log?.(`plays shadow ${card.name} on ${target.id} (${window})`);
+}
+
+/** Fire a hero-turn/reaction Shadow window: if the Eye hasn't already played a
+ *  Shadow card this hero activation, play the best affordable card matching
+ *  `window` (and its printed sub-condition) on the relevant hero, honouring the
+ *  Finale ban and the Elven Cloak (a hero-turn play costs the Eye 1 pool if the
+ *  target holds one). Returns true if a card was played. */
+export function playShadowReaction(
+  s: GameState, cat: Catalog, window: ShadowWindow,
+  ctx: { heroId?: HeroId; isMinionCombat?: boolean }, log?: Logger,
+): boolean {
+  if (s.story.finale) return false;              // Errata: no Shadow cards in the Finale
+  if (s.shadowPlayedThisHeroTurn) return false;  // one Shadow card per hero turn
+  const target = reactionTarget(s, ctx);
+  if (!target) return false;
+  const cands = reactionCandidates(s, cat, window, ctx, target);
+  if (!cands.length) return false;
+  playSpecificShadow(s, cat, cands[0], target, window, log);
+  return true;
+}
+
+/** Interactive counterpart of playShadowReaction for a HUMAN Sauron: instead of
+ *  auto-playing the best card, raise a `pendingShadowReaction` decision offering
+ *  the affordable matching cards (plus an implicit Pass) so he chooses whether
+ *  and what to play. Returns true if a decision was raised (the caller must then
+ *  pause). No-op (false) when nothing is playable or the window is already spent.
+ *  `resumeCombat` marks a combat-start pause that owes the Preparation step. */
+export function raiseShadowReaction(
+  s: GameState, cat: Catalog, window: ShadowWindow,
+  ctx: { heroId?: HeroId; isMinionCombat?: boolean }, resumeCombat = false,
+): boolean {
+  if (s.story.finale) return false;
+  if (s.shadowPlayedThisHeroTurn) return false;
+  const target = reactionTarget(s, ctx);
+  if (!target) return false;
+  const cands = reactionCandidates(s, cat, window, ctx, target);
+  if (!cands.length) return false;
+  s.pendingShadowReaction = {
+    window, heroId: ctx.heroId, isMinionCombat: ctx.isMinionCombat, resumeCombat,
+    options: cands.map((cid) => ({ id: cid, label: cat.shadow[cid]?.name ?? cid })),
+  };
   return true;
 }
 
