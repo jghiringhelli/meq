@@ -96,6 +96,29 @@ function combatReady(cat: Catalog, h: HeroState): boolean {
   return agility >= 3 || h.hand.length >= 4;
 }
 
+/** Opportunistic card-gain fight (an experienced-player tactic): a hero gains
+ *  nothing from combat itself, but a HIGH-AGILITY hero facing a genuinely WEAK
+ *  monster can spend the Preparation step drawing cards (each agility point draws
+ *  one) and still win the short bout — walking away with MORE hero cards than he
+ *  started with. Worth doing only when the hero actually needs those cards to
+ *  press the plot race: he is card-poor, there is a plot to work toward, and he
+ *  is healthy enough to risk a bout. Deliberately narrow (only the weakest,
+ *  non-corrupting foes) so a smart hero still routes around real danger. */
+export function worthFightingForCards(s: GameState, cat: Catalog, hero: HeroState, monsterId: string): boolean {
+  const mon = cat.monsters[monsterId];
+  if (!mon) return false;
+  if (/corrupt/i.test(mon.ability ?? '')) return false; // corruption-dealers are never "cheap"
+  const agility = (cat.heroes[hero.id]?.agility ?? 0) + (hero.statBonus?.agility ?? 0);
+  const strength = (cat.heroes[hero.id]?.strength ?? 0) + (hero.statBonus?.strength ?? 0);
+  if (agility < 4) return false;                 // need real draw headroom in Preparation
+  if (mon.strength > 3 || mon.fortitude > 6) return false; // only the weakest foes
+  if (strength + agility < mon.fortitude + 2) return false; // must overwhelm it fast
+  if ((s.sauron.activePlots ?? []).length === 0) return false; // no plot race → no need
+  if (hero.hand.length > 4) return false;        // already card-rich
+  if (hero.corruption > 2 || hero.damagePool.length > 2) return false; // too fragile to risk
+  return true;
+}
+
 // Routing weights (all in "extra safe-steps" units, so they trade off against
 // real distance): a human detours several safe hops rather than eat a peril,
 // dodges monster-held nodes, and prefers matching-terrain moves (1 card) over
@@ -552,6 +575,13 @@ export const missionAware: HeroStrategy = {
     if (canSurvey(s, cat, heroId)) return { kind: 'survey' };
     // breaking plots is the win path — pursue it before mission-specific play
     const plot = planPlotCounter(s, cat, hero);
+    // Breaking a plot NOW (or pooling favor to) beats everything; but if the plot
+    // plan is only a card-hungry march, first take an opportunistic card-gain
+    // fight against a weak foe standing here (user tactic) to stock the cards the
+    // march needs.
+    if (plot && (plot.kind === 'counter-plot' || plot.kind === 'trade-favor')) return plot;
+    const easyFoe = engageableMonsters(s, heroId).find((m) => worthFightingForCards(s, cat, hero, m));
+    if (easyFoe) return { kind: 'engage', monsterId: easyFoe };
     if (plot) return plot;
     const earn = planEarnFavor(s, cat, hero);
     if (earn) return earn;

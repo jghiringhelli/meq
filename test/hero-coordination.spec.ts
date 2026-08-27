@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { cat } from './helpers';
 import { newGame } from '../src/engine/game';
-import { coordinatedPlotTarget } from '../src/engine/heroAI';
+import { coordinatedPlotTarget, worthFightingForCards } from '../src/engine/heroAI';
 import type { GameState } from '../src/engine/types';
 
 // Two-hero coordination: heroes split affordable plots across the party and
@@ -62,5 +62,44 @@ describe('hero AI coordination (coordinatedPlotTarget)', () => {
     const st = s.story.sauron;
     expect(coordinatedPlotTarget(s, cat, s.heroes[0], st)).toBeNull();
     expect(coordinatedPlotTarget(s, cat, s.heroes[1], st)).toBeNull();
+  });
+});
+
+describe('opportunistic card-gain fight (worthFightingForCards)', () => {
+  function heroVsMonster(monsterId: string) {
+    const s = newGame(cat, 2, ['argalad']);
+    s.heroes[0].statBonus = { agility: 5, strength: 3 } as any; // high-agility, card-drawing hero
+    s.heroes[0].hand = ['x1', 'x2'] as any; // card-poor
+    s.heroes[0].corruption = 0;
+    s.heroes[0].damagePool = [] as any;
+    s.sauron.activePlots = [{ eventId: 's-monsters-in-the-east', location: 'fornost' } as any];
+    return { s, mon: monsterId };
+  }
+
+  it('fights a genuinely weak, non-corrupting foe when card-poor with a plot to chase', () => {
+    const { s, mon } = heroVsMonster('mon-snaga'); // F6 S3, no corruption
+    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(true);
+  });
+
+  it('does NOT fight a tough foe', () => {
+    const { s, mon } = heroVsMonster('mon-balrog'); // F9 S12
+    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
+  });
+
+  it('does NOT fight a corruption-dealing foe even if statistically weak', () => {
+    const { s, mon } = heroVsMonster('mon-agent'); // F5 S3 but inflicts Corruption
+    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
+  });
+
+  it('does NOT bother when already card-rich', () => {
+    const { s, mon } = heroVsMonster('mon-snaga');
+    s.heroes[0].hand = ['a', 'b', 'c', 'd', 'e'] as any; // 5 cards
+    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
+  });
+
+  it('does NOT bother when there is no plot race on', () => {
+    const { s, mon } = heroVsMonster('mon-snaga');
+    s.sauron.activePlots = [];
+    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
   });
 });
