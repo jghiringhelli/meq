@@ -188,12 +188,12 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
               <div className={`cb-choice ${ch.kind === 'combat-prep' ? 'prep' : 'hand'}`}>
                 <p className="cb-prompt">{ch.prompt}</p>
                 <div className="cb-options">
-                  {ch.options.map((o) => {
+                  {ch.options.map((o, i) => {
                     const card = cat.combatCards[o.id];
                     const img = card ? combatCardArt(card, hero.refId) : '';
                     const declare = o.id === '__exhaust__';
                     return (
-                      <button key={o.id}
+                      <button key={`${o.id}-${i}`}
                         className={declare ? 'cb-opt declare' : 'cb-opt'}
                         onClick={() => onChoose(o.id)}
                         title={card?.ability ?? ''}>

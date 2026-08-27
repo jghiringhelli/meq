@@ -13,8 +13,8 @@ export default function ChoiceModal({ choice, onChoose }: Props) {
       <div className="choice-modal">
         <p className="prompt">{choice.prompt}</p>
         <div className="choice-options">
-          {choice.options.map((o) => (
-            <button key={o.id} className="choice-btn" onClick={() => onChoose(o.id)}>
+          {choice.options.map((o, i) => (
+            <button key={`${o.id}-${i}`} className="choice-btn" onClick={() => onChoose(o.id)}>
               {o.label}
             </button>
           ))}

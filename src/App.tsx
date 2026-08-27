@@ -84,6 +84,13 @@ export default function App() {
     if (net.role === 'host' && state) net.broadcastState(state);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
+  // Dev/test hook: expose the live GameState so e2e validation can read the full
+  // engine state (and run the same invariant checks as the headless validator)
+  // after every UI action. Never enabled in production builds.
+  useEffect(() => {
+    const env = (import.meta as unknown as { env?: { DEV?: boolean } }).env ?? {};
+    if (env.DEV) (window as unknown as { __MEQ_STATE__?: GameState | null }).__MEQ_STATE__ = state;
+  }, [state]);
   useEffect(() => {
     if (net.role === 'host' && roster) net.broadcastRoster(roster);
   // eslint-disable-next-line react-hooks/exhaustive-deps
