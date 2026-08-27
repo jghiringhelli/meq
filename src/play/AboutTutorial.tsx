@@ -9,8 +9,68 @@ import { VMOD_URL } from './ArtLoader';
  */
 export default function AboutTutorial() {
   const [open, setOpen] = useState(false);
+  const [openHow, setOpenHow] = useState(false);
   return (
     <section className="about">
+      <button className="about-toggle" onClick={() => setOpenHow((v) => !v)} aria-expanded={openHow}>
+        {openHow ? '▾' : '▸'} How to play (the basics)
+      </button>
+      {openHow && (
+        <div className="about-body">
+          <h3>Your goal</h3>
+          <p>
+            You lead the <strong>heroes</strong>: thwart Sauron by <strong>breaking his Plots</strong>
+            {' '}and advancing your own quests and secret mission. <strong>Sauron wins</strong> if his
+            three coloured story markers climb too far — any one marker reaching the
+            {' '}<em>Finale</em>, or all three reaching the <em>Shadow Falls</em> (the midpoint).
+            Every Plot Sauron plays feeds one of those markers each turn, so countering plots in
+            time is the whole game.
+          </p>
+
+          <h3>A hero turn, step by step</h3>
+          <ol>
+            <li><strong>Draw</strong> — at the start of your turn you draw cards equal to your
+              hero's fortitude. Cards are your fuel for movement and combat.</li>
+            <li><strong>Take 2 actions</strong>, choosing from:
+              <ul>
+                <li><strong>Travel</strong> — reachable locations glow gold. Click one; a window
+                  lets you pick which card(s) pay for the path (one matching-terrain card, or a
+                  number of any cards).</li>
+                <li><strong>Explore</strong> — run the location's Encounter step (draw 3, resolve
+                  the one that applies) for rewards like favor, training or items.</li>
+                <li><strong>Rest</strong> — only in a <em>Haven</em>: heal and cleanse Corruption
+                  (for favor).</li>
+                <li><strong>Engage</strong> a monster blocking your way; <strong>Counter a Plot</strong>
+                  {' '}by spending favor where a plot sits; <strong>Consult</strong> a character or
+                  <strong> retrieve favor</strong>; or <strong>trade favor</strong> with an ally in
+                  the same location.</li>
+              </ul>
+            </li>
+            <li><strong>End</strong> — your turn ends with the Encounter step if you didn't Explore.</li>
+          </ol>
+
+          <h3>What experienced players do</h3>
+          <ul>
+            <li><strong>Favor is everything</strong> — it breaks plots and cleanses corruption.
+              Bank it, and break plots with pooled favor at the last safe moment.</li>
+            <li><strong>End your turn in a Haven</strong> when you can, so Sauron can't steal your
+              favor and you're safe from Shadow cards and Peril.</li>
+            <li><strong>Cleanse Corruption</strong> in Havens — each card you carry is an ongoing
+              penalty.</li>
+            <li><strong>Cooperate</strong> — split up to cover several plots, then converge to pool
+              favor for a break none of you could afford alone.</li>
+          </ul>
+
+          <h3>Sauron & the smart button</h3>
+          <p>
+            The <strong>Sauron</strong> turn is played by the AI (or a human) and runs between
+            your turns; the panel on the right <strong>recaps what Sauron did</strong>, including
+            the opening setup. The glowing <strong>next-step button</strong> tells you the obvious
+            thing to do now, and warns you before you end a turn with actions still worth taking
+            (a favor to grab, a plot to break, a move to make out of the open).
+          </p>
+        </div>
+      )}
       <button className="about-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         {open ? '▾' : '▸'} About this project & how to load the art
       </button>
