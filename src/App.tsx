@@ -26,6 +26,8 @@ import TurnCycle from './play/TurnCycle';
 import { JoinScreen, NetPanel } from './play/NetPanel';
 import ArtLoader from './play/ArtLoader';
 import AboutTutorial from './play/AboutTutorial';
+import SmartNext from './play/SmartNext';
+import { pendingHeroTasks } from './engine/turnTasks';
 import { advanceHeroSide, missionAware, mulberry32 } from './engine/heroAI';
 import { useGameSession } from './net/session';
 import { emptyRoster, type Roster } from './net/roles';
@@ -293,9 +295,31 @@ export default function App() {
   const ambush = inHeroActions && engageable.length > 0;
   const exploreHere = inHeroActions && !ambush && canExplore(state, cat, activeHero.id);
 
+  // Smart next-step button: only when the human runs the heroes (a human Sauron
+  // is guided by the SauronPanel instead). It ends the hero turn or advances the
+  // dark side's AI step, glowing when nothing is left and warning otherwise.
+  const anyPending = !!(state.pendingCombat || state.pendingChoice || state.pendingEncounter
+    || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction);
+  const smartMode: 'endTurn' | 'advance' | null =
+    state.winner || anyPending || state.humanSide === 'Sauron' ? null
+      : inHeroActions ? 'endTurn'
+        : state.phase !== 'HeroActions' ? 'advance' : null;
+  const smartTasks = smartMode === 'endTurn' ? pendingHeroTasks(state, cat) : [];
+  const smartLabel = smartMode === 'endTurn'
+    ? 'End hero turn ▶'
+    : (SMART_ADVANCE_LABELS[state.phase] ?? 'Continue ▶');
+
   return (
     <div className="app">
       <header className="app-header">
+        {smartMode && (
+          <SmartNext
+            label={smartLabel}
+            ready={smartTasks.length === 0}
+            tasks={smartTasks}
+            onProceed={smartMode === 'endTurn' ? doEndTurn : doAdvance}
+          />
+        )}
         <h1>Middle-earth Quest</h1>
         <span className="subtitle">round {state.round}
           {state.winner ? ` · WINNER: ${state.winner}` : ''}</span>
@@ -413,6 +437,16 @@ const PHASE_STEPS: { label: string; phases: string[] }[] = [
   { label: 'Action', phases: ['SauronMinions'] },
   { label: 'Advance', phases: ['StoryAdvance'] },
 ];
+
+// Friendly caption for the smart button when it advances the (AI) dark side —
+// it names the step the click is about to run.
+const SMART_ADVANCE_LABELS: Record<string, string> = {
+  HeroRefresh: 'Begin hero actions ▶',
+  SauronRefresh: 'Sauron: story step ▶',
+  SauronEvents: 'Sauron: plot & events ▶',
+  SauronMinions: 'Sauron: dark actions ▶',
+  StoryAdvance: 'Advance the story ▶',
+};
 
 function PhaseTrack({ phase }: { phase: string }) {
   return (
