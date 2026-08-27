@@ -18,7 +18,7 @@ import {
 export type Action =
   | { t: 'advance' }
   | { t: 'endHeroActions' }
-  | { t: 'move'; heroId: HeroId; to: LocationId }
+  | { t: 'move'; heroId: HeroId; to: LocationId; cards?: CardId[] }
   | { t: 'rest'; heroId: HeroId; beravorTrain?: boolean }
   | { t: 'engage'; heroId: HeroId; monsterId: MonsterId }
   | { t: 'explore'; heroId: HeroId }
@@ -46,7 +46,7 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
   switch (action.t) {
     case 'advance': return advance(state, cat);
     case 'endHeroActions': return endHeroActions(state, cat);
-    case 'move': return heroMove(state, cat, action.heroId, action.to);
+    case 'move': return heroMove(state, cat, action.heroId, action.to, action.cards);
     case 'rest': return heroRest(state, cat, action.heroId, { beravorTrain: action.beravorTrain });
     case 'engage': return heroEngage(state, cat, action.heroId, action.monsterId);
     case 'explore': return heroExplore(state, cat, action.heroId);

@@ -19,7 +19,7 @@ export {
   playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
   moveTargets, adjacentLocations,
 } from './sauronPlay';
-export { legalMoves } from './mechanics';
+export { legalMoves, moveOptions, validateMovePayment } from './mechanics';
 export { resolveShadowReaction, resolveTreeDecision, autoResolvePendingTree } from './combat';
 export {
   heroDarkPath, heroRetrieveFavor, heroConsultCharacter, heroCompleteQuest,

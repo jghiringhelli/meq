@@ -276,6 +276,65 @@ export function legalMoves(cat: Catalog, hero: HeroState): LegalMove[] {
   return out;
 }
 
+/** The two ways a hero may pay to cross the path to `to` (rulebook p.22): show
+ *  ONE card matching the path terrain, OR discard `anyCardCost` cards of any
+ *  type (the number printed on the path; Horse lowers it by 1 on land, Boat
+ *  makes a water path cost one any-card). Used by the interactive Travel UI so
+ *  the player can pick exactly which card(s) to spend. */
+export interface MoveOption {
+  to: LocationId; terrain: Terrain; water: boolean;
+  /** true when the hero holds a matching-terrain card (1-card route available). */
+  terrainPayable: boolean;
+  /** number of any-type cards that also cross this path. */
+  anyCardCost: number;
+}
+
+/** Per-destination payment options from the hero's current location, honouring
+ *  the same travel caps as `legalMoves`. Returns every neighbouring path (the
+ *  UI decides which are affordable via `terrainPayable`/`anyCardCost`). */
+export function moveOptions(cat: Catalog, hero: HeroState): MoveOption[] {
+  const corrCap = corruptionTravelCap(cat, hero);
+  const caps = [corrCap, hero.turnTravelCap].filter((n): n is number => n != null);
+  const travelCap = caps.length ? Math.min(...caps) : undefined;
+  if (travelCap !== undefined && (hero.travelStepsThisTurn ?? 0) >= travelCap) return [];
+  const held = new Set(terrainsInHand(cat, hero));
+  const horse = hasItem(hero, 'item-horse', 'Horse');
+  const boat = hasItem(hero, 'item-boat', 'Boat');
+  const out: MoveOption[] = [];
+  for (const e of neighbors(cat, hero.location)) {
+    const to = otherEnd(e, hero.location);
+    if (e.water && boat) {
+      out.push({ to, terrain: e.terrain, water: true, terrainPayable: false, anyCardCost: 1 });
+      continue;
+    }
+    const base = Math.max(1, e.cost || 1);
+    const anyCardCost = horse && !e.water ? Math.max(1, base - 1) : base;
+    out.push({ to, terrain: e.terrain, water: !!e.water, terrainPayable: held.has(e.terrain), anyCardCost });
+  }
+  return out;
+}
+
+/** True if discarding exactly `cards` (from hand) is a legal payment to Travel
+ *  to `to`: either a single matching-terrain card, or `anyCardCost` any-type
+ *  cards. `cards` is a multiset of hand card ids (duplicates allowed when the
+ *  hand holds copies). Mirrors the spend logic in `heroMove`. */
+export function validateMovePayment(cat: Catalog, hero: HeroState, to: LocationId, cards: CardId[]): boolean {
+  const opt = moveOptions(cat, hero).find((o) => o.to === to);
+  if (!opt) return false;
+  if (!cards.length) return false;
+  // The chosen cards must be a sub-multiset of the hand.
+  const have = new Map<CardId, number>();
+  for (const c of hero.hand) have.set(c, (have.get(c) ?? 0) + 1);
+  const want = new Map<CardId, number>();
+  for (const c of cards) want.set(c, (want.get(c) ?? 0) + 1);
+  for (const [id, n] of want) if ((have.get(id) ?? 0) < n) return false;
+  // Terrain route: exactly one matching-terrain card (never available on a
+  // water path crossed by Boat, where any single card is required instead).
+  if (opt.terrainPayable && cards.length === 1 && cat.combatCards[cards[0]]?.terrain === opt.terrain) return true;
+  // Any-card route: exactly the printed number of cards, of any type.
+  return cards.length === opt.anyCardCost;
+}
+
 /** A card in hand whose terrain matches, to spend for a move. */
 export function findMovementCard(cat: Catalog, hero: HeroState, terrain: Terrain): CardId | null {
   for (const cid of hero.hand) {

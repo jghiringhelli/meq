@@ -280,6 +280,23 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .choice-options { display: flex; flex-direction: column; gap: 0.5rem; }
 .choice-btn { padding: 0.55rem 0.8rem; background: #2a2016; border: 1px solid var(--accent); border-radius: 6px; color: #f0e2c0; cursor: pointer; font-size: 0.98rem; }
 .choice-btn:hover { background: #3a2c1c; }
+.travel-modal { background: var(--panel); border: 2px solid var(--accent); border-radius: 8px; padding: 1rem 1.2rem; width: 560px; max-width: 94vw; }
+.travel-modal h3 { margin: 0 0 0.5rem; color: var(--accent); font-size: 1.05rem; }
+.travel-modal .travel-req { margin: 0 0 0.8rem; color: #d8c8a0; font-size: 0.9rem; }
+.travel-modal .terrain-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px; margin-right: 0.4rem; font-size: 0.8rem; text-transform: capitalize; color: #12100b; font-weight: 700; }
+.travel-modal .terrain-chip.terrain-woods { background: #6aa84f; }
+.travel-modal .terrain-chip.terrain-swamp { background: #a8b04a; }
+.travel-modal .terrain-chip.terrain-mountain { background: #cfcfcf; }
+.travel-modal .terrain-chip.terrain-plains { background: #e0b84a; }
+.travel-modal .terrain-chip.terrain-hill { background: #c07c3a; }
+.travel-modal .water-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px; margin-right: 0.4rem; font-size: 0.8rem; background: #3a6ea5; color: #eef; font-weight: 700; }
+.travel-hand { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; max-height: 46vh; overflow-y: auto; }
+.travel-card { cursor: pointer; opacity: 0.72; transition: opacity 0.1s, box-shadow 0.1s, transform 0.1s; }
+.travel-card.match { opacity: 0.92; }
+.travel-card.selected { opacity: 1; box-shadow: 0 0 0 2px var(--accent), 0 0 8px rgba(224,192,120,0.6); transform: translateY(-2px); }
+.travel-actions { display: flex; align-items: center; gap: 0.6rem; justify-content: flex-end; }
+.travel-actions .travel-count { margin-right: auto; color: #a89870; font-size: 0.85rem; }
+.travel-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 .combat-board { background: var(--panel); border: 2px solid var(--accent); border-radius: 8px; padding: 1.2rem; width: 520px; max-width: 92vw; }
 .combatants { display: flex; align-items: center; justify-content: space-around; margin: 0.8rem 0; }
 .combatant { text-align: center; }

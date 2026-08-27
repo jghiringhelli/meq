@@ -3,7 +3,7 @@
 import type { Catalog, GameState, HeroId, HeroState, LocationId, MonsterId, Terrain, EventCard, Side, CardId, Plot } from './types';
 import { placeCharacterUnique, removeCharacter } from './characters';
 import { STORY_FINALE, SHADOW_FALLS } from './types';
-import { clone, legalMoves, findMovementCard, discardFromHand, ambushPending, advanceLeftmostMarker, gameStage, grantTraining } from './mechanics';
+import { clone, legalMoves, findMovementCard, discardFromHand, validateMovePayment, ambushPending, advanceLeftmostMarker, gameStage, grantTraining } from './mechanics';
 import { HERO_ACTIONS, deployMinion } from './setup';
 import { drawFromLifePool, restHero, healHero, prepareHeroForFinale } from './heroLife';
 import { log } from './log';
@@ -33,7 +33,7 @@ function requireHeroTurn(state: GameState, heroId: HeroId): HeroState {
 }
 
 /** Move the active hero across a terrain-matching edge, spending a card. */
-export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: LocationId): GameState {
+export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: LocationId, cards?: CardId[]): GameState {
   const s = clone(state);
   const hero = requireHeroTurn(s, heroId);
   if (ambushPending(s, hero, cat)) throw new Error('Ambush: a foe here must be fought before travelling');
@@ -50,7 +50,18 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
   const mv = legalMoves(cat, hero).find((m) => m.to === to);
   if (!mv) throw new Error(`No legal move from ${hero.location} to ${to}`);
   let spent: string;
-  if (!mv.viaAnyCards) {
+  if (cards && cards.length) {
+    // Interactive Travel: the player picked exactly which card(s) to spend.
+    if (!validateMovePayment(cat, hero, to, cards)) throw new Error(`Invalid card selection to travel to ${to}`);
+    const names: string[] = [];
+    for (const cid of cards) {
+      names.push(cat.combatCards[cid]?.name ?? cid);
+      discardFromHand(hero, cid);
+    }
+    spent = cards.length === 1 && cat.combatCards[cards[0]]?.terrain === mv.terrain
+      ? `via ${mv.terrain} (spent ${names[0]})`
+      : `via cards (discarded ${names.length}: ${names.join(', ')})`;
+  } else if (!mv.viaAnyCards) {
     const card = findMovementCard(cat, hero, mv.terrain as Terrain)!;
     discardFromHand(hero, card);
     spent = `via ${mv.terrain} (spent ${cat.combatCards[card].name})`;

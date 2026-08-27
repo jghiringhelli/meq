@@ -27,6 +27,7 @@ import { JoinScreen, NetPanel } from './play/NetPanel';
 import ArtLoader from './play/ArtLoader';
 import AboutTutorial from './play/AboutTutorial';
 import SmartNext from './play/SmartNext';
+import TravelModal from './play/TravelModal';
 import { pendingHeroTasks } from './engine/turnTasks';
 import { advanceHeroSide, missionAware, mulberry32 } from './engine/heroAI';
 import { useGameSession } from './net/session';
@@ -48,6 +49,7 @@ export default function App() {
   const [joining, setJoining] = useState(false);
   const [resumable, setResumable] = useState(() => loadSavedGame());
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [travelTo, setTravelTo] = useState<string | null>(null);
   const heroRng = useRef(mulberry32(0));
 
   // ---- Multiplayer session (host-authoritative). Off by default (solo play). ----
@@ -249,7 +251,10 @@ export default function App() {
   };
 
   const doAdvance = () => dispatch({ t: 'advance' });
-  const doMove = (to: string) => dispatch({ t: 'move', heroId: activeHero.id, to });
+  // Node click opens the interactive Travel window; the actual move is
+  // dispatched once the player confirms which card(s) to spend.
+  const doMove = (to: string) => setTravelTo(to);
+  const doTravel = (cards: string[]) => { dispatch({ t: 'move', heroId: activeHero.id, to: travelTo!, cards }); setTravelTo(null); };
   const doRest = () => dispatch({ t: 'rest', heroId: activeHero.id });
   const doRestTrain = () => dispatch({ t: 'rest', heroId: activeHero.id, beravorTrain: true });
   const doCombatOrPeril = (choice: 'combat' | 'peril') => dispatch({ t: 'combatOrPeril', choice });
@@ -420,6 +425,13 @@ export default function App() {
             </button>
           ))}
         </div>
+      )}
+
+      {travelTo && inHeroActions && !ambush && (
+        <TravelModal
+          cat={cat} hero={activeHero} to={travelTo}
+          onConfirm={doTravel} onCancel={() => setTravelTo(null)}
+        />
       )}
 
       {state.winner && (
