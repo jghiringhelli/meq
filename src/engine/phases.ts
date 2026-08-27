@@ -299,16 +299,17 @@ function drawEncounters(s: GameState, cat: Catalog, group: string, n: number): C
   return out;
 }
 
-/** Whether the active hero can explore here: a foe-free (non-ambush) location,
- *  not yet claimed this game, whose region Encounter deck holds a card that
- *  could affect it. (The draw-3 resolution is faithful; the per-location claim
- *  marker keeps the AI touring the map instead of re-exploring one spot.) */
+/** Whether the active hero can explore here: a foe-free (non-ambush) location
+ *  whose Encounter step has not yet run this turn and whose region Encounter
+ *  deck holds a card that could affect it. The Encounter step happens once per
+ *  turn (guarded by `encounterStepDone`) but may repeat on later turns — the
+ *  manual places no once-per-game restriction on exploring a location. */
 export function canExplore(state: GameState, cat: Catalog, heroId: HeroId): boolean {
   const hero = state.heroes.find((h) => h.id === heroId)!;
   // An event-deck plot at the hero's location is always explorable (to discard
   // it), even where there is no ordinary encounter to draw.
   if ((state.sauron.activeEventPlots ?? []).some((m) => m.location === hero.location)) return true;
-  if (state.explored[hero.location]) return false;
+  if (hero.encounterStepDone) return false; // the Encounter step runs once per turn
   const group = encounterGroupFor(cat, hero.location);
   if (!group) return false;
   return Object.values(cat.encounters)
@@ -374,7 +375,7 @@ export function heroExplore(state: GameState, cat: Catalog, heroId: HeroId): Gam
   const group = encounterGroupFor(cat, hero.location);
   if (!group) throw new Error(`Nothing to explore at ${hero.location}`);
   hero.encounterStepDone = true;
-  s.explored[hero.location] = true; // location claimed this game (touring hint for the AI)
+  s.explored[hero.location] = true; // record the visit (map memory; no longer gates re-exploring)
   runEncounterStep(s, cat, heroId); // resolve (or whiff) — either way the turn ends
   hero.actionsRemaining = 0;
   return s;
