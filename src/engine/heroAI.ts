@@ -11,10 +11,11 @@ import {
   advance, heroMove, heroRest, heroExplore, endHeroActions, heroEngage,
   engageableMonsters, canExplore, encounterPlan, resolveChoice, resolveEncounter,
   chooseEncounter, legalMoves, heroDiscardPlot, heroRetrieveFavor, favorHere, targetablePlot,
-  heroSurvey, canSurvey, autoResolvePendingTree,
+  heroSurvey, canSurvey, autoResolvePendingTree, heroTradeFavor, otherHeroesHere,
 } from './game';
 import { ambushPending } from './mechanics';
 import { isPerilous } from './influence';
+import { corruptionBlocksSocial, corruptionFavorGainCap } from './corruption';
 
 // ---- local PRNG (independent of the game rng) --------------------------
 export type Rng = () => number;
@@ -49,6 +50,7 @@ export type HeroAction =
   | { kind: 'counter-plot' }
   | { kind: 'retrieve-favor' }
   | { kind: 'survey' }
+  | { kind: 'trade-favor'; fromId: HeroId; toId: HeroId; n: number }
   | { kind: 'end' };
 
 // ---- shared helpers ----------------------------------------------------
@@ -211,6 +213,34 @@ function plotDanger(st: { yellow: number; red: number; black: number }, marker: 
   return dangerA + dangerB;
 }
 
+/** Co-located allies pool favor onto the active hero so he can break a plot he
+ *  can't solo-afford. Heroes at the same location freely trade favor (rulebook
+ *  p.24); this pulls exactly the shortfall from the richest willing ally (never
+ *  draining one who might need it, and skipping Isolated heroes who can't trade).
+ *  Returns a single trade — repeated calls chain across turns/steps until the
+ *  active hero can afford the counter, then he breaks the plot. */
+function planFavorPool(s: GameState, cat: Catalog, hero: HeroState, cost: number): HeroAction | null {
+  const shortfall = cost - hero.favor;
+  if (shortfall <= 0) return null;
+  // A favor-gain cap (Corruption) would silently burn any traded favor above the
+  // recipient's remaining allowance — cap the ask so an ally's favor is never wasted.
+  let want = shortfall;
+  const gainCap = corruptionFavorGainCap(cat, hero);
+  if (gainCap !== undefined) {
+    const remaining = gainCap - (hero.favorGainedThisTurn ?? 0);
+    if (remaining <= 0) return null;
+    want = Math.min(want, remaining);
+  }
+  const donors = otherHeroesHere(s, hero.id)
+    .filter((a) => a.favor > 0 && !corruptionBlocksSocial(cat, a))
+    .sort((a, b) => b.favor - a.favor);
+  if (!donors.length) return null;
+  const donor = donors[0];
+  const n = Math.min(want, donor.favor);
+  if (n <= 0) return null;
+  return { kind: 'trade-favor', fromId: donor.id, toId: hero.id, n };
+}
+
 /** Breaking Sauron's plots is THE hero win path: if his colored markers fill he
  *  wins, and if the heroes never counter plots they almost never win. This plans
  *  the best plot-breaking action for the hero:
@@ -225,6 +255,21 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
   const active = s.sauron.activePlots ?? [];
   if (!active.length) return null;
   const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
+  // Standing on a counterable plot is the highest-value action: counter it now if
+  // affordable, otherwise pull the favor shortfall from a co-located ally (heroes
+  // freely trade favor, rulebook p.24) — the "break a plot with pooled favour at
+  // the last moment" tactic. This must precede the affordability filter below so
+  // it still fires when no single hero can solo-afford the break.
+  {
+    const here = targetablePlot(s, cat, hero.id);
+    if (here) {
+      const hp = cat.plots.find((p) => p.id === here.eventId);
+      const cost = hp?.favorToCounter ?? 2;
+      if (hero.favor >= cost) return { kind: 'counter-plot' };
+      const pool = planFavorPool(s, cat, hero, cost);
+      if (pool) return pool;
+    }
+  }
   const plotSlots = new Set<LocationId>(
     Object.values(cat.locations).filter((l) => l.plotSlot).map((l) => l.id),
   );
@@ -249,15 +294,8 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
   }
   if (!cands.length) return null;
   cands.sort((a, b) => b.urgency - a.urgency);
-  // counter now if the plot the ENGINE would select here is one we can afford
-  // (targetablePlot decides which plot a counter action removes — match it so we
-  // never issue an unaffordable counter).
-  const here = targetablePlot(s, cat, hero.id);
-  if (here) {
-    const hp = cat.plots.find((p) => p.id === here.eventId);
-    if (hero.favor >= (hp?.favorToCounter ?? 2)) return { kind: 'counter-plot' };
-  }
-  // otherwise step toward the most dangerous candidate's location
+  // (on-plot counter / favour-pooling is handled at the top of this function.)
+  // step toward the most dangerous candidate's location
   const best = cands[0];
   const targets = best.loc ? new Set<LocationId>([best.loc]) : plotSlots;
   const step = legalStepToward(s, cat, hero, targets);
@@ -545,6 +583,7 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
     case 'counter-plot': return heroDiscardPlot(s, cat, heroId);
     case 'retrieve-favor': return heroRetrieveFavor(s, cat, heroId);
     case 'survey': return heroSurvey(s, cat, heroId);
+    case 'trade-favor': return heroTradeFavor(s, cat, act.fromId, act.toId, act.n);
     case 'end': return endHeroActions(s, cat);
   }
 }
