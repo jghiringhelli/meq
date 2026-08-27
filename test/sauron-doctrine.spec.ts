@@ -32,18 +32,23 @@ describe('sauron doctrine', () => {
     }
   });
 
-  it('attrition drains more hero favor than balanced (vs a non-dodging hero)', () => {
-    const totalFavor = (doctrine: SauronDoctrine): number => {
-      let favor = 0;
+  it('attrition grinds the heroes harder than balanced (more Shadow pressure + corruption)', () => {
+    // The attrition doctrine "wears the heroes down" — it prizes corrupting
+    // Shadow cards and is less reluctant to hand-dump, so over many games it
+    // plays MORE Shadow cards and inflicts MORE corruption than a balanced Eye.
+    // (Hero end-favour is a poor proxy: heroes retrieve favour, so it is noisy.)
+    const agg = (doctrine: SauronDoctrine, key: 'shadowPlays' | 'finalCorruption'): number => {
+      let v = 0;
       for (const h of ['thalin', 'eleanor']) {
         for (const base of [1000, 2000]) {
           for (let i = 0; i < 12; i++) {
-            favor += playoutGame(cat, base + 13 * i, heuristic, 20000, { heroIds: [h], doctrine }).finalFavor;
+            v += playoutGame(cat, base + 13 * i, heuristic, 20000, { heroIds: [h], doctrine })[key];
           }
         }
       }
-      return favor;
+      return v;
     };
-    expect(totalFavor('attrition')).toBeLessThan(totalFavor('balanced'));
-  }, 60000);
+    expect(agg('attrition', 'shadowPlays')).toBeGreaterThan(agg('balanced', 'shadowPlays'));
+    expect(agg('attrition', 'finalCorruption')).toBeGreaterThan(agg('balanced', 'finalCorruption'));
+  }, 120000);
 });

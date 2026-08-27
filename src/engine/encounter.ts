@@ -442,7 +442,19 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       if (influenceAt(s, hero.location) < 1) addCardInfluence(s, cat, hero.location, 1);
       return 'location treated as perilous';
     }
-    case 'redistributeCorruption': { hero.corruption += 1; return '+1 corruption (redistributed)'; }
+    case 'redistributeCorruption': {
+      // "Redistribute Corruption cards between two heroes" (net-zero total): the
+      // Eye concentrates harm by moving one held Corruption card from another
+      // active hero onto this one. The card's actual +1 comes from the seq's
+      // second step (gainCorruption). No donor in a solo game -> no-op.
+      const donor = s.heroes.find((o) => o.id !== hero.id && o.status === 'active' && (o.corruptionCards?.length ?? 0) > 0);
+      if (!donor) return 'no corruption to redistribute';
+      const id = donor.corruptionCards.shift()!;
+      donor.corruption = Math.max(0, (donor.corruption ?? 0) - 1);
+      (hero.corruptionCards ||= []).push(id);
+      hero.corruption = (hero.corruption ?? 0) + 1;
+      return `redistributes 1 Corruption from ${donor.id}`;
+    }
     case 'skipAmbush': { hero.skipAmbush = true; return 'ambush avoided this turn'; }
     case 'moveAnywhere': { return 'hero may move to any location'; }
     case 'sauronMoveCharacter': {

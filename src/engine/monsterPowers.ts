@@ -7,6 +7,7 @@
 //   3. end-of-round — regeneration
 import type { Catalog, GameState, CombatCard, CombatType, CardId, Combatant } from './types';
 import { nextInt, shuffle } from './rng';
+import { gainCorruption } from './corruption';
 import { log } from './log';
 import { bestPlacementToward, placeInfluenceAction } from './influence';
 
@@ -109,7 +110,7 @@ export function applyMonsterPostBout(
     case 'mon-agent': {
       // Spread Lies: once per battle, after dealing Ranged damage, hero +1 corruption.
       if (dealtRanged && !once.spreadLies && heroState) {
-        heroState.corruption += 1;
+        gainCorruption(s, cat, heroState.id, 1);
         once.spreadLies = true;
         log(s, 'monster-ability', heroState.id, 'Agent Spread Lies: hero gains 1 corruption');
       }

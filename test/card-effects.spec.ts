@@ -121,12 +121,33 @@ describe('atom: gainCorruption / discardCorruption / discardAllCorruption / redi
     expect(h.corruption).toBe(0);
   });
 
-  it('redistributeCorruption adds exactly 1 corruption', () => {
+  it('redistributeCorruption moves a Corruption card between heroes (net-zero)', () => {
     const s = freshGame();
+    const a = s.heroes[0];
+    const b = s.heroes[1];
+    // Hero b holds a real Corruption card; hero a is the redistribution target.
+    const cid = Object.keys(cat.corruption)[0];
+    b.corruptionCards = [cid];
+    b.corruption = 1;
+    a.corruptionCards = [];
+    a.corruption = 0;
+    const totalBefore = a.corruption + b.corruption;
+    applyAtom(s, cat, a.id, { op: 'redistributeCorruption' });
+    // Net-zero total, counters stay in sync with the actual cards, and the card
+    // is concentrated onto the target hero.
+    expect(a.corruption + b.corruption).toBe(totalBefore);
+    expect(a.corruption).toBe(a.corruptionCards.length);
+    expect(b.corruption).toBe(b.corruptionCards.length);
+    expect(a.corruptionCards).toContain(cid);
+  });
+
+  it('redistributeCorruption is a no-op when no other hero holds Corruption', () => {
+    const s = freshGame();
+    for (const h of s.heroes) { h.corruptionCards = []; h.corruption = 0; }
     const h = heroOf(s);
-    h.corruption = 1;
     applyAtom(s, cat, h.id, { op: 'redistributeCorruption' });
-    expect(h.corruption).toBe(2);
+    expect(h.corruption).toBe(0);
+    expect(h.corruption).toBe(h.corruptionCards.length);
   });
 });
 
