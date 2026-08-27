@@ -272,6 +272,16 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .log-body { max-height: 240px; overflow-y: auto; font-size: 0.75rem; }
 .log-line { padding: 0.1rem 0; border-bottom: 1px solid #221c12; }
 .log-actor { color: var(--accent); }
+.sauron-summary { background: #1a1010; border: 1px solid #4a2a2a; border-radius: 6px; padding: 0.5rem; }
+.ss-title { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #d98a8a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.ss-toggle { background: #2a1616; border: 1px solid #5a2f2f; color: #d9a0a0; font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 4px; cursor: pointer; }
+.ss-toggle:hover { background: #3a1e1e; }
+.ss-block { margin-top: 0.4rem; max-height: 260px; overflow-y: auto; font-size: 0.75rem; }
+.ss-setup { border-top: 1px dashed #4a2a2a; padding-top: 0.3rem; }
+.ss-sub { font-size: 0.68rem; color: #a87a6a; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.2rem; }
+.ss-line { padding: 0.12rem 0; border-bottom: 1px solid #2a1616; color: #e4d3c3; }
+.ss-line.ss-phase { color: #b58f6a; font-style: italic; }
+.ss-empty { color: #8a7c60; font-style: italic; }
 
 .combat-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; }
 .choice-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 40; }

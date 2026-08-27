@@ -21,6 +21,7 @@ import RevealTray from './play/RevealTray';
 import LogPane from './play/LogPane';
 import NewGameSetup from './play/NewGameSetup';
 import SauronPanel from './play/SauronPanel';
+import SauronSummary from './play/SauronSummary';
 import MissionPanel from './play/MissionPanel';
 import TurnCycle from './play/TurnCycle';
 import { JoinScreen, NetPanel } from './play/NetPanel';
@@ -354,6 +355,7 @@ export default function App() {
         />
         <aside className="side">
           {state.humanSide !== 'Sauron' && <MissionPanel state={state} cat={cat} />}
+          {state.humanSide !== 'Sauron' && <SauronSummary state={state} />}
           <NetPanel net={net} state={state} cat={cat} roster={roster} onClaim={handleClaim} onKick={net.kick} />
           <TurnCycle state={state} cat={cat} />
           <HeroPanel
