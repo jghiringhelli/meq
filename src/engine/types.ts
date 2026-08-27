@@ -649,6 +649,23 @@ export interface GameState {
     heroId?: HeroId; isMinionCombat?: boolean; resumeCombat?: boolean;
     options: { id: CardId; label: string }[];
   } | null;
+  /** A card's internal effect-tree decision that the human `actor` must make
+   *  (e.g. Sauron choosing Morgul-Blade's effect). The resolver auto-picks the
+   *  AI-owned nodes and pauses here; `treeDecision` supplies the chosen option
+   *  index and resumes. `resumeCombat` means a combat-start shadow owes a
+   *  `queuePreparation` on completion. */
+  pendingTree?: {
+    sourceKind: 'encounter' | 'event' | 'peril' | 'shadow';
+    cardId: string;
+    source: string;
+    heroId: HeroId;
+    actor: 'hero' | 'sauron';
+    resumeCombat?: boolean;
+    tree: EffTree;
+    decisions: number[];
+    prompt: string;
+    options: { label: string; enabled: boolean }[];
+  } | null;
   /** locations whose encounter has already been resolved this game. */
   explored: Record<LocationId, boolean>;
   /** #10: per-region Encounter decks + discard piles (keyed by regionGroup,

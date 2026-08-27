@@ -11,7 +11,7 @@ import {
   heroExplore, resolveEncounter, chooseEncounter, revealEncounter, dismissReveal,
   heroDarkPath, heroRetrieveFavor, heroConsultCharacter, heroCompleteQuest,
   heroDiscardPlot, heroCleanseCorruption, heroTradeFavor, heroSurvey, resolveCombatOrPeril,
-  resolveShadowReaction,
+  resolveShadowReaction, resolveTreeDecision,
 } from './game';
 
 /** A serializable player intent. `t` is the discriminant tag. */
@@ -36,7 +36,8 @@ export type Action =
   | { t: 'tradeFavor'; heroId: HeroId; toId: HeroId; n: number }
   | { t: 'survey'; heroId: HeroId }
   | { t: 'combatOrPeril'; choice: 'combat' | 'peril' }
-  | { t: 'shadowReaction'; cardId: CardId | null };
+  | { t: 'shadowReaction'; cardId: CardId | null }
+  | { t: 'treeDecision'; optionIndex: number };
 
 export type ActionType = Action['t'];
 
@@ -64,6 +65,7 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'survey': return heroSurvey(state, cat, action.heroId);
     case 'combatOrPeril': return resolveCombatOrPeril(state, cat, action.choice);
     case 'shadowReaction': return resolveShadowReaction(state, cat, action.cardId);
+    case 'treeDecision': return resolveTreeDecision(state, cat, action.optionIndex);
     default: {
       const _exhaustive: never = action;
       return _exhaustive;

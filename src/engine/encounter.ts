@@ -568,23 +568,101 @@ export function autoResolveTree(
   s: GameState, cat: Catalog, heroId: HeroId, tree: EffTree, source: string,
   side: 'hero' | 'sauron' = 'hero',
 ): void {
-  const better = (a: number, b: number) => (side === 'hero' ? a > b : a < b);
   const decisions: number[] = [];
   for (let guard = 0; guard < 24; guard++) {
     const plan = planEncounter(s, cat, heroId, tree, decisions);
     if (plan.complete) { applyAtoms(s, cat, heroId, plan.atoms, source); return; }
-    const opts = plan.pending!.options;
-    let best = -1, bestScore = 0;
-    for (let i = 0; i < opts.length; i++) {
-      if (!opts[i].enabled) continue;
-      const trial = planEncounter(s, cat, heroId, tree, [...decisions, i]);
-      const c = clone(s);
-      applyAtoms(c, cat, heroId, trial.atoms, source);
-      const score = heroWellbeing(c, heroId);
-      if (best < 0 || better(score, bestScore)) { bestScore = score; best = i; }
-    }
-    decisions.push(best >= 0 ? best : Math.max(0, opts.findIndex((o) => o.enabled)));
+    decisions.push(bestDecision(s, cat, heroId, tree, decisions, plan.pending!.options, side, source));
   }
   const plan = planEncounter(s, cat, heroId, tree, decisions);
   applyAtoms(s, cat, heroId, plan.atoms, source);
+}
+
+/** Pick the option a `side`-controlled AI actor would take at a decision node:
+ *  the one that (via a trial resolution) leaves the hero best off for `'hero'`
+ *  or worst off for `'sauron'`. Shared by the auto-resolver and the interactive
+ *  resolver (which uses it for the decisions the AI owns). */
+function bestDecision(
+  s: GameState, cat: Catalog, heroId: HeroId, tree: EffTree, decisions: number[],
+  opts: { label: string; enabled: boolean }[], side: 'hero' | 'sauron', source: string,
+): number {
+  const better = (a: number, b: number) => (side === 'hero' ? a > b : a < b);
+  let best = -1, bestScore = 0;
+  for (let i = 0; i < opts.length; i++) {
+    if (!opts[i].enabled) continue;
+    const trial = planEncounter(s, cat, heroId, tree, [...decisions, i]);
+    const c = clone(s);
+    applyAtoms(c, cat, heroId, trial.atoms, source);
+    const score = heroWellbeing(c, heroId);
+    if (best < 0 || better(score, bestScore)) { bestScore = score; best = i; }
+  }
+  return best >= 0 ? best : Math.max(0, opts.findIndex((o) => o.enabled));
+}
+
+/** Kind of card whose internal decisions can be owned by a specific side. */
+export type TreeSource = 'encounter' | 'event' | 'peril' | 'shadow';
+
+// Cards whose PRINTED text hands the choice to the side that does not normally
+// control that source (the only such exceptions in the current card data).
+const TREE_HERO_OVERRIDE = new Set(['shadow-dark-promises', 'shadow-dark-promises-2']);
+const TREE_SAURON_OVERRIDE = new Set(['peril-nine-for-mortal-men-doomed-to-die']);
+
+/** Who makes the decisions printed on a card: Sauron on the cards he controls
+ *  (Shadow), the affected hero otherwise (Encounter/Event/Peril) — honouring the
+ *  two printed exceptions where a card hands the choice to the other side. */
+export function treeActor(sourceKind: TreeSource, cardId: string): 'hero' | 'sauron' {
+  if (TREE_HERO_OVERRIDE.has(cardId)) return 'hero';
+  if (TREE_SAURON_OVERRIDE.has(cardId)) return 'sauron';
+  return sourceKind === 'shadow' ? 'sauron' : 'hero';
+}
+
+/** Is the given decision `actor` currently a HUMAN player (who must be prompted)
+ *  rather than an AI (which auto-picks)? Mirrors `sauronAuto` without importing
+ *  it (avoids a module cycle): Sauron is human only when the human plays Sauron
+ *  and reactions are not auto-resolved; heroes are human when the human plays
+ *  the hero side. */
+export function treeActorIsHuman(s: GameState, actor: 'hero' | 'sauron'): boolean {
+  return actor === 'sauron'
+    ? (s.humanSide === 'Sauron' && !s.sauronReactsAuto)
+    : s.humanSide === 'Hero';
+}
+
+/** Context describing a card `tree` being resolved interactively. */
+export interface TreeCtx {
+  sourceKind: TreeSource;
+  cardId: string;
+  source: string;
+  heroId: HeroId;
+  actor: 'hero' | 'sauron';
+  /** Combat-start shadow (e.g. Morgul-Blade) owes a `queuePreparation` once the
+   *  internal decision completes — the caller resumes combat when this is set. */
+  resumeCombat?: boolean;
+}
+
+/** Resolve a card `tree` interactively: auto-pick the decisions the AI owns and
+ *  PAUSE (set `s.pendingTree`) at the first decision the human `actor` must make.
+ *  Returns true if it paused (the caller must yield to the UI), false if it ran
+ *  to completion and applied every atom. `decisions` seeds a resume. */
+export function stepResolveTree(
+  s: GameState, cat: Catalog, tree: EffTree, ctx: TreeCtx, decisions: number[] = [],
+): boolean {
+  const human = treeActorIsHuman(s, ctx.actor);
+  let dec = decisions;
+  for (let guard = 0; guard < 64; guard++) {
+    const plan = planEncounter(s, cat, ctx.heroId, tree, dec);
+    if (plan.complete) { applyAtoms(s, cat, ctx.heroId, plan.atoms, ctx.source); return false; }
+    if (human) {
+      s.pendingTree = {
+        sourceKind: ctx.sourceKind, cardId: ctx.cardId, source: ctx.source,
+        heroId: ctx.heroId, actor: ctx.actor, resumeCombat: ctx.resumeCombat,
+        tree, decisions: dec, prompt: plan.pending!.prompt,
+        options: plan.pending!.options.map((o) => ({ label: o.label, enabled: o.enabled })),
+      };
+      return true;
+    }
+    dec = [...dec, bestDecision(s, cat, ctx.heroId, tree, dec, plan.pending!.options, ctx.actor, ctx.source)];
+  }
+  const plan = planEncounter(s, cat, ctx.heroId, tree, dec);
+  applyAtoms(s, cat, ctx.heroId, plan.atoms, ctx.source);
+  return false;
 }

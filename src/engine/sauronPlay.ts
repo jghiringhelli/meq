@@ -7,7 +7,7 @@
 import type { Catalog, GameState, LocationId, MinionId, MonsterId, Plot } from './types';
 import { clone, gameStage } from './mechanics';
 import { log } from './log';
-import { autoResolveTree } from './encounter';
+import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman } from './encounter';
 import { applyPlotCard, drawShadow, drawPlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
 import { influenceAt, canPlaceInfluence, placeInfluenceAction, monsterPlaceable } from './influence';
 
@@ -246,7 +246,14 @@ export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string)
   if (!target) return state;
   s.sauron.shadowHand = s.sauron.shadowHand.filter((x) => x !== cardId);
   s.sauron.shadowDiscard.push(cardId);
-  autoResolveTree(s, cat, target.id, card.tree, `shadow ${card.name}`, 'sauron');
+  const actor = treeActor('shadow', cardId);
+  if (actor === 'sauron' && treeActorIsHuman(s, 'sauron')) {
+    stepResolveTree(s, cat, card.tree, {
+      sourceKind: 'shadow', cardId, source: `shadow ${card.name}`, heroId: target.id, actor,
+    });
+  } else {
+    autoResolveTree(s, cat, target.id, card.tree, `shadow ${card.name}`, actor);
+  }
   s.shadowPlayedThisSauronTurn = true;
   log(s, 'sauron', 'Sauron', `plays shadow ${card.name} on ${target.id}`);
   return s;

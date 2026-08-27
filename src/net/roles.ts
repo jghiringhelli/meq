@@ -61,6 +61,12 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
       return SAURON_ROLE;
     case 'shadowReaction':
       return SAURON_ROLE;
+    case 'treeDecision':
+      // The player who owns the paused card decision: Sauron for his own cards,
+      // otherwise the affected hero.
+      return state.pendingTree?.actor === 'hero'
+        ? (state.pendingTree.heroId as RoleId)
+        : SAURON_ROLE;
     case 'choice':
     case 'chooseEncounter':
     case 'revealEncounter':

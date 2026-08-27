@@ -98,7 +98,7 @@ export default function App() {
     // Pause the AI hero driver ONLY for the decisions a human Sauron must make;
     // every other pending (hero choices, combat, encounters) is resolved inside
     // advanceHeroSide, so it must be allowed to run to reach/resume them.
-    if (state.pendingCombatOrPeril || state.pendingShadowReaction) return;
+    if (state.pendingCombatOrPeril || state.pendingShadowReaction || state.pendingTree) return;
     const next = advanceHeroSide(state, catalog, missionAware, heroRng.current);
     setState(next);
   }, [catalog, state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -245,6 +245,7 @@ export default function App() {
   const doRestTrain = () => dispatch({ t: 'rest', heroId: activeHero.id, beravorTrain: true });
   const doCombatOrPeril = (choice: 'combat' | 'peril') => dispatch({ t: 'combatOrPeril', choice });
   const doShadowReaction = (cardId: string | null) => dispatch({ t: 'shadowReaction', cardId });
+  const doTreeDecision = (optionIndex: number) => dispatch({ t: 'treeDecision', optionIndex });
   const doEngage = (m: MonsterId) => dispatch({ t: 'engage', heroId: activeHero.id, monsterId: m });
   const doEndTurn = () => dispatch({ t: 'endHeroActions' });
   const doChoice = (optId: string) => dispatch({ t: 'choice', optionId: optId });
@@ -372,6 +373,21 @@ export default function App() {
             </button>
           ))}
           <button onClick={() => doShadowReaction(null)}>Pass</button>
+        </div>
+      )}
+
+      {state.pendingTree
+        && ((state.pendingTree.actor === 'sauron' && state.humanSide === 'Sauron')
+          || (state.pendingTree.actor === 'hero' && state.humanSide === 'Hero')) && (
+        <div className="banner tree-decision">
+          <span>
+            <b>{state.pendingTree.source}</b> — {state.pendingTree.prompt}
+          </span>
+          {state.pendingTree.options.map((o, i) => (
+            <button key={i} disabled={!o.enabled} onClick={() => doTreeDecision(i)}>
+              {o.label}
+            </button>
+          ))}
         </div>
       )}
 

@@ -12,7 +12,7 @@ import { log } from './log';
 import { requestChoice } from './choices';
 import { resolveBout } from './effects';
 import { chooseMonsterCard } from './ai';
-import { statValue } from './encounter';
+import { statValue, stepResolveTree } from './encounter';
 import { gainCorruption, corruptionCombatStartDiscard } from './corruption';
 import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
 import { bestPlacementToward, placeInfluenceAction } from './influence';
@@ -536,11 +536,36 @@ export function resolveShadowReaction(state: GameState, cat: Catalog, choice: Ca
     const target = pending.heroId
       ? s.heroes.find((h) => h.id === pending.heroId)
       : s.heroes.filter((h) => h.status === 'active').sort((a, b) => b.corruption - a.corruption)[0];
-    if (target) playSpecificShadow(s, cat, choice, target, pending.window, (m) => log(s, 'sauron', 'Sauron', m));
+    if (target) {
+      playSpecificShadow(s, cat, choice, target, pending.window, (m) => log(s, 'sauron', 'Sauron', m),
+        { resumeCombat: pending.resumeCombat });
+    }
   } else {
     log(s, 'sauron', 'Sauron', `passes the ${pending.window} Shadow window`);
   }
-  if (pending.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
+  // If the played card paused for an internal Sauron decision, the combat resume
+  // (Preparation) is owed once that decision completes — see resolveTreeDecision.
+  if (!s.pendingTree && pending.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
+  return s;
+}
+
+/** Resume a paused card effect-tree (`s.pendingTree`) with the human actor's
+ *  chosen `optionIndex`: auto-picks any remaining AI-owned nodes, applies the
+ *  atoms once the walk completes (or pauses again at the next human decision),
+ *  and — for a combat-start shadow — runs the owed Preparation step. */
+export function resolveTreeDecision(state: GameState, cat: Catalog, optionIndex: number): GameState {
+  const s = clone(state);
+  const p = s.pendingTree;
+  if (!p) throw new Error('No pending tree decision');
+  if (optionIndex < 0 || optionIndex >= p.options.length || !p.options[optionIndex].enabled) {
+    throw new Error(`Illegal tree decision ${optionIndex}`);
+  }
+  s.pendingTree = null;
+  const paused = stepResolveTree(s, cat, p.tree, {
+    sourceKind: p.sourceKind, cardId: p.cardId, source: p.source,
+    heroId: p.heroId, actor: p.actor, resumeCombat: p.resumeCombat,
+  }, [...p.decisions, optionIndex]);
+  if (!paused && p.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
   return s;
 }
 

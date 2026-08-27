@@ -3,7 +3,7 @@
 // the Lidless Eye loop so hoarded influence and board pressure actually convert
 // into progress on the dark story track.
 import type { Catalog, GameState, HeroId, HeroState, LocationId, CardId, Plot, ShadowCard, StoryMarkerColor, SauronDoctrine } from './types';
-import { autoResolveTree, statValue } from './encounter';
+import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman, statValue } from './encounter';
 import { influenceAt, plotMakesPerilous } from './influence';
 import { shuffle } from './rng';
 import { corruptionPerilBonus, corruptionSauronShadowRedraw } from './corruption';
@@ -400,12 +400,24 @@ export function reactionCandidates(
  *  window spent, and apply the Elven Cloak pool drain. Used by both the automa
  *  (best card) and the interactive human (his chosen card). */
 export function playSpecificShadow(
-  s: GameState, cat: Catalog, cid: CardId, target: HeroState, window: ShadowWindow, log?: Logger,
+  s: GameState, cat: Catalog, cid: CardId, target: HeroState, window: ShadowWindow,
+  log?: Logger, opts?: { resumeCombat?: boolean },
 ): void {
   const card = cat.shadow[cid];
   s.sauron.shadowHand = s.sauron.shadowHand.filter((x) => x !== cid);
   s.sauron.shadowDiscard.push(cid);
-  autoResolveTree(s, cat, target.id, card.tree, `shadow ${card.name}`, 'sauron');
+  const actor = treeActor('shadow', cid);
+  // Sauron's own printed choices become interactive when a human plays the Eye;
+  // everything else (AI Sauron, or a hero-owned choice like Dark Promises whose
+  // hero is AI here) auto-resolves optimally for the deciding side.
+  if (actor === 'sauron' && treeActorIsHuman(s, 'sauron')) {
+    stepResolveTree(s, cat, card.tree, {
+      sourceKind: 'shadow', cardId: cid, source: `shadow ${card.name}`,
+      heroId: target.id, actor, resumeCombat: opts?.resumeCombat,
+    });
+  } else {
+    autoResolveTree(s, cat, target.id, card.tree, `shadow ${card.name}`, actor);
+  }
   s.shadowPlayedThisHeroTurn = true;
   // Elven Cloak: "After Sauron plays a Shadow card on your turn, discard 1
   // influence from the Shadow Pool."
