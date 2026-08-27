@@ -295,7 +295,7 @@ export default function App() {
         <PhaseTrack phase={state.phase} />
         <div style={{ flex: 1 }} />
         {!state.winner && state.phase !== 'HeroActions' && !state.pendingChoice && !state.pendingCombat
-          && !state.pendingReveal
+          && !state.pendingReveal && !state.pendingTree
           && !(state.humanSide === 'Sauron' && state.activeSide === 'Sauron') && (
           <button className="primary" onClick={doAdvance}>Advance phase ▶</button>
         )}

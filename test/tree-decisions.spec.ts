@@ -10,6 +10,7 @@ import { treeActor } from '../src/engine/encounter';
 import { playSpecificShadow, raiseShadowReaction } from '../src/engine/sauronmech';
 import { maybeDrawPeril } from '../src/engine/sauronmech';
 import { sauronPlayShadow } from '../src/engine/sauronPlay';
+import { sauronResolveEvents } from '../src/engine/game';
 import { resolveShadowReaction, resolveTreeDecision, autoResolvePendingTree } from '../src/engine/game';
 import type { GameState } from '../src/engine/types';
 
@@ -142,6 +143,37 @@ describe('Peril "Choose one" is the hero\'s decision', () => {
     expect(s.pendingTree).toBeTruthy();
     const s2 = autoResolvePendingTree(s, cat);
     expect(s2.pendingTree).toBeFalsy();
+  });
+});
+
+describe('Event "Choose one" is the hero\'s decision', () => {
+  const TEMPTED = 'event-t1-tempted-by-power';
+  function eventSetup(human: 'Hero' | 'Sauron'): GameState {
+    const s = freshGame();
+    s.humanSide = human;
+    s.phase = 'SauronEvents';
+    s.sauron.eventStage = 1; // matches t1 events; skip the deck rebuild
+    s.sauron.eventDeck = [TEMPTED, TEMPTED, TEMPTED];
+    s.sauron.eventDiscard = [];
+    return s;
+  }
+
+  it('pauses for a HUMAN hero, after placing tokens and advancing the phase', () => {
+    const s2 = sauronResolveEvents(eventSetup('Hero'), cat);
+    expect(s2.pendingTree?.sourceKind).toBe('event');
+    expect(s2.pendingTree?.actor).toBe('hero');
+    expect(s2.pendingTree?.cardId).toBe(TEMPTED);
+    // The board placement + phase transition already ran (reordered ahead of the
+    // pausing effect), so resuming needs no further continuation.
+    expect(s2.phase).toBe('SauronMinions');
+    const s3 = resolveTreeDecision(s2, cat, 0);
+    expect(s3.pendingTree).toBeFalsy();
+  });
+
+  it('auto-resolves the event (no pause) when the hero is AI', () => {
+    const s2 = sauronResolveEvents(eventSetup('Sauron'), cat);
+    expect(s2.pendingTree).toBeFalsy();
+    expect(s2.phase).toBe('SauronMinions');
   });
 });
 

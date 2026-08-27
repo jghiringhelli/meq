@@ -9,7 +9,7 @@ import { drawFromLifePool, restHero, healHero, prepareHeroForFinale } from './he
 import { log } from './log';
 import { shuffle } from './rng';
 import { applyOps } from './noncombat';
-import { planEncounter, applyAtoms, autoResolveTree, statValue, type PlanResult } from './encounter';
+import { planEncounter, applyAtoms, autoResolveTree, stepResolveTree, treeActorIsHuman, statValue, type PlanResult } from './encounter';
 import { eyePlaceInfluenceOnce, eyeSpawnMonsterOnce } from './ai';
 import { evalMission, minionsInPlay } from './missions';
 import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, raiseShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield } from './sauronmech';
@@ -676,30 +676,11 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
         : 'No dominance: a single card is drawn and resolved.',
     };
   }
-  // Apply each event's mechanical ops: global ops (influence) once; hero-scoped
-  // ops (favor/corruption/damage) fall on every active hero (a Sauron event).
-  for (const e of chosen) {
-    // Event-deck "plots" don't resolve a one-shot effect: they enter play as a
-    // lasting board token (see registerEventPlot) whose coloured marker advances
-    // each Story Step until a hero Explores it. Skip the generic tree here.
-    if (eventDeckPlotFor(cat, e)) { registerEventPlot(s, cat, e); continue; }
-    if (e.tree && (e.tree as any).k && (e.tree as any).k !== 'none') {
-      // Compiled effect tree: forced Sauron atoms fire; optional hero reactions
-      // resolve in the heroes' favour. Applied once so global board pressure
-      // (influence/markers/spawns) isn't multiplied by the party size.
-      const target = s.heroes.find((x) => x.status === 'active');
-      if (target) autoResolveTree(s, cat, target.id, e.tree, `event ${e.name}`, 'hero');
-      continue;
-    }
-    if (!e.ops?.length) continue;
-    const globalOps = e.ops.filter((o) => o.op === 'addInfluence' || o.op === 'removeInfluence');
-    const heroOps = e.ops.filter((o) => o.op !== 'addInfluence' && o.op !== 'removeInfluence');
-    if (globalOps.length) applyOps(s, cat, null, globalOps, `event ${e.name}`);
-    if (heroOps.length) for (const h of s.heroes.filter((x) => x.status === 'active')) applyOps(s, cat, h.id, heroOps, `event ${e.name}`);
-  }
-  // Event board placement: favor tokens (favor1/favor2) and the Character named
-  // by the card land at their designated locations (this is what makes e.g.
-  // Théoden / Thranduil appear where the card says, not an arbitrary seat).
+  // Event board placement happens FIRST — it is independent of the card's
+  // mechanical effect (favor/Character tokens land per the card text), so doing
+  // it up front lets the effect below PAUSE for a human hero's printed choice
+  // without stranding the placement or the phase transition.
+  for (const e of chosen) if (eventDeckPlotFor(cat, e)) registerEventPlot(s, cat, e);
   for (const e of chosen) placeEventTokens(s, cat, e);
   // Discard the resolved cards — EXCEPT event-deck plots, which are held in play
   // (out of the deck) until a hero Explores them.
@@ -717,6 +698,31 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
     s.sauronPending = undefined;
     s.shadowPlayedThisSauronTurn = false;
     log(s, 'phase', 'Sauron', `action step: ${s.sauronActionsLeft} actions (chest ${s.sauron.influence})`);
+  }
+  // Apply each event's mechanical effect LAST: global ops (influence) once;
+  // hero-scoped ops (favor/corruption/damage) fall on every active hero. A card
+  // whose printed "Choose one" belongs to the hero PAUSES here for a human hero
+  // (see treeActor); the AI picks the hero's best option.
+  for (const e of chosen) {
+    if (eventDeckPlotFor(cat, e)) continue; // a lasting plot, no one-shot effect
+    if (e.tree && (e.tree as any).k && (e.tree as any).k !== 'none') {
+      const target = s.heroes.find((x) => x.status === 'active');
+      if (target) {
+        if (treeActorIsHuman(s, 'hero')) {
+          stepResolveTree(s, cat, e.tree, {
+            sourceKind: 'event', cardId: e.id, source: `event ${e.name}`, heroId: target.id, actor: 'hero',
+          });
+        } else {
+          autoResolveTree(s, cat, target.id, e.tree, `event ${e.name}`, 'hero');
+        }
+      }
+      continue;
+    }
+    if (!e.ops?.length) continue;
+    const globalOps = e.ops.filter((o) => o.op === 'addInfluence' || o.op === 'removeInfluence');
+    const heroOps = e.ops.filter((o) => o.op !== 'addInfluence' && o.op !== 'removeInfluence');
+    if (globalOps.length) applyOps(s, cat, null, globalOps, `event ${e.name}`);
+    if (heroOps.length) for (const h of s.heroes.filter((x) => x.status === 'active')) applyOps(s, cat, h.id, heroOps, `event ${e.name}`);
   }
   return s;
 }
@@ -1276,7 +1282,7 @@ export function checkWin(s: GameState, _cat: Catalog): WinResult | null {
 /** Advance the phase machine one step. Never advances through an interactive
  *  HeroActions step or while a choice/combat is pending. */
 export function advance(state: GameState, cat: Catalog): GameState {
-  if (state.pendingChoice || state.pendingCombat) return state;
+  if (state.pendingChoice || state.pendingCombat || state.pendingTree) return state;
   // A human Sauron drives their own turn via the sauronPlay functions; the phase
   // machine must not auto-run the Lidless Eye on their behalf.
   if (state.humanSide === 'Sauron' && state.activeSide === 'Sauron' && state.phase !== 'GameOver') {

@@ -1,0 +1,15 @@
+Interactive hero Event decisions (reordered runSauronEvents)
+
+The Event Step's "Choose one" is the hero's decision. Previously it was
+auto-resolved. Now, when the hero is human, the event effect pauses via
+stepResolveTree and the human resolves it through the pendingTree modal.
+
+runSauronEvents is reordered so token placement, plot registration, the
+phase transition to SauronMinions, and human-Sauron action setup all run
+BEFORE applying the (possibly-pausing) event effect. Since a single event
+is resolved per step, the pausing effect runs last and resume is
+self-contained -- avoiding the phases<-combat module cycle on resume.
+
+advance() and the App "Advance phase" button now guard on pendingTree.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
