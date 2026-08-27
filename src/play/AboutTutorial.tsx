@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { VMOD_URL } from './ArtLoader';
 
 /**
  * Start-screen "About / How to play" panel: explains what this project is,
@@ -35,13 +36,13 @@ export default function AboutTutorial() {
             You do <strong>not</strong> need to install VASSAL — just download the module file.
           </p>
           <ol>
-            <li>Download the <em>Middle-earth Quest</em> module (<code>.vmod</code>) from the{' '}
-              <a href="https://vassalengine.org" target="_blank" rel="noreferrer">VASSAL module library</a>.
+            <li>Download the <em>Middle-earth Quest</em> module (<code>.vmod</code>) directly:{' '}
+              <a href={VMOD_URL} target="_blank" rel="noreferrer"><code>Middle_Earth_Quest_1.6.vmod</code></a>{' '}
+              (from the <a href="https://vassalengine.org" target="_blank" rel="noreferrer">VASSAL module library</a>).
             </li>
-            <li>A <code>.vmod</code> file is just a ZIP — rename it to <code>.zip</code> and
-              extract it. The card/board images live in the <code>images/</code> folder inside.</li>
-            <li>Click <strong>“Load your art”</strong> below and select that <code>images</code>
-              folder (or all the image files). The app matches them to the cards automatically.</li>
+            <li>Click <strong>“Load VASSAL module (.vmod)…”</strong> below and select that file.
+              No need to rename or unzip it — the app reads the images inside and matches them to
+              the cards automatically. (Loading extracted files or a folder still works too.)</li>
           </ol>
           <p className="muted">
             The VASSAL module has some misspelled/mismatched file names. We keep our own
