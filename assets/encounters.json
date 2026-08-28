@@ -330,11 +330,23 @@
           }
         },
         "then": {
-          "k": "op",
-          "atom": {
-            "op": "gainCorruption",
-            "n": 1
-          }
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            }
+          ]
         }
       },
       "partial": false
@@ -794,11 +806,36 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "loseFavor",
-          "n": 2
-        }
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Remove 1 influence from the Shadow Pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Spend 2 favor to gain 1 level of an attribute",
+            "cost": {
+              "op": "loseFavor",
+              "n": 2
+            },
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainStat",
+                "stat": "choice",
+                "n": 1
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -898,11 +935,32 @@
               "n": 6
             },
             "eff": {
-              "k": "op",
-              "atom": {
-                "op": "gainFavor",
-                "n": 1
-              }
+              "k": "choice",
+              "prompt": "If reduced to 0 damage, choose one",
+              "options": [
+                {
+                  "label": "Gain 1 favor",
+                  "cost": null,
+                  "eff": {
+                    "k": "op",
+                    "atom": {
+                      "op": "gainFavor",
+                      "n": 1
+                    }
+                  }
+                },
+                {
+                  "label": "Gain a \"Horse\" Item card",
+                  "cost": null,
+                  "eff": {
+                    "k": "op",
+                    "atom": {
+                      "op": "gainItem",
+                      "item": "Horse"
+                    }
+                  }
+                }
+              ]
             }
           },
           {
@@ -1605,11 +1663,32 @@
           }
         },
         "then": {
-          "k": "op",
-          "atom": {
-            "op": "gainFavor",
-            "n": 2
-          }
+          "k": "choice",
+          "prompt": "Choose one",
+          "options": [
+            {
+              "label": "Gain 2 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 2
+                }
+              }
+            },
+            {
+              "label": "Gain a \"Boat\" Item card",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainItem",
+                  "item": "Boat"
+                }
+              }
+            }
+          ]
         }
       },
       "partial": false
@@ -1641,13 +1720,16 @@
           },
           {
             "k": "optional",
-            "prompt": "You may then spend 1 favor to remove 2 influence from the Shadow Pool",
-            "cost": null,
+            "prompt": "You may spend 1 favor to remove 2 influence from the Shadow Pool",
+            "cost": {
+              "op": "loseFavor",
+              "n": 1
+            },
             "eff": {
               "k": "op",
               "atom": {
-                "op": "loseFavor",
-                "n": 1
+                "op": "removeInfluence",
+                "n": 2
               }
             }
           }
@@ -2100,6 +2182,21 @@
           "atom": {
             "op": "gainFavor",
             "n": 1
+          }
+        },
+        "else": {
+          "k": "optional",
+          "prompt": "You may spend 1 favor to discard 1 Corruption card",
+          "cost": {
+            "op": "loseFavor",
+            "n": 1
+          },
+          "eff": {
+            "k": "op",
+            "atom": {
+              "op": "discardCorruption",
+              "n": 1
+            }
           }
         }
       },
@@ -3979,19 +4076,35 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "optional",
-        "prompt": "Gain 1 Corruption to draw Hero cards equal to your fortitude (else gain 1 favor)",
-        "cost": {
-          "op": "gainCorruption",
-          "n": 1
-        },
-        "eff": {
-          "k": "op",
-          "atom": {
-            "op": "drawPer",
-            "per": "fortitude"
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Gain 1 Corruption to draw Hero cards equal to your fortitude",
+            "cost": {
+              "op": "gainCorruption",
+              "n": 1
+            },
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "drawPer",
+                "per": "fortitude"
+              }
+            }
+          },
+          {
+            "label": "Gain 1 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainFavor",
+                "n": 1
+              }
+            }
           }
-        }
+        ]
       },
       "partial": false
     },

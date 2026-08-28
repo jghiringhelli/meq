@@ -430,11 +430,33 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "discardCorruption",
-          "n": 1
-        }
+        "k": "choice",
+        "prompt": "Explore: choose one",
+        "options": [
+          {
+            "label": "Gain +1 Fortitude",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainStat",
+                "stat": "fortitude",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Discard 1 Corruption card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardCorruption",
+                "n": 1
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -539,7 +561,7 @@
         "k": "op",
         "atom": {
           "op": "spawnMonster",
-          "n": 1
+          "n": 2
         }
       },
       "partial": false
@@ -1210,11 +1232,23 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "discardMonsterToken",
-          "n": 1
-        }
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 2
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "discardMonsterToken",
+              "n": 1
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -1266,11 +1300,33 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "discardCorruption",
-          "n": 1
-        }
+        "k": "choice",
+        "prompt": "Explore: choose one",
+        "options": [
+          {
+            "label": "Discard 1 Corruption card",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardCorruption",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Gain +1 Fortitude",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "gainStat",
+                "stat": "fortitude",
+                "n": 1
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -1289,10 +1345,19 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
+        "k": "optional",
+        "prompt": "Explore; you may spend 2 favor to move the black story marker 1 space left",
+        "cost": {
           "op": "loseFavor",
           "n": 2
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "advanceMarker",
+            "marker": "black",
+            "n": -1
+          }
         }
       },
       "partial": false

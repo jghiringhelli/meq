@@ -27,14 +27,35 @@
           },
           {
             "k": "optional",
-            "prompt": "You may discard any number of hero cards from your hand, reducing the damage by 1 for each shield icon discarded, If you reduces the damage to 0, you gain 1 favor or training",
+            "prompt": "Discard cards to reduce the damage; if reduced to 0, gain 1 favor or training",
             "cost": null,
             "eff": {
-              "k": "op",
-              "atom": {
-                "op": "gainFavor",
-                "n": 1
-              }
+              "k": "choice",
+              "prompt": "Choose your reward",
+              "options": [
+                {
+                  "label": "Gain 1 favor",
+                  "cost": null,
+                  "eff": {
+                    "k": "op",
+                    "atom": {
+                      "op": "gainFavor",
+                      "n": 1
+                    }
+                  }
+                },
+                {
+                  "label": "Receive training",
+                  "cost": null,
+                  "eff": {
+                    "k": "op",
+                    "atom": {
+                      "op": "training",
+                      "n": 1
+                    }
+                  }
+                }
+              ]
             }
           }
         ]
@@ -128,7 +149,7 @@
         "prompt": "Choose one",
         "options": [
           {
-            "label": "You choose to either lose 2 favor",
+            "label": "Lose 2 favor",
             "cost": null,
             "eff": {
               "k": "op",
@@ -139,13 +160,13 @@
             }
           },
           {
-            "label": "Have sauron draw 2 corruption cards and choose 1 for you to receive, discarding the other",
+            "label": "Sauron draws 2 Corruption and you receive 1",
             "cost": null,
             "eff": {
               "k": "op",
               "atom": {
                 "op": "gainCorruption",
-                "n": 2
+                "n": 1
               }
             }
           }
@@ -167,7 +188,8 @@
             "k": "op",
             "atom": {
               "op": "discardHand",
-              "n": 1
+              "n": 0,
+              "perCorruption": true
             }
           },
           {
@@ -191,7 +213,7 @@
       "tree": {
         "k": "if",
         "cond": {
-          "cmp": "lt",
+          "cmp": "le",
           "left": {
             "stat": "wisdom"
           },
@@ -200,11 +222,22 @@
           }
         },
         "then": {
-          "k": "op",
-          "atom": {
-            "op": "damage",
-            "n": 5
-          }
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "endTurn"
+              }
+            }
+          ]
         }
       },
       "partial": false
@@ -410,6 +443,13 @@
             "atom": {
               "op": "placeInfluence",
               "where": "region",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "spawnMonster",
               "n": 1
             }
           }

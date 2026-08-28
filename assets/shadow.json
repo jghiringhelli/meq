@@ -709,7 +709,17 @@
             "atom": {
               "op": "combatStatMod",
               "stat": "strength",
-              "n": -1
+              "n": -1,
+              "per": "corruptionOnHero"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "combatStatMod",
+              "stat": "agility",
+              "n": -1,
+              "per": "corruptionOnHero"
             }
           }
         ]
