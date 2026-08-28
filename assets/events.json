@@ -497,10 +497,19 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
+        "k": "optional",
+        "prompt": "After exploring, you may spend 3 favor to move the Hero Story Marker 1 space up the track",
+        "cost": {
           "op": "loseFavor",
           "n": 3
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "advanceMarker",
+            "marker": "green",
+            "n": 1
+          }
         }
       },
       "partial": false
@@ -927,10 +936,19 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
+        "k": "optional",
+        "prompt": "After exploring, you may spend 3 favor to move the Hero Story Marker 1 space up the track",
+        "cost": {
           "op": "loseFavor",
           "n": 3
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "advanceMarker",
+            "marker": "green",
+            "n": 1
+          }
         }
       },
       "partial": false
@@ -1101,11 +1119,23 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "gainFavor",
-          "n": 1
-        }
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "gainFavor",
+              "n": 1
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "clearMonstersAt",
+              "location": "fangorn"
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -1377,10 +1407,19 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
+        "k": "optional",
+        "prompt": "After exploring, you may spend 3 favor to move the Hero Story Marker 1 space up the track",
+        "cost": {
           "op": "loseFavor",
           "n": 3
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "advanceMarker",
+            "marker": "green",
+            "n": 1
+          }
         }
       },
       "partial": false
