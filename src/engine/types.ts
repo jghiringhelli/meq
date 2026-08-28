@@ -215,7 +215,7 @@ export type Atom =
   | { op: 'drawPer'; per: 'fortitude' }
   | { op: 'examineTokens' }
   | { op: 'discardHand'; n: number; toHand?: number; perCorruption?: boolean }
-  | { op: 'discardShields'; n: number }           // discard hand cards whose defense (shield icons) sums to >= n, to negate n damage
+  | { op: 'discardCardId'; id: CardId }           // discard one named card from hand (shield-block, per-card selection)
   // M9: shadow/event/peril mechanics ----------------------------------
   | { op: 'forceCombat'; monster: string }        // "must combat a Balrog"
   | { op: 'combatReward'; favor?: number; training?: number } // reward granted only on defeating the forced foe
@@ -250,6 +250,7 @@ export type EffTree =
   | { k: 'if'; cond: Cond; then: EffTree; else?: EffTree }
   | { k: 'op'; atom: Atom }
   | { k: 'raw'; text: string }
+  | { k: 'shieldBlock'; damage: number; reward: EffTree } // discard hand cards (shields = combat defense) to reduce `damage`; reward only if reduced to 0
   | { k: 'none' };
 
 /** Structured win predicate for a hero/Sauron mission, evaluated each turn. */

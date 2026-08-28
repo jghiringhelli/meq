@@ -50,6 +50,10 @@ function enumPaths(node: any): Path[] {
     case 'op': return [{ decisions: [], conds: [], atoms: [node.atom], desc: 'op' }];
     case 'raw':
     case 'none': return [{ decisions: [], conds: [], atoms: [], desc: node.k }];
+    // shieldBlock is a dynamic, hand-dependent node (its option count and
+    // decision indices vary with the live hand); it is covered exhaustively by
+    // the dedicated shield-block.spec.ts, so skip static path enumeration here.
+    case 'shieldBlock': return [];
     case 'seq': {
       let acc: Path[] = [{ decisions: [], conds: [], atoms: [], desc: '' }];
       for (const st of node.steps ?? []) {

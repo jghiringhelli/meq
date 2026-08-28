@@ -16,56 +16,36 @@
       "region": "",
       "effectKey": "",
       "tree": {
-        "k": "choice",
-        "prompt": "The hounds close in — discard cards to block the damage?",
-        "options": [
-          {
-            "label": "Discard cards (6 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 6
-            },
-            "eff": {
-              "k": "choice",
-              "prompt": "Choose your reward",
-              "options": [
-                {
-                  "label": "Gain 1 favor",
-                  "cost": null,
-                  "eff": {
-                    "k": "op",
-                    "atom": {
-                      "op": "gainFavor",
-                      "n": 1
-                    }
-                  }
-                },
-                {
-                  "label": "Receive training",
-                  "cost": null,
-                  "eff": {
-                    "k": "op",
-                    "atom": {
-                      "op": "training",
-                      "n": 1
-                    }
-                  }
+        "k": "shieldBlock",
+        "damage": 6,
+        "reward": {
+          "k": "choice",
+          "prompt": "Choose your reward",
+          "options": [
+            {
+              "label": "Gain 1 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
                 }
-              ]
-            }
-          },
-          {
-            "label": "Take 6 damage",
-            "cost": null,
-            "eff": {
-              "k": "op",
-              "atom": {
-                "op": "damage",
-                "n": 6
+              }
+            },
+            {
+              "label": "Receive training",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },

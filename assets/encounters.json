@@ -555,47 +555,27 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (4 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 4
-            },
-            "eff": {
-              "k": "seq",
-              "steps": [
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "gainFavor",
-                    "n": 2
-                  }
-                },
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "training",
-                    "n": 1
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "label": "Take 4 damage",
-            "cost": null,
-            "eff": {
+        "k": "shieldBlock",
+        "damage": 4,
+        "reward": {
+          "k": "seq",
+          "steps": [
+            {
               "k": "op",
               "atom": {
-                "op": "damage",
-                "n": 4
+                "op": "gainFavor",
+                "n": 2
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -921,56 +901,36 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (6 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 6
-            },
-            "eff": {
-              "k": "choice",
-              "prompt": "If reduced to 0 damage, choose one",
-              "options": [
-                {
-                  "label": "Gain 1 favor",
-                  "cost": null,
-                  "eff": {
-                    "k": "op",
-                    "atom": {
-                      "op": "gainFavor",
-                      "n": 1
-                    }
-                  }
-                },
-                {
-                  "label": "Gain a \"Horse\" Item card",
-                  "cost": null,
-                  "eff": {
-                    "k": "op",
-                    "atom": {
-                      "op": "gainItem",
-                      "item": "Horse"
-                    }
-                  }
+        "k": "shieldBlock",
+        "damage": 6,
+        "reward": {
+          "k": "choice",
+          "prompt": "If reduced to 0 damage, choose one",
+          "options": [
+            {
+              "label": "Gain 1 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
                 }
-              ]
-            }
-          },
-          {
-            "label": "Take 6 damage",
-            "cost": null,
-            "eff": {
-              "k": "op",
-              "atom": {
-                "op": "damage",
-                "n": 6
+              }
+            },
+            {
+              "label": "Gain a \"Horse\" Item card",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainItem",
+                  "item": "Horse"
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -1027,56 +987,36 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (6 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 6
-            },
-            "eff": {
-              "k": "choice",
-              "prompt": "Choose one",
-              "options": [
-                {
-                  "label": "Gain 1 favor",
-                  "cost": null,
-                  "eff": {
-                    "k": "op",
-                    "atom": {
-                      "op": "gainFavor",
-                      "n": 1
-                    }
-                  }
-                },
-                {
-                  "label": "Receive training",
-                  "cost": null,
-                  "eff": {
-                    "k": "op",
-                    "atom": {
-                      "op": "training",
-                      "n": 1
-                    }
-                  }
+        "k": "shieldBlock",
+        "damage": 6,
+        "reward": {
+          "k": "choice",
+          "prompt": "Choose one",
+          "options": [
+            {
+              "label": "Gain 1 favor",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "gainFavor",
+                  "n": 1
                 }
-              ]
-            }
-          },
-          {
-            "label": "Take 6 damage",
-            "cost": null,
-            "eff": {
-              "k": "op",
-              "atom": {
-                "op": "damage",
-                "n": 6
+              }
+            },
+            {
+              "label": "Receive training",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "training",
+                  "n": 1
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -1296,47 +1236,27 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (8 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 8
-            },
-            "eff": {
-              "k": "seq",
-              "steps": [
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "gainFavor",
-                    "n": 1
-                  }
-                },
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "training",
-                    "n": 2
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "label": "Take 8 damage",
-            "cost": null,
-            "eff": {
+        "k": "shieldBlock",
+        "damage": 8,
+        "reward": {
+          "k": "seq",
+          "steps": [
+            {
               "k": "op",
               "atom": {
-                "op": "damage",
-                "n": 8
+                "op": "gainFavor",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 2
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -1807,47 +1727,27 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (6 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 6
-            },
-            "eff": {
-              "k": "seq",
-              "steps": [
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "gainFavor",
-                    "n": 1
-                  }
-                },
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "training",
-                    "n": 1
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "label": "Take 6 damage",
-            "cost": null,
-            "eff": {
+        "k": "shieldBlock",
+        "damage": 6,
+        "reward": {
+          "k": "seq",
+          "steps": [
+            {
               "k": "op",
               "atom": {
-                "op": "damage",
-                "n": 6
+                "op": "gainFavor",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -2495,47 +2395,27 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (7 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 7
-            },
-            "eff": {
-              "k": "seq",
-              "steps": [
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "gainFavor",
-                    "n": 2
-                  }
-                },
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "training",
-                    "n": 1
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "label": "Take 7 damage",
-            "cost": null,
-            "eff": {
+        "k": "shieldBlock",
+        "damage": 7,
+        "reward": {
+          "k": "seq",
+          "steps": [
+            {
               "k": "op",
               "atom": {
-                "op": "damage",
-                "n": 7
+                "op": "gainFavor",
+                "n": 2
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -3839,47 +3719,27 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (4 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 4
-            },
-            "eff": {
-              "k": "seq",
-              "steps": [
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "gainFavor",
-                    "n": 1
-                  }
-                },
-                {
-                  "k": "op",
-                  "atom": {
-                    "op": "training",
-                    "n": 1
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "label": "Take 4 damage",
-            "cost": null,
-            "eff": {
+        "k": "shieldBlock",
+        "damage": 4,
+        "reward": {
+          "k": "seq",
+          "steps": [
+            {
               "k": "op",
               "atom": {
-                "op": "damage",
-                "n": 4
+                "op": "gainFavor",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "training",
+                "n": 1
               }
             }
-          }
-        ]
+          ]
+        }
       },
       "partial": false
     },
@@ -4011,35 +3871,15 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "choice",
-        "prompt": "A blow lands — discard cards to block it?",
-        "options": [
-          {
-            "label": "Discard cards (5 shields) to negate the damage",
-            "cost": {
-              "op": "discardShields",
-              "n": 5
-            },
-            "eff": {
-              "k": "op",
-              "atom": {
-                "op": "removeInfluence",
-                "n": 2
-              }
-            }
-          },
-          {
-            "label": "Take 5 damage",
-            "cost": null,
-            "eff": {
-              "k": "op",
-              "atom": {
-                "op": "damage",
-                "n": 5
-              }
-            }
+        "k": "shieldBlock",
+        "damage": 5,
+        "reward": {
+          "k": "op",
+          "atom": {
+            "op": "removeInfluence",
+            "n": 2
           }
-        ]
+        }
       },
       "partial": false
     },

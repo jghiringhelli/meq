@@ -12,7 +12,7 @@
 // (no stored continuations) and fully deterministic.
 
 import type {
-  Catalog, GameState, HeroId, HeroState, EffTree, Atom, Cond, Metric, EffOption, LocationId,
+  Catalog, GameState, HeroId, EffTree, Atom, Cond, Metric, EffOption, LocationId,
 } from './types';
 import { STORY_FINALE } from './types';
 import { placeCharacterUnique } from './characters';
@@ -127,19 +127,13 @@ export function evalCond(s: GameState, cat: Catalog, heroId: HeroId, c: Cond): b
 
 // ---- affordability (for disabling illegal choice options) ---------------
 
-/** Total shield icons (= combat defense) across the hero's current hand. */
-function handShieldTotal(cat: Catalog, h: HeroState): number {
-  return h.hand.reduce((n, id) => n + (cat.combatCards[id]?.defense ?? 0), 0);
-}
-
-function canAfford(s: GameState, cat: Catalog, heroId: HeroId, cost?: Atom): boolean {
+function canAfford(s: GameState, _cat: Catalog, heroId: HeroId, cost?: Atom): boolean {
   if (!cost) return true;
   const h = s.heroes.find((x) => x.id === heroId);
   if (!h) return false;
   switch (cost.op) {
     case 'loseFavor': return h.favor >= cost.n;
     case 'discardHand': return h.hand.length >= cost.n;
-    case 'discardShields': return handShieldTotal(cat, h) >= cost.n;
     case 'discardItem': return h.items.length >= cost.n;
     default: return true;
   }
@@ -183,6 +177,54 @@ export function planEncounter(
       case 'raw':
       case 'none':
         return;
+      case 'shieldBlock': {
+        // Faithful partial damage reduction. The hero's hand cards each bear
+        // shield icons equal to their combat DEFENSE. He may discard any number
+        // of cards, one at a time, each reducing the incoming damage by that
+        // card's shields. Three outcomes: discard nothing → full damage, no
+        // reward; discard some but not enough → adjusted (residual) damage, no
+        // reward; reduce the damage to 0 → no damage and the printed reward.
+        const hero = s.heroes.find((x) => x.id === heroId)!;
+        let dmg = node.damage;
+        const simHand = [...hero.hand];
+        for (;;) {
+          if (dmg <= 0) break;
+          // Distinct hand cards that would actually reduce damage (defense > 0),
+          // in first-seen order; discarding a 0-shield card is never offered.
+          const seen = new Set<string>();
+          const discardable: { id: string; def: number; name: string }[] = [];
+          for (const id of simHand) {
+            const def = cat.combatCards[id]?.defense ?? 0;
+            if (def > 0 && !seen.has(id)) {
+              seen.add(id);
+              discardable.push({ id, def, name: cat.combatCards[id]?.name ?? id });
+            }
+          }
+          if (discardable.length === 0) break; // nothing left that can block
+          const stopIndex = discardable.length;
+          const idx = cursor++;
+          const decision = decisions[idx];
+          if (decision === undefined || decision < 0 || decision > stopIndex) {
+            pending = {
+              prompt: `Dealt ${node.damage} damage (${dmg} remaining). Discard a card to block by its shields — reduce it to 0 for the reward.`,
+              options: [
+                ...discardable.map((d) => ({ label: `Discard ${d.name} (−${d.def} damage)`, enabled: true })),
+                { label: `Take the remaining ${dmg} damage`, enabled: true },
+              ],
+            };
+            return;
+          }
+          if (decision === stopIndex) break; // hero stops discarding
+          const chosen = discardable[decision];
+          atoms.push({ op: 'discardCardId', id: chosen.id });
+          dmg -= chosen.def;
+          const k = simHand.indexOf(chosen.id);
+          if (k >= 0) simHand.splice(k, 1);
+        }
+        if (dmg > 0) atoms.push({ op: 'damage', n: dmg });
+        else walk(node.reward);
+        return;
+      }
       case 'optional':
       case 'choice': {
         const options = node.k === 'optional' ? optionsToChoice(node) : node.options;
@@ -417,23 +459,11 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       hero.discard.push(...moved);
       return `discard ${n} card(s)`;
     }
-    case 'discardShields': {
-      // Faithful shield-block: discard hand cards whose combat defense (the
-      // shield icons printed on each card) sums to at least `n`, negating that
-      // much damage. Discard the highest-defense cards first so the fewest
-      // cards leave the hand to reach the required block.
-      const order = [...hero.hand].sort(
-        (a, b) => (cat.combatCards[b]?.defense ?? 0) - (cat.combatCards[a]?.defense ?? 0),
-      );
-      let blocked = 0; const moved: string[] = [];
-      for (const id of order) {
-        if (blocked >= atom.n) break;
-        blocked += cat.combatCards[id]?.defense ?? 0;
-        const i = hero.hand.indexOf(id);
-        if (i >= 0) hero.discard.push(hero.hand.splice(i, 1)[0]);
-        moved.push(id);
-      }
-      return `discard ${moved.length} card(s) (${blocked} shields) to block ${atom.n} damage`;
+    case 'discardCardId': {
+      // Discard one named card (chosen during shield-block) from hand.
+      const i = hero.hand.indexOf(atom.id);
+      if (i >= 0) hero.discard.push(hero.hand.splice(i, 1)[0]);
+      return `discard ${cat.combatCards[atom.id]?.name ?? atom.id}`;
     }
     case 'forceCombat': {
       const mid = findMonsterByName(cat, atom.monster);

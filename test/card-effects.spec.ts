@@ -34,6 +34,7 @@ function collectAtoms(tree: any, out: any[]): void {
     if (n.then) walk(n.then);
     if (n.else) walk(n.else);
     if (n.eff) walk(n.eff);
+    if (n.reward) walk(n.reward);
     (n.options ?? []).forEach((o: any) => walk(o.eff));
   };
   walk(tree);
@@ -401,30 +402,27 @@ describe('atom: discardHand', () => {
   });
 });
 
-describe('atom: discardShields', () => {
-  // Shield icons on a hero card == its combat defense. Block/Dodge = 4, Evade = 2,
-  // Parry = 1, Sweep = 0.
-  it('discards highest-defense cards first, fewest cards to reach the block', () => {
+describe('atom: discardCardId', () => {
+  // Discards one specific named card from hand (used by shield-block selection).
+  it('removes the named card instance from hand into the discard pile', () => {
     const s = freshGame();
     const h = heroOf(s);
-    // 4 (Block) + 2 (Evade) + 1 (Parry) + 0 (Sweep) = 7 shields available.
-    h.hand = ['cmb-thalin-parry', 'cmb-thalin-sweep', 'cmb-thalin-block', 'cmb-thalin-evade'];
+    h.hand = ['cmb-thalin-block', 'cmb-thalin-evade', 'cmb-thalin-block'];
     h.discard = [];
-    applyAtom(s, cat, h.id, { op: 'discardShields', n: 4 });
-    // Block alone (def 4) covers 4 damage: exactly one card discarded.
+    applyAtom(s, cat, h.id, { op: 'discardCardId', id: 'cmb-thalin-block' });
+    // Only ONE copy of Block is removed; Evade and the other Block stay.
+    expect(h.hand).toEqual(['cmb-thalin-evade', 'cmb-thalin-block']);
     expect(h.discard).toEqual(['cmb-thalin-block']);
-    expect(h.hand).toEqual(['cmb-thalin-parry', 'cmb-thalin-sweep', 'cmb-thalin-evade']);
   });
 
-  it('accumulates several cards when no single card blocks enough', () => {
+  it('is a no-op when the named card is not in hand', () => {
     const s = freshGame();
     const h = heroOf(s);
-    // Need 6 shields: Block(4) + Evade(2) = 6 with two cards; Parry left in hand.
-    h.hand = ['cmb-thalin-parry', 'cmb-thalin-evade', 'cmb-thalin-block'];
+    h.hand = ['cmb-thalin-evade'];
     h.discard = [];
-    applyAtom(s, cat, h.id, { op: 'discardShields', n: 6 });
-    expect(h.discard.sort()).toEqual(['cmb-thalin-block', 'cmb-thalin-evade']);
-    expect(h.hand).toEqual(['cmb-thalin-parry']);
+    applyAtom(s, cat, h.id, { op: 'discardCardId', id: 'cmb-thalin-block' });
+    expect(h.hand).toEqual(['cmb-thalin-evade']);
+    expect(h.discard).toEqual([]);
   });
 });
 
@@ -1191,7 +1189,7 @@ describe('meta: op coverage', () => {
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
     'sauronDrawShadow', 'counterPlot', 'healPer', 'clearAdjacent', 'handToLife', 'placeFavorToken',
     'combatReward', 'redeemGrace', 'removeCharacter', 'damageMinion', 'bankFavor',
-    'discardShields',
+    'discardCardId',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {

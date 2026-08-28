@@ -45,6 +45,7 @@ export function collectTreeProblems(tree: any, name: string): string[] {
       case 'if': walk(node.then); if (node.else) walk(node.else); break;
       case 'optional': walk(node.eff); break;
       case 'choice': (node.options ?? []).forEach((o: { eff: unknown }) => walk(o.eff)); break;
+      case 'shieldBlock': walk(node.reward); break;
       case 'none': break;
       default: problems.push(`${name}: unknown node kind '${node.k}'`);
     }
