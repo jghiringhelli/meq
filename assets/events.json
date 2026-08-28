@@ -1047,11 +1047,37 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "loseFavor",
-          "n": 1
-        }
+        "k": "seq",
+        "steps": [
+          {
+            "k": "if",
+            "cond": {
+              "cmp": "ge",
+              "left": {
+                "count": "favor"
+              },
+              "right": {
+                "num": 4
+              }
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "placeCharacter",
+              "who": "Gandalf",
+              "location": "Isengard",
+              "ifInPlay": true
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -1244,11 +1270,17 @@
             }
           },
           {
-            "k": "op",
-            "atom": {
-              "op": "advanceMarker",
-              "marker": "yellow",
-              "n": 1
+            "k": "if",
+            "cond": {
+              "cmp": "yellowClosest"
+            },
+            "then": {
+              "k": "op",
+              "atom": {
+                "op": "advanceMarker",
+                "marker": "yellow",
+                "n": 1
+              }
             }
           }
         ]

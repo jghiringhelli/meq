@@ -475,13 +475,8 @@
           {
             "k": "if",
             "cond": {
-              "cmp": "ge",
-              "left": {
-                "count": "plotsInPlay"
-              },
-              "right": {
-                "num": 1
-              }
+              "cmp": "plotActive",
+              "plot": "a-dark-messenger"
             },
             "then": {
               "k": "op",

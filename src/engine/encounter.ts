@@ -105,6 +105,13 @@ export function evalMetric(s: GameState, cat: Catalog, heroId: HeroId, m: Metric
 export function evalCond(s: GameState, cat: Catalog, heroId: HeroId, c: Cond): boolean {
   if (c.cmp === 'always') return true;
   if (c.cmp === 'noCorruption') return (s.heroes.find((x) => x.id === heroId)?.corruption ?? 0) === 0;
+  if (c.cmp === 'yellowClosest') {
+    const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
+    return st.yellow <= st.red && st.yellow <= st.black;
+  }
+  if (c.cmp === 'plotActive') {
+    return (s.sauron.activePlots ?? []).some((p) => p.eventId === c.plot);
+  }
   const l = evalMetric(s, cat, heroId, c.left);
   const r = evalMetric(s, cat, heroId, c.right);
   switch (c.cmp) {
@@ -309,6 +316,11 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
     case 'moveAdjacent': { const to = firstAdjacent(cat, hero.location); if (to) relocateHero(s, heroId, to); return `move to ${to ?? '—'}`; }
     case 'moveToEncounter': { const id = findLocation(cat, atom.location); if (id) relocateHero(s, heroId, id); return `move to ${atom.location}`; }
     case 'placeCharacter': {
+      if (atom.ifInPlay) {
+        const key = String(atom.who).trim().toLowerCase();
+        const inPlay = Object.values(s.map.charactersAt ?? {}).some((arr) => arr.includes(key));
+        if (!inPlay) return `${atom.who} not in play`;
+      }
       let loc = findLocation(cat, atom.location);
       if (!loc && /haven/i.test(String(atom.location ?? ''))) {
         loc = Object.values(cat.locations).find((l) => isHaven(cat, l.id))?.id ?? null;

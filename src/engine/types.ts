@@ -176,6 +176,8 @@ export type Metric =
 export type Cond =
   | { cmp: 'ge' | 'gt' | 'le' | 'lt' | 'eq'; left: Metric; right: Metric }
   | { cmp: 'noCorruption' }
+  | { cmp: 'yellowClosest' }               // Sauron's yellow marker closest to start
+  | { cmp: 'plotActive'; plot: string }    // a specific Plot card (by id) is active
   | { cmp: 'always' };
 
 /** Atomic mechanical operation applied by the interpreter. */
@@ -198,7 +200,7 @@ export type Atom =
   | { op: 'gainStat'; stat: 'fortitude' | 'strength' | 'agility' | 'wisdom' | 'choice'; n: number }
   | { op: 'moveAdjacent' }
   | { op: 'moveToEncounter'; location: string }
-  | { op: 'placeCharacter'; who: string; location: string }
+  | { op: 'placeCharacter'; who: string; location: string; ifInPlay?: boolean }
   | { op: 'explore'; location: string }
   | { op: 'discardMonsterToken'; n: number }
   | { op: 'forceSauronDiscard'; n: number; pile?: 'shadow' | 'plot' }

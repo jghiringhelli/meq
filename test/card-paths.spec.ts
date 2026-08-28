@@ -170,14 +170,25 @@ function forceCond(s: S, heroId: HeroId, c: Cond, want: boolean): boolean {
     if (want) h.corruption = 0; else h.corruption = Math.max(1, h.corruption);
     return true;
   }
+  if (c.cmp === 'yellowClosest') {
+    const st = (s.story.sauron ||= { yellow: 0, red: 0, black: 0 });
+    if (want) { st.yellow = 0; } else { st.yellow = 2; st.red = 0; }
+    return true;
+  }
+  if (c.cmp === 'plotActive') {
+    const active = (s.sauron.activePlots ||= []);
+    if (want) { if (!active.some((p) => p.eventId === c.plot)) active.push({ eventId: c.plot, step: 0 }); }
+    else { s.sauron.activePlots = active.filter((p) => p.eventId !== c.plot); }
+    return true;
+  }
   const { left, right, cmp } = c;
   const L = evalMetric(s, cat, heroId, left);
   const R = evalMetric(s, cat, heroId, right);
   if (myCmp(L, cmp, R) === want) return true; // already satisfied — no mutation
 
   // target value for the LEFT metric given fixed R (and vice-versa)
-  const leftTargets: Record<Cond['cmp'], number> = { ge: want ? R : R - 1, gt: want ? R + 1 : R, le: want ? R : R + 1, lt: want ? R - 1 : R, eq: want ? R : R + 1 };
-  const rightTargets: Record<Cond['cmp'], number> = { ge: want ? L : L + 1, gt: want ? L - 1 : L, le: want ? L : L - 1, lt: want ? L + 1 : L, eq: want ? L : L + 1 };
+  const leftTargets: Record<string, number> = { ge: want ? R : R - 1, gt: want ? R + 1 : R, le: want ? R : R + 1, lt: want ? R - 1 : R, eq: want ? R : R + 1 };
+  const rightTargets: Record<string, number> = { ge: want ? L : L + 1, gt: want ? L - 1 : L, le: want ? L : L - 1, lt: want ? L + 1 : L, eq: want ? L : L + 1 };
   const tL = leftTargets[cmp];
   const tR = rightTargets[cmp];
 
