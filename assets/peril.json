@@ -469,7 +469,8 @@
             "atom": {
               "op": "placeInfluence",
               "where": "region",
-              "n": 1
+              "n": 1,
+              "spread": 3
             }
           }
         ]

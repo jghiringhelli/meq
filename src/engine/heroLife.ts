@@ -61,6 +61,16 @@ export function restHero(s: GameState, h: LifeZones): void {
   syncLife(h);
 }
 
+/** Move every card in hand into the life pool (used by cards that "shuffle
+ *  your hand into your life pool"). Returns how many cards moved. */
+export function handIntoLife(s: GameState, h: LifeZones): number {
+  const n = h.hand.length;
+  if (!n) return 0;
+  h.deck.push(...shuffle(s, h.hand.splice(0)));
+  syncLife(h);
+  return n;
+}
+
 /** Heal (in a Haven): shuffle the damage pool back into the life pool. */
 export function healHero(s: GameState, h: LifeZones): void {
   if (!h.damagePool.length) return;

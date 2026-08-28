@@ -215,7 +215,7 @@ export type Atom =
   | { op: 'discardHand'; n: number; toHand?: number; perCorruption?: boolean }
   // M9: shadow/event/peril mechanics ----------------------------------
   | { op: 'forceCombat'; monster: string }        // "must combat a Balrog"
-  | { op: 'placeInfluence'; where: 'region' | 'shadowPool' | 'location' | 'mordor' | 'shire'; n: number; location?: string }
+  | { op: 'placeInfluence'; where: 'region' | 'shadowPool' | 'location' | 'mordor' | 'shire'; n: number; location?: string; each?: boolean; spread?: number }
   | { op: 'spawnMonster'; n: number }             // place N monster tokens near the hero
   | { op: 'advanceMarker'; marker: 'yellow' | 'red' | 'black' | 'green'; n: number } // advance a named story marker n spaces (green = hero clock; n may be negative)
   | { op: 'combatStatMod'; stat: 'strength' | 'agility' | 'fortitude' | 'wisdom'; n: number; per?: 'corruptionOnHero' }
@@ -229,6 +229,9 @@ export type Atom =
   | { op: 'moveAnywhere' }                          // hero may move to any location (player choice)
   | { op: 'sauronMoveCharacter'; location: string } // Sauron banishes a chosen Character to `location`
   | { op: 'clearMonstersAt'; location: string }     // remove all monster tokens from a named location
+  | { op: 'clearAdjacent' }                          // remove all influence + monster tokens within 1 space of the hero
+  | { op: 'handToLife' }                             // shuffle the hero's whole hand into his life pool
+  | { op: 'placeFavorToken'; location: string; n: number } // place N favor tokens on a named location
   | { op: 'counterPlot'; scope?: 'haven' }          // hero removes an active plot from play (optionally one affecting a Haven)
   | { op: 'reviveRelocateMinion' };                 // they-are-terrible: full-heal a minion (board or defeated) and place it on an influenced location
 

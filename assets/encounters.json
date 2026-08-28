@@ -1251,11 +1251,35 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "addInfluence",
-          "n": 1
-        }
+        "k": "choice",
+        "prompt": "Sauron chooses one",
+        "options": [
+          {
+            "label": "Place 1 influence in any 2 locations in your region",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "placeInfluence",
+                "where": "region",
+                "n": 1,
+                "spread": 2
+              }
+            }
+          },
+          {
+            "label": "Place 1 influence in the Shadow Pool",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "placeInfluence",
+                "where": "shadowPool",
+                "n": 1
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -2371,17 +2395,28 @@
       "effectKind": "mechanical",
       "tree": {
         "k": "optional",
-        "prompt": "You may remove 2 influence from the Shadow Pool and remove all influence and monster tokens within 1 space of your location",
+        "prompt": "Spend 1 favor to remove 2 influence from the Shadow Pool and clear all influence and monster tokens within 1 space of your location",
         "cost": {
           "op": "loseFavor",
           "n": 1
         },
         "eff": {
-          "k": "op",
-          "atom": {
-            "op": "removeInfluence",
-            "n": 2
-          }
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "removeInfluence",
+                "n": 2
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "clearAdjacent"
+              }
+            }
+          ]
         }
       },
       "partial": false
@@ -2540,11 +2575,32 @@
           }
         },
         "then": {
-          "k": "op",
-          "atom": {
-            "op": "addInfluence",
-            "n": 1
-          }
+          "k": "choice",
+          "prompt": "Sauron chooses one",
+          "options": [
+            {
+              "label": "Deal 2 damage",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "damage",
+                  "n": 2
+                }
+              }
+            },
+            {
+              "label": "Add 1 influence to the Shadow Pool",
+              "cost": null,
+              "eff": {
+                "k": "op",
+                "atom": {
+                  "op": "addInfluence",
+                  "n": 1
+                }
+              }
+            }
+          ]
         }
       },
       "partial": false
@@ -2649,10 +2705,21 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "endTurn"
-        }
+        "k": "seq",
+        "steps": [
+          {
+            "k": "op",
+            "atom": {
+              "op": "handToLife"
+            }
+          },
+          {
+            "k": "op",
+            "atom": {
+              "op": "endTurn"
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -3265,14 +3332,29 @@
             }
           },
           {
-            "label": "Allow sauron to place 1 influence in the shadow pool and 3 influence in extension of mount gundabad",
+            "label": "Allow Sauron to place 1 influence in the Shadow Pool and 3 influence in extension of Mount Gundabad",
             "cost": null,
             "eff": {
-              "k": "op",
-              "atom": {
-                "op": "addInfluence",
-                "n": 1
-              }
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "placeInfluence",
+                    "where": "shadowPool",
+                    "n": 1
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "placeInfluence",
+                    "where": "location",
+                    "location": "mount-gundabad",
+                    "n": 3
+                  }
+                }
+              ]
             }
           }
         ]

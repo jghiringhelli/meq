@@ -12,6 +12,7 @@ import {
   cat, freshGame, shadowCards, plots, events, encounters, perils, combatCards, label,
 } from './helpers';
 import { applyAtom, autoResolveTree, evalMetric, statValue } from '../src/engine/encounter';
+import { addCardInfluence, influenceAt } from '../src/engine/influence';
 
 type S = ReturnType<typeof freshGame>;
 const activeId = (s: S) => (s.heroes.find((h) => h.status === 'active') ?? s.heroes[0]).id;
@@ -679,6 +680,39 @@ describe('atom: counterPlot', () => {
   });
 });
 
+describe('atom: handToLife', () => {
+  it('shuffles the whole hand into the life pool', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    h.hand = ['a', 'b', 'c'];
+    const deck = h.deck.length;
+    applyAtom(s, cat, h.id, { op: 'handToLife' });
+    expect(h.hand.length).toBe(0);
+    expect(h.deck.length).toBe(deck + 3);
+  });
+});
+
+describe('atom: placeFavorToken', () => {
+  it('places favor tokens on a named location', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    applyAtom(s, cat, h.id, { op: 'placeFavorToken', location: h.location, n: 2 });
+    expect(s.map.favorAt?.[h.location]).toBe(2);
+  });
+});
+
+describe('atom: clearAdjacent', () => {
+  it('removes influence and monster tokens within 1 space of the hero', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    addCardInfluence(s, cat, h.location, 3);
+    s.map.monstersAt[h.location] = ['m1', 'm2'];
+    applyAtom(s, cat, h.id, { op: 'clearAdjacent' });
+    expect(influenceAt(s, h.location)).toBe(0);
+    expect(s.map.monstersAt[h.location] ?? []).toHaveLength(0);
+  });
+});
+
 describe('atom: advanceMarker', () => {
   it('advances a named coloured marker directly', () => {
     const s = freshGame();
@@ -1035,7 +1069,7 @@ describe('meta: op coverage', () => {
     'examineTokens', 'forcePeril', 'advanceStory', 'sauronDrawPlot', 'advanceMarker',
     'forceSauronDiscard', 'lookSauronHand', 'plotPeekReorder', 'plotFromDiscard', 'plotTutor',
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
-    'sauronDrawShadow', 'counterPlot', 'healPer',
+    'sauronDrawShadow', 'counterPlot', 'healPer', 'clearAdjacent', 'handToLife', 'placeFavorToken',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {

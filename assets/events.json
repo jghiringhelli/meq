@@ -276,11 +276,33 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "discardMonsterToken",
-          "n": 1
-        }
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Remove up to 1 monster token",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardMonsterToken",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Place 1 favor in Helm's Deep",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "placeFavorToken",
+                "location": "helm-s-deep",
+                "n": 1
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },

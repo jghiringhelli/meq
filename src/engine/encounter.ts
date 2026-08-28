@@ -17,11 +17,12 @@ import type {
 import { STORY_FINALE } from './types';
 import { placeCharacterUnique } from './characters';
 import { clamp, grantTraining, raiseAttribute, clone, defeatHero, gameStage } from './mechanics';
-import { dealHeroDamage, heroDefeated, healHero, healHeroBy } from './heroLife';
+import { dealHeroDamage, heroDefeated, healHero, healHeroBy, handIntoLife } from './heroLife';
 import { log } from './log';
 import { addCardInfluence, removeInfluenceAt, regionInfluenceTotal, influenceAt, isHaven } from './influence';
 import { adjacentLocations } from './sauronPlay';
 import { drawPlots, drawShadow } from './sauronmech';
+import { placeFavorToken } from './economy';
 import {
   gainCorruption as gainCorruptionCards,
   discardCorruption as discardCorruptionCards,
@@ -415,21 +416,40 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
     }
     case 'placeInfluence': {
       if (atom.where === 'shadowPool') { s.sauron.influence += atom.n; return `+${atom.n} shadow influence`; }
-      // Resolve a concrete target LOCATION for the card's placement.
-      let loc: string | undefined;
       if (atom.where === 'location') {
-        loc = (atom.location && cat.locations[atom.location]) ? atom.location : hero.location;
-      } else {
-        const rgn = atom.where === 'mordor' ? findRegion(cat, 'mordor')
-          : atom.where === 'shire' ? findRegion(cat, 'shire')
-          : region;
-        if (!rgn) return '';
-        // Prefer the hero's own location if it sits in the target region, then a
-        // Shadow Stronghold, then any non-haven location of that region.
-        if (cat.locations[hero.location]?.regionId === rgn && !isHaven(cat, hero.location)) loc = hero.location;
-        else loc = Object.values(cat.locations).find((l) => l.regionId === rgn && l.kind === 'stronghold')?.id
-          ?? Object.values(cat.locations).find((l) => l.regionId === rgn && l.kind !== 'haven')?.id;
+        const loc = (atom.location && cat.locations[atom.location]) ? atom.location : hero.location;
+        const placed = addCardInfluence(s, cat, loc, atom.n);
+        return placed > 0 ? `+${placed} influence on ${cat.locations[loc]?.name ?? loc}` : '';
       }
+      const rgn = atom.where === 'mordor' ? findRegion(cat, 'mordor')
+        : atom.where === 'shire' ? findRegion(cat, 'shire')
+        : region;
+      if (!rgn) return '';
+      const eligible = Object.values(cat.locations).filter((l) => l.regionId === rgn && !isHaven(cat, l.id));
+      // "in each location of <region>": place n on every eligible location.
+      if (atom.each) {
+        let cnt = 0;
+        for (const l of eligible) if (addCardInfluence(s, cat, l.id, atom.n) > 0) cnt++;
+        return cnt > 0 ? `+${atom.n} influence on ${cnt} location(s)` : '';
+      }
+      // "on any <spread> locations": spread n across that many distinct locations,
+      // preferring the hero's own location, then strongholds, then the rest.
+      if (atom.spread && atom.spread > 1) {
+        const ordered = [
+          ...eligible.filter((l) => l.id === hero.location),
+          ...eligible.filter((l) => l.id !== hero.location && l.kind === 'stronghold'),
+          ...eligible.filter((l) => l.id !== hero.location && l.kind !== 'stronghold'),
+        ];
+        let cnt = 0;
+        for (const l of ordered.slice(0, atom.spread)) if (addCardInfluence(s, cat, l.id, atom.n) > 0) cnt++;
+        return cnt > 0 ? `+${atom.n} influence on ${cnt} location(s)` : '';
+      }
+      // Single target: prefer the hero's own location, then a Shadow Stronghold,
+      // then any non-haven location of that region.
+      let loc: string | undefined;
+      if (cat.locations[hero.location]?.regionId === rgn && !isHaven(cat, hero.location)) loc = hero.location;
+      else loc = Object.values(cat.locations).find((l) => l.regionId === rgn && l.kind === 'stronghold')?.id
+        ?? Object.values(cat.locations).find((l) => l.regionId === rgn && l.kind !== 'haven')?.id;
       if (!loc) return '';
       const placed = addCardInfluence(s, cat, loc, atom.n);
       return placed > 0 ? `+${placed} influence on ${cat.locations[loc]?.name ?? loc}` : '';
@@ -496,6 +516,26 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       const had = s.map.monstersAt[loc]?.length ?? 0;
       if (had) s.map.monstersAt[loc] = [];
       return had ? `removed ${had} monster token(s) from ${cat.locations[loc]?.name ?? loc}` : '';
+    }
+    case 'clearAdjacent': {
+      const scope = [hero.location, ...adjacentLocations(cat, hero.location)];
+      let inf = 0, mon = 0;
+      for (const loc of scope) {
+        inf += removeInfluenceAt(s, loc, Number.MAX_SAFE_INTEGER);
+        const had = s.map.monstersAt[loc]?.length ?? 0;
+        if (had) { s.map.monstersAt[loc] = []; mon += had; }
+      }
+      return `cleared ${inf} influence, ${mon} monster token(s) within 1 space`;
+    }
+    case 'handToLife': {
+      const moved = handIntoLife(s, hero);
+      return `shuffled ${moved} hand card(s) into life pool`;
+    }
+    case 'placeFavorToken': {
+      const loc = findLocation(cat, atom.location);
+      if (!loc) return '';
+      placeFavorToken(s, loc, atom.n);
+      return `+${atom.n} favor token on ${cat.locations[loc]?.name ?? loc}`;
     }
     case 'counterPlot': {
       const active = s.sauron.activePlots ?? [];

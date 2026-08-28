@@ -303,14 +303,15 @@
         "prompt": "Choose one",
         "options": [
           {
-            "label": "Place 2 influence in each location of mordor",
+            "label": "Place 2 influence in each location of Mordor",
             "cost": null,
             "eff": {
               "k": "op",
               "atom": {
                 "op": "placeInfluence",
                 "where": "mordor",
-                "n": 2
+                "n": 2,
+                "each": true
               }
             }
           },
