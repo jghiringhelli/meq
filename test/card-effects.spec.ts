@@ -787,6 +787,25 @@ describe('atom: damageMinion', () => {
   });
 });
 
+describe('atom: bankFavor', () => {
+  it('moves favor out of the pool and into the banked store', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    h.favor = 2;
+    applyAtom(s, cat, h.id, { op: 'bankFavor', n: 1 });
+    expect(h.favor).toBe(1);
+    expect(h.bankedFavor).toBe(1);
+  });
+
+  it('banks nothing when the hero has no favor', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    h.favor = 0;
+    applyAtom(s, cat, h.id, { op: 'bankFavor', n: 1 });
+    expect(h.bankedFavor ?? 0).toBe(0);
+  });
+});
+
 describe('atom: advanceMarker', () => {
   it('advances a named coloured marker directly', () => {
     const s = freshGame();
@@ -1144,7 +1163,7 @@ describe('meta: op coverage', () => {
     'forceSauronDiscard', 'lookSauronHand', 'plotPeekReorder', 'plotFromDiscard', 'plotTutor',
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
     'sauronDrawShadow', 'counterPlot', 'healPer', 'clearAdjacent', 'handToLife', 'placeFavorToken',
-    'combatReward', 'redeemGrace', 'removeCharacter', 'damageMinion',
+    'combatReward', 'redeemGrace', 'removeCharacter', 'damageMinion', 'bankFavor',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {

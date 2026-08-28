@@ -132,7 +132,7 @@
       "tree": {
         "k": "op",
         "atom": {
-          "op": "loseFavor",
+          "op": "bankFavor",
           "n": 1
         }
       },

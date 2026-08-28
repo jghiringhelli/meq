@@ -16,7 +16,7 @@ import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playSh
 import { beginCombat } from './combat';
 import { influenceAt, clearInfluenceAt, enforceInfluenceRules, isPerilous } from './influence';
 import { tryCompleteQuestsOnExplore, questSubstituteMonster } from './quests';
-import { cleanseAtRest, corruptionRestDefeatSteps, corruptionEncounterDraw, corruptionHandLimit, corruptionTravelCap } from './corruption';
+import { cleanseAtRest, corruptionRestDefeatSteps, corruptionEncounterDraw, corruptionHandLimit, corruptionTravelCap, grantFavor } from './corruption';
 
 // ---------------- Hero actions (during HeroActions phase) ----------------
 
@@ -374,6 +374,18 @@ export function heroExplore(state: GameState, cat: Catalog, heroId: HeroId): Gam
   const s = clone(state);
   const hero = requireHeroTurn(s, heroId);
   if (ambushPending(s, hero, cat)) throw new Error('Ambush: a foe here must be fought before exploring');
+  // Trust in Friendship: a hero who banked favor regains it the first time he
+  // explores a location occupied by another Hero or a Character.
+  if ((hero.bankedFavor ?? 0) > 0) {
+    const loc = hero.location;
+    const heroHere = s.heroes.some((o) => o.id !== hero.id && o.location === loc);
+    const charHere = (s.map.charactersAt?.[loc]?.length ?? 0) > 0;
+    if (heroHere || charHere) {
+      grantFavor(cat, hero, hero.bankedFavor!);
+      log(s, 'favor', hero.id, `regains ${hero.bankedFavor} banked favor (Trust in Friendship)`);
+      hero.bankedFavor = 0;
+    }
+  }
   // "Explore to Discard": if an event-deck plot sits here, exploring removes it
   // (and its character) from the board instead of drawing an encounter.
   const ep = (s.sauron.activeEventPlots ?? []).find((m) => m.location === hero.location);

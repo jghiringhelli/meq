@@ -38,3 +38,28 @@ describe('explore — Encounter step is per-turn, not once-per-game (fidelity)',
     expect(canExplore(s, cat, s.heroes[0].id)).toBe(false);
   });
 });
+
+describe('Trust in Friendship — banked favor returns on exploring near a Character', () => {
+  it('returns banked favor when a Character occupies the explored location', () => {
+    const { s, loc } = havenGame();
+    const h = s.heroes[0];
+    h.favor = 0;
+    h.bankedFavor = 1;
+    s.map.charactersAt = { [loc]: ['gandalf'] };
+    const s2 = heroExplore(s, cat, h.id);
+    const h2 = s2.heroes[0];
+    expect(h2.favor).toBe(1);
+    expect(h2.bankedFavor).toBe(0);
+  });
+
+  it('does NOT return banked favor when the location is empty', () => {
+    const { s } = havenGame();
+    const h = s.heroes[0];
+    h.favor = 0;
+    h.bankedFavor = 1;
+    s.map.charactersAt = {};
+    const s2 = heroExplore(s, cat, h.id);
+    expect(s2.heroes[0].bankedFavor).toBe(1);
+    expect(s2.heroes[0].favor).toBe(0);
+  });
+});

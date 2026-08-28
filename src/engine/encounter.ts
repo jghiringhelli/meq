@@ -274,6 +274,13 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       const r = discardCorruptionCards(s, cat, hero.id, k);
       return `spent ${k} favor to discard ${r} corruption`;
     }
+    case 'bankFavor': {
+      const n = Math.min(hero.favor, atom.n);
+      if (n <= 0) return 'no favor to bank';
+      hero.favor -= n;
+      hero.bankedFavor = (hero.bankedFavor ?? 0) + n;
+      return `banked ${n} favor`;
+    }
     case 'discardAllCorruption': { const r = discardAllCorruptionCards(s, cat, hero.id); return `-${r} corruption (all)`; }
     case 'addInfluence': { const n = atom.per === 'corruptionOnHero' ? atom.n * hero.corruption : atom.n; s.sauron.influence += n; return `+${n} shadow influence`; }
     case 'removeInfluence': s.sauron.influence = Math.max(0, s.sauron.influence - atom.n); return `-${atom.n} shadow influence`;

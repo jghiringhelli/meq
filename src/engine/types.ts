@@ -188,6 +188,7 @@ export type Atom =
   | { op: 'discardCorruption'; n: number }
   | { op: 'discardAllCorruption' }
   | { op: 'redeemGrace' }                       // spend min(favor,corruption) favor to discard that many Corruption
+  | { op: 'bankFavor'; n: number }              // lose n favor now, banked for later return (Trust in Friendship)
   | { op: 'addInfluence'; n: number; per?: 'corruptionOnHero' } // to Shadow Pool (optionally n per Corruption card)
   | { op: 'removeInfluence'; n: number }        // from Shadow Pool
   | { op: 'discardRegionInfluence'; n: number }
@@ -340,6 +341,9 @@ export interface HeroState {
    *  penalty (see corruption.ts) and lists a favor cost to discard at Rest. */
   corruptionCards: CardId[];
   favor: number;
+  /** Favor banked on the "Trust in Friendship" event, returned to this hero the
+   *  next time he explores a location with another Hero or a Character. */
+  bankedFavor?: number;
   deck: CardId[]; hand: CardId[]; discard: CardId[]; damagePool: CardId[];
   actionsRemaining: number;
   status: HeroStatus;
