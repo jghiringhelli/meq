@@ -17,7 +17,7 @@ import type {
 import { STORY_FINALE } from './types';
 import { placeCharacterUnique } from './characters';
 import { clamp, grantTraining, raiseAttribute, clone, defeatHero, gameStage } from './mechanics';
-import { dealHeroDamage, heroDefeated, healHero } from './heroLife';
+import { dealHeroDamage, heroDefeated, healHero, healHeroBy } from './heroLife';
 import { log } from './log';
 import { addCardInfluence, removeInfluenceAt, regionInfluenceTotal, influenceAt, isHaven } from './influence';
 import { adjacentLocations } from './sauronPlay';
@@ -82,6 +82,7 @@ export function evalMetric(s: GameState, cat: Catalog, heroId: HeroId, m: Metric
       return influenceAt(s, 'the-shire') + (minionInShire ? 3 : 0);
     }
     case 'influenceShadowPool': return s.sauron.influence;
+    case 'influenceHere': return influenceAt(s, hero?.location ?? '');
     case 'corruptionOnHero': return hero?.corruption ?? 0;
     case 'plotsInPlay': return (s.sauron.activePlots ?? []).length;
     case 'itemsOnHero': return hero?.items.length ?? 0;
@@ -287,6 +288,11 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       return `${dmg} damage (${atom.n}×${per} corruption)`;
     }
     case 'heal': { healHero(s, hero); return 'healed (damage pool → life pool)'; }
+    case 'healPer': {
+      const n = statValue(s, cat, heroId, atom.per);
+      const k = healHeroBy(s, hero, n);
+      return `healed ${k} card(s) (${atom.per})`;
+    }
     case 'training': grantTraining(s, cat, hero, atom.n); return `+${atom.n} training`;
     case 'gainItem': {
       // One of each Item title at a time (rulebook p.26): skip a duplicate.

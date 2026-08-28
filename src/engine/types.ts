@@ -169,7 +169,7 @@ export type Metric =
   | { stat: 'wisdom' | 'agility' | 'fortitude' | 'strength' }
   | { num: number }
   | { count:
-      | 'monstersInRegion' | 'influenceInRegion' | 'influenceShadowPool'
+      | 'monstersInRegion' | 'influenceInRegion' | 'influenceShadowPool' | 'influenceHere'
       | 'corruptionOnHero' | 'plotsInPlay' | 'itemsOnHero' | 'handSize' | 'favor'
       | 'adjacentInfluencedLocations' | 'minionsTotal' | 'monstersTotal' | 'shireControl' };
 
@@ -191,6 +191,7 @@ export type Atom =
   | { op: 'damage'; n: number }
   | { op: 'damagePer'; n: number; per: 'corruptionOnHero' }
   | { op: 'heal' }                              // rest+damage pools into life
+  | { op: 'healPer'; per: 'fortitude' | 'strength' | 'agility' | 'wisdom' } // move N damage→life per stat point
   | { op: 'training'; n: number }
   | { op: 'gainItem'; item: string }
   | { op: 'discardItem'; n: number }

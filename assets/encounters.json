@@ -2398,21 +2398,11 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "seq",
-        "steps": [
-          {
-            "k": "op",
-            "atom": {
-              "op": "heal"
-            }
-          },
-          {
-            "k": "op",
-            "atom": {
-              "op": "heal"
-            }
-          }
-        ]
+        "k": "op",
+        "atom": {
+          "op": "healPer",
+          "per": "wisdom"
+        }
       },
       "partial": false
     },
@@ -3034,21 +3024,11 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "seq",
-        "steps": [
-          {
-            "k": "op",
-            "atom": {
-              "op": "heal"
-            }
-          },
-          {
-            "k": "op",
-            "atom": {
-              "op": "heal"
-            }
-          }
-        ]
+        "k": "op",
+        "atom": {
+          "op": "healPer",
+          "per": "wisdom"
+        }
       },
       "partial": false
     },
@@ -3659,21 +3639,11 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "seq",
-        "steps": [
-          {
-            "k": "op",
-            "atom": {
-              "op": "heal"
-            }
-          },
-          {
-            "k": "op",
-            "atom": {
-              "op": "heal"
-            }
-          }
-        ]
+        "k": "op",
+        "atom": {
+          "op": "healPer",
+          "per": "wisdom"
+        }
       },
       "partial": false
     },
@@ -3902,7 +3872,8 @@
       "tree": {
         "k": "op",
         "atom": {
-          "op": "heal"
+          "op": "healPer",
+          "per": "fortitude"
         }
       },
       "partial": false

@@ -306,6 +306,31 @@ describe('atom: heal', () => {
   });
 });
 
+describe('atom: healPer', () => {
+  it('moves up to <stat> damage cards back into the life pool', () => {
+    const s = freshGame();
+    const h = heroOf(s);
+    h.statBonus = { ...(h.statBonus ?? {}), wisdom: 3 };
+    const wis = statValue(s, cat, h.id, 'wisdom');
+    h.damagePool = Array.from({ length: wis + 3 }, (_, i) => 'd' + i);
+    const deck = h.deck.length;
+    applyAtom(s, cat, h.id, { op: 'healPer', per: 'wisdom' });
+    expect(h.damagePool.length).toBe(3);
+    expect(h.deck.length).toBe(deck + wis);
+  });
+
+  it('never heals more cards than the damage pool holds', () => {
+    const s = freshGame();
+    const h = heroOf(s);
+    h.statBonus = { ...(h.statBonus ?? {}), wisdom: 5 };
+    h.damagePool = ['d1'];
+    const deck = h.deck.length;
+    applyAtom(s, cat, h.id, { op: 'healPer', per: 'wisdom' });
+    expect(h.damagePool.length).toBe(0);
+    expect(h.deck.length).toBe(deck + 1);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Cards / items / training / stats
 // ---------------------------------------------------------------------------
@@ -960,7 +985,7 @@ describe('coverage: every catalog discardCorruption atom lowers corruption', () 
 describe('coverage: hostile Shadow/Peril cards never leave the hero better off', () => {
   const wellbeing = (h: any) => h.life * 10 - h.corruption * 6 + h.favor * 2;
   const BENEFICIAL = new Set([
-    'gainFavor', 'heal', 'discardCorruption', 'discardAllCorruption',
+    'gainFavor', 'heal', 'healPer', 'discardCorruption', 'discardAllCorruption',
     'gainItem', 'training', 'gainStat', 'drawPer', 'removeInfluence',
   ]);
   const cardOps = (card: any): string[] => {
@@ -1010,7 +1035,7 @@ describe('meta: op coverage', () => {
     'examineTokens', 'forcePeril', 'advanceStory', 'sauronDrawPlot', 'advanceMarker',
     'forceSauronDiscard', 'lookSauronHand', 'plotPeekReorder', 'plotFromDiscard', 'plotTutor',
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
-    'sauronDrawShadow', 'counterPlot',
+    'sauronDrawShadow', 'counterPlot', 'healPer',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {

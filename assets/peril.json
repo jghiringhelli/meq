@@ -350,10 +350,33 @@
       "region": "purple",
       "effectKey": "",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "gainCorruption",
-          "n": 1
+        "k": "if",
+        "cond": {
+          "cmp": "ge",
+          "left": {
+            "count": "influenceHere"
+          },
+          "right": {
+            "num": 1
+          }
+        },
+        "then": {
+          "k": "seq",
+          "steps": [
+            {
+              "k": "op",
+              "atom": {
+                "op": "gainCorruption",
+                "n": 1
+              }
+            },
+            {
+              "k": "op",
+              "atom": {
+                "op": "endTurn"
+              }
+            }
+          ]
         }
       },
       "partial": false

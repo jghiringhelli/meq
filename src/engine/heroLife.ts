@@ -69,6 +69,17 @@ export function healHero(s: GameState, h: LifeZones): void {
   syncLife(h);
 }
 
+/** Partial heal: move up to `n` cards from the damage pool back into the life
+ *  pool (used by cards that recover a stat-scaled number of cards). */
+export function healHeroBy(s: GameState, h: LifeZones, n: number): number {
+  const k = Math.min(Math.max(0, n), h.damagePool.length);
+  if (k <= 0) return 0;
+  const moved = h.damagePool.splice(0, k);
+  h.deck.push(...shuffle(s, moved));
+  syncLife(h);
+  return k;
+}
+
 /** Recover (defeated hero, and Finale "Prepare"): shuffle the rest pool AND the
  *  damage pool into the life pool. */
 export function recoverHero(s: GameState, h: LifeZones): void {
