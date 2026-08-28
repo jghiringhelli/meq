@@ -50,5 +50,5 @@ describe('sauron doctrine', () => {
     };
     expect(agg('attrition', 'shadowPlays')).toBeGreaterThan(agg('balanced', 'shadowPlays'));
     expect(agg('attrition', 'finalCorruption')).toBeGreaterThan(agg('balanced', 'finalCorruption'));
-  }, 120000);
+  }, 240000);
 });

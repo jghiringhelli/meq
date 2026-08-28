@@ -70,11 +70,43 @@
       "region": "",
       "effectKey": "",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "damage",
-          "n": 5
-        }
+        "k": "choice",
+        "prompt": "Choose one",
+        "options": [
+          {
+            "label": "Be dealt 5 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 5
+              }
+            }
+          },
+          {
+            "label": "Allow Sauron to draw 1 Plot and 1 Shadow card",
+            "cost": null,
+            "eff": {
+              "k": "seq",
+              "steps": [
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "sauronDrawPlot"
+                  }
+                },
+                {
+                  "k": "op",
+                  "atom": {
+                    "op": "sauronDrawShadow",
+                    "n": 1
+                  }
+                }
+              ]
+            }
+          }
+        ]
       },
       "partial": false
     },

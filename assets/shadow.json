@@ -283,7 +283,8 @@
             "k": "op",
             "atom": {
               "op": "loseFavor",
-              "n": 1
+              "n": 1,
+              "per": "corruptionOnHero"
             }
           }
         ]
@@ -756,7 +757,8 @@
             "k": "op",
             "atom": {
               "op": "addInfluence",
-              "n": 1
+              "n": 1,
+              "per": "corruptionOnHero"
             }
           },
           {

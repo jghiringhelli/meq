@@ -21,7 +21,7 @@ import { dealHeroDamage, heroDefeated, healHero } from './heroLife';
 import { log } from './log';
 import { addCardInfluence, removeInfluenceAt, regionInfluenceTotal, influenceAt, isHaven } from './influence';
 import { adjacentLocations } from './sauronPlay';
-import { drawPlots } from './sauronmech';
+import { drawPlots, drawShadow } from './sauronmech';
 import {
   gainCorruption as gainCorruptionCards,
   discardCorruption as discardCorruptionCards,
@@ -255,11 +255,11 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
   const region = heroRegion(s, cat, heroId);
   switch (atom.op) {
     case 'gainFavor': grantFavor(cat, hero, atom.n); return `+${atom.n} favor`;
-    case 'loseFavor': hero.favor = Math.max(0, hero.favor - atom.n); return `-${atom.n} favor`;
+    case 'loseFavor': { const n = atom.per === 'corruptionOnHero' ? atom.n * hero.corruption : atom.n; hero.favor = Math.max(0, hero.favor - n); return `-${n} favor`; }
     case 'gainCorruption': return gainCorruptionCards(s, cat, hero.id, atom.n);
     case 'discardCorruption': { const r = discardCorruptionCards(s, cat, hero.id, atom.n); return `-${r} corruption`; }
     case 'discardAllCorruption': { const r = discardAllCorruptionCards(s, cat, hero.id); return `-${r} corruption (all)`; }
-    case 'addInfluence': s.sauron.influence += atom.n; return `+${atom.n} shadow influence`;
+    case 'addInfluence': { const n = atom.per === 'corruptionOnHero' ? atom.n * hero.corruption : atom.n; s.sauron.influence += n; return `+${n} shadow influence`; }
     case 'removeInfluence': s.sauron.influence = Math.max(0, s.sauron.influence - atom.n); return `-${atom.n} shadow influence`;
     case 'discardRegionInfluence': {
       // Heroes clearing influence: strip the hero's own location first, then
@@ -353,6 +353,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
         : "look at Sauron's plots (hand empty)";
     }
     case 'sauronDrawPlot': { drawPlots(s, cat, 1); return 'Sauron draws a plot'; }
+    case 'sauronDrawShadow': { for (let i = 0; i < atom.n; i++) drawShadow(s, cat, s.sauron.shadowHand.length + 1); return `Sauron draws ${atom.n} Shadow card(s)`; }
     case 'drawPer': {
       const n = statValue(s, cat, hero.id, 'fortitude');
       const drawn = hero.deck.splice(0, n);
@@ -477,6 +478,16 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       const had = s.map.monstersAt[loc]?.length ?? 0;
       if (had) s.map.monstersAt[loc] = [];
       return had ? `removed ${had} monster token(s) from ${cat.locations[loc]?.name ?? loc}` : '';
+    }
+    case 'counterPlot': {
+      const active = s.sauron.activePlots ?? [];
+      if (!active.length) return 'no active plot to counter';
+      const affectsHaven = (m: { location?: string }) => !!m.location && isHaven(cat, m.location as LocationId);
+      const pool = atom.scope === 'haven' ? active.filter(affectsHaven) : active;
+      const from = pool.length ? pool : active;
+      const target = [...from].sort((a, b) => plotValue(cat, b.eventId) - plotValue(cat, a.eventId))[0];
+      s.sauron.activePlots = active.filter((e) => e !== target);
+      return `countered plot ${cat.plots.find((p) => p.id === target.eventId)?.name ?? target.eventId}`;
     }
     case 'reviveRelocateMinion': {
       // "They Are Terrible" (Sauron Shadow, pool 8): choose a minion on the

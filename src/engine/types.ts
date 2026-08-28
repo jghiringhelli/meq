@@ -181,11 +181,11 @@ export type Cond =
 /** Atomic mechanical operation applied by the interpreter. */
 export type Atom =
   | { op: 'gainFavor'; n: number }
-  | { op: 'loseFavor'; n: number }
+  | { op: 'loseFavor'; n: number; per?: 'corruptionOnHero' } // n, or n per Corruption card
   | { op: 'gainCorruption'; n: number }        // draw N corruption cards
   | { op: 'discardCorruption'; n: number }
   | { op: 'discardAllCorruption' }
-  | { op: 'addInfluence'; n: number }          // to Shadow Pool
+  | { op: 'addInfluence'; n: number; per?: 'corruptionOnHero' } // to Shadow Pool (optionally n per Corruption card)
   | { op: 'removeInfluence'; n: number }        // from Shadow Pool
   | { op: 'discardRegionInfluence'; n: number }
   | { op: 'damage'; n: number }
@@ -206,6 +206,7 @@ export type Atom =
   | { op: 'reusable' }                          // shuffle card back into its deck
   | { op: 'lookSauronHand' }
   | { op: 'sauronDrawPlot' }
+  | { op: 'sauronDrawShadow'; n: number }         // Sauron draws N Shadow cards
   | { op: 'drawPer'; per: 'fortitude' }
   | { op: 'examineTokens' }
   | { op: 'discardHand'; n: number; toHand?: number; perCorruption?: boolean }
@@ -225,6 +226,7 @@ export type Atom =
   | { op: 'moveAnywhere' }                          // hero may move to any location (player choice)
   | { op: 'sauronMoveCharacter'; location: string } // Sauron banishes a chosen Character to `location`
   | { op: 'clearMonstersAt'; location: string }     // remove all monster tokens from a named location
+  | { op: 'counterPlot'; scope?: 'haven' }          // hero removes an active plot from play (optionally one affecting a Haven)
   | { op: 'reviveRelocateMinion' };                 // they-are-terrible: full-heal a minion (board or defeated) and place it on an influenced location
 
 export interface EffOption { label: string; cost?: Atom; eff: EffTree; }

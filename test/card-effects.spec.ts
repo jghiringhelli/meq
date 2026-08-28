@@ -629,6 +629,31 @@ describe('atom: advanceStory / sauronDrawPlot', () => {
   });
 });
 
+describe('atom: sauronDrawShadow', () => {
+  it("draws n Shadow cards into Sauron's hand", () => {
+    const s = freshGame();
+    const before = s.sauron.shadowHand.length;
+    applyAtom(s, cat, activeId(s), { op: 'sauronDrawShadow', n: 1 });
+    expect(s.sauron.shadowHand.length).toBe(before + 1);
+  });
+});
+
+describe('atom: counterPlot', () => {
+  it('removes an active plot from play', () => {
+    const s = freshGame();
+    const ids = cat.plots.slice(0, 2).map((p) => p.id);
+    s.sauron.activePlots = ids.map((id) => ({ eventId: id, step: 0 }));
+    applyAtom(s, cat, activeId(s), { op: 'counterPlot' });
+    expect((s.sauron.activePlots ?? []).length).toBe(1);
+  });
+
+  it('fizzles quietly with no active plots', () => {
+    const s = freshGame();
+    s.sauron.activePlots = [];
+    expect(applyAtom(s, cat, activeId(s), { op: 'counterPlot' })).toContain('no active plot');
+  });
+});
+
 describe('atom: advanceMarker', () => {
   it('advances a named coloured marker directly', () => {
     const s = freshGame();
@@ -838,6 +863,7 @@ describe('full-card resolution (autoResolveTree)', () => {
     const h = heroOf(s);
     h.location = nonHaven;
     h.favor = 2;
+    h.corruption = 1; // "discard 1 favor for each Corruption card" — 1 card ⇒ −1 favor
     const before = s.sauron.locationInfluence[nonHaven] ?? 0;
     const card = shadowCards.find((c) => c.id === 'shadow-do-not-tempt-me')!;
     autoResolveTree(s, cat, h.id, card.tree, 'test:' + card.id, 'sauron');
@@ -884,8 +910,10 @@ describe('coverage: every catalog gainFavor / loseFavor atom moves favor', () =>
     const s = freshGame();
     const h = heroOf(s);
     h.favor = 9;
+    h.corruption = 2; // exercise per='corruptionOnHero' scaling where present
     applyAtom(s, cat, h.id, atom);
-    expect(h.favor).toBe(Math.max(0, 9 - atom.n));
+    const mult = atom.per === 'corruptionOnHero' ? h.corruption : 1;
+    expect(h.favor).toBe(Math.max(0, 9 - atom.n * mult));
   });
 });
 
@@ -893,8 +921,11 @@ describe('coverage: every catalog addInfluence atom raises the shadow pool', () 
   it.each(uniqAtoms('addInfluence'))('$cardId +$atom.n shadow influence', ({ atom }) => {
     const s = freshGame();
     const before = s.sauron.influence;
-    applyAtom(s, cat, activeId(s), atom);
-    expect(s.sauron.influence).toBe(before + atom.n);
+    const h = heroOf(s);
+    h.corruption = 2; // exercise per='corruptionOnHero' scaling where present
+    applyAtom(s, cat, h.id, atom);
+    const mult = atom.per === 'corruptionOnHero' ? h.corruption : 1;
+    expect(s.sauron.influence).toBe(before + atom.n * mult);
   });
 });
 
@@ -979,6 +1010,7 @@ describe('meta: op coverage', () => {
     'examineTokens', 'forcePeril', 'advanceStory', 'sauronDrawPlot', 'advanceMarker',
     'forceSauronDiscard', 'lookSauronHand', 'plotPeekReorder', 'plotFromDiscard', 'plotTutor',
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
+    'sauronDrawShadow', 'counterPlot',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {

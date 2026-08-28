@@ -973,10 +973,18 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
+        "k": "optional",
+        "prompt": "A hero may discard 3 favor to discard an active Plot affecting a Haven",
+        "cost": {
           "op": "loseFavor",
           "n": 3
+        },
+        "eff": {
+          "k": "op",
+          "atom": {
+            "op": "counterPlot",
+            "scope": "haven"
+          }
         }
       },
       "partial": false
