@@ -187,6 +187,7 @@ export type Atom =
   | { op: 'gainCorruption'; n: number }        // draw N corruption cards
   | { op: 'discardCorruption'; n: number }
   | { op: 'discardAllCorruption' }
+  | { op: 'redeemGrace' }                       // spend min(favor,corruption) favor to discard that many Corruption
   | { op: 'addInfluence'; n: number; per?: 'corruptionOnHero' } // to Shadow Pool (optionally n per Corruption card)
   | { op: 'removeInfluence'; n: number }        // from Shadow Pool
   | { op: 'discardRegionInfluence'; n: number }
@@ -215,6 +216,7 @@ export type Atom =
   | { op: 'discardHand'; n: number; toHand?: number; perCorruption?: boolean }
   // M9: shadow/event/peril mechanics ----------------------------------
   | { op: 'forceCombat'; monster: string }        // "must combat a Balrog"
+  | { op: 'combatReward'; favor?: number; training?: number } // reward granted only on defeating the forced foe
   | { op: 'placeInfluence'; where: 'region' | 'shadowPool' | 'location' | 'mordor' | 'shire'; n: number; location?: string; each?: boolean; spread?: number }
   | { op: 'spawnMonster'; n: number }             // place N monster tokens near the hero
   | { op: 'advanceMarker'; marker: 'yellow' | 'red' | 'black' | 'green'; n: number } // advance a named story marker n spaces (green = hero clock; n may be negative)
@@ -509,6 +511,10 @@ export interface MapState {
   /** Green Quest markers: which heroes have an active Quest objective at a
    *  location (placed at setup, cleared when the quest completes). */
   questAt?: Record<LocationId, HeroId[]>;
+  /** Rewards a card promises only if the hero DEFEATS the foe it forced into
+   *  combat (e.g. Khazad-dûm, The Dark Tower). Granted and removed when a foe at
+   *  the matching location is defeated. */
+  pendingCombatRewards?: { location: LocationId; favor?: number; training?: number }[];
 }
 /** M10: the real story track (three stages of six spaces after the shared START
  *  space; Finale at space 18). The Hero (green) marker climbs 2 spaces per turn

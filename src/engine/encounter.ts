@@ -267,6 +267,13 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
     case 'loseFavor': { const n = atom.per === 'corruptionOnHero' ? atom.n * hero.corruption : atom.n; hero.favor = Math.max(0, hero.favor - n); return `-${n} favor`; }
     case 'gainCorruption': return gainCorruptionCards(s, cat, hero.id, atom.n);
     case 'discardCorruption': { const r = discardCorruptionCards(s, cat, hero.id, atom.n); return `-${r} corruption`; }
+    case 'redeemGrace': {
+      const k = Math.min(hero.favor, hero.corruption);
+      if (k <= 0) return 'no favor/corruption to redeem';
+      hero.favor -= k;
+      const r = discardCorruptionCards(s, cat, hero.id, k);
+      return `spent ${k} favor to discard ${r} corruption`;
+    }
     case 'discardAllCorruption': { const r = discardAllCorruptionCards(s, cat, hero.id); return `-${r} corruption (all)`; }
     case 'addInfluence': { const n = atom.per === 'corruptionOnHero' ? atom.n * hero.corruption : atom.n; s.sauron.influence += n; return `+${n} shadow influence`; }
     case 'removeInfluence': s.sauron.influence = Math.max(0, s.sauron.influence - atom.n); return `-${atom.n} shadow influence`;
@@ -402,6 +409,11 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       if (!mid) return '';
       (s.map.monstersAt[hero.location] ||= []).push(mid);
       return `must combat ${cat.monsters[mid].name}`;
+    }
+    case 'combatReward': {
+      (s.map.pendingCombatRewards ||= []).push({ location: hero.location, favor: atom.favor, training: atom.training });
+      const bits = [atom.favor ? `${atom.favor} favor` : '', atom.training ? `${atom.training} training` : ''].filter(Boolean);
+      return `reward on defeating the foe: ${bits.join(' + ')}`;
     }
     case 'spawnMonster': {
       const ids = Object.keys(cat.monsters);

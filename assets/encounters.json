@@ -772,16 +772,12 @@
             }
           },
           {
-            "label": "Spend 1 favor to discard 1 Corruption card",
-            "cost": {
-              "op": "loseFavor",
-              "n": 1
-            },
+            "label": "Spend any number of favor to discard an equal number of Corruption cards",
+            "cost": null,
             "eff": {
               "k": "op",
               "atom": {
-                "op": "discardCorruption",
-                "n": 1
+                "op": "redeemGrace"
               }
             }
           }

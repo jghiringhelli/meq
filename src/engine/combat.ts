@@ -7,13 +7,13 @@ import type {
   Catalog, GameState, Combatant, HeroId, MonsterId, LocationId, CardId, CombatType, NextMod, CombatCard, CombatState,
 } from './types';
 import { shuffle, nextInt } from './rng';
-import { clone, moveHero, defeatHero } from './mechanics';
+import { clone, moveHero, defeatHero, grantTraining } from './mechanics';
 import { log } from './log';
 import { requestChoice } from './choices';
 import { resolveBout } from './effects';
 import { chooseMonsterCard } from './ai';
 import { statValue, stepResolveTree, bestTreeOption } from './encounter';
-import { gainCorruption, corruptionCombatStartDiscard } from './corruption';
+import { gainCorruption, corruptionCombatStartDiscard, grantFavor } from './corruption';
 import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
 import { bestPlacementToward, placeInfluenceAction } from './influence';
 import { tryCompleteQuestsOnDefeat } from './quests';
@@ -459,6 +459,19 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
     // (rulebook p.28). It yields the hero NO favor or reward on its own — only a
     // Quest that names this foe may complete here.
     tryCompleteQuestsOnDefeat(s, cat, hero.id, pc.defender.refId);
+    // A card (Khazad-dûm, The Dark Tower) may promise a reward ONLY if the hero
+    // defeats the foe it forced into combat here. Grant and consume it now.
+    const rewards = s.map.pendingCombatRewards;
+    if (rewards) {
+      const i = rewards.findIndex((r) => r.location === pc.locationId);
+      if (i >= 0) {
+        const r = rewards[i];
+        if (r.favor) grantFavor(cat, hero, r.favor);
+        if (r.training) grantTraining(s, cat, hero, r.training);
+        rewards.splice(i, 1);
+        log(s, 'combat', hero.id, `defeated the foe — gains ${[r.favor ? `${r.favor} favor` : '', r.training ? 'training' : ''].filter(Boolean).join(' + ')}`);
+      }
+    }
   } else if (result === 'escape' || result === 'standoff') {
     // no defeat: the hero keeps the cards he has left. On an escape (a Withdraw
     // card) the hero slips to an adjacent location; on a standoff (both

@@ -294,8 +294,8 @@
           {
             "k": "op",
             "atom": {
-              "op": "gainFavor",
-              "n": 2
+              "op": "combatReward",
+              "favor": 2
             }
           }
         ]
@@ -320,23 +320,12 @@
             }
           },
           {
-            "k": "seq",
-            "steps": [
-              {
-                "k": "op",
-                "atom": {
-                  "op": "gainFavor",
-                  "n": 2
-                }
-              },
-              {
-                "k": "op",
-                "atom": {
-                  "op": "training",
-                  "n": 1
-                }
-              }
-            ]
+            "k": "op",
+            "atom": {
+              "op": "combatReward",
+              "favor": 2,
+              "training": 1
+            }
           }
         ]
       },

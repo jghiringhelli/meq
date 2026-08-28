@@ -713,6 +713,49 @@ describe('atom: clearAdjacent', () => {
   });
 });
 
+describe('atom: redeemGrace', () => {
+  it('spends min(favor, corruption) favor to discard that many Corruption', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    h.favor = 3;
+    applyAtom(s, cat, h.id, { op: 'gainCorruption', n: 2 });
+    const corr = h.corruption;
+    applyAtom(s, cat, h.id, { op: 'redeemGrace' });
+    const spent = Math.min(3, corr);
+    expect(h.favor).toBe(3 - spent);
+    expect(h.corruption).toBe(corr - spent);
+  });
+
+  it('is a no-op with no favor', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    h.favor = 0;
+    applyAtom(s, cat, h.id, { op: 'gainCorruption', n: 1 });
+    const corr = h.corruption;
+    applyAtom(s, cat, h.id, { op: 'redeemGrace' });
+    expect(h.corruption).toBe(corr);
+  });
+});
+
+describe('atom: combatReward', () => {
+  it('registers a location-scoped reward pending on defeating the foe', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    applyAtom(s, cat, h.id, { op: 'combatReward', favor: 2, training: 1 });
+    const pending = s.map.pendingCombatRewards ?? [];
+    expect(pending).toHaveLength(1);
+    expect(pending[0]).toMatchObject({ location: h.location, favor: 2, training: 1 });
+  });
+
+  it('does NOT grant favor immediately (only on victory)', () => {
+    const s = freshGame();
+    const h = s.heroes.find((x) => x.id === activeId(s))!;
+    const favor = h.favor;
+    applyAtom(s, cat, h.id, { op: 'combatReward', favor: 2 });
+    expect(h.favor).toBe(favor);
+  });
+});
+
 describe('atom: advanceMarker', () => {
   it('advances a named coloured marker directly', () => {
     const s = freshGame();
@@ -1070,6 +1113,7 @@ describe('meta: op coverage', () => {
     'forceSauronDiscard', 'lookSauronHand', 'plotPeekReorder', 'plotFromDiscard', 'plotTutor',
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
     'sauronDrawShadow', 'counterPlot', 'healPer', 'clearAdjacent', 'handToLife', 'placeFavorToken',
+    'combatReward', 'redeemGrace',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {
