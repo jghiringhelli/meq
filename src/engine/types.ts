@@ -215,6 +215,7 @@ export type Atom =
   | { op: 'drawPer'; per: 'fortitude' }
   | { op: 'examineTokens' }
   | { op: 'discardHand'; n: number; toHand?: number; perCorruption?: boolean }
+  | { op: 'discardShields'; n: number }           // discard hand cards whose defense (shield icons) sums to >= n, to negate n damage
   // M9: shadow/event/peril mechanics ----------------------------------
   | { op: 'forceCombat'; monster: string }        // "must combat a Balrog"
   | { op: 'combatReward'; favor?: number; training?: number } // reward granted only on defeating the forced foe

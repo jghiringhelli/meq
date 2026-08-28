@@ -401,6 +401,33 @@ describe('atom: discardHand', () => {
   });
 });
 
+describe('atom: discardShields', () => {
+  // Shield icons on a hero card == its combat defense. Block/Dodge = 4, Evade = 2,
+  // Parry = 1, Sweep = 0.
+  it('discards highest-defense cards first, fewest cards to reach the block', () => {
+    const s = freshGame();
+    const h = heroOf(s);
+    // 4 (Block) + 2 (Evade) + 1 (Parry) + 0 (Sweep) = 7 shields available.
+    h.hand = ['cmb-thalin-parry', 'cmb-thalin-sweep', 'cmb-thalin-block', 'cmb-thalin-evade'];
+    h.discard = [];
+    applyAtom(s, cat, h.id, { op: 'discardShields', n: 4 });
+    // Block alone (def 4) covers 4 damage: exactly one card discarded.
+    expect(h.discard).toEqual(['cmb-thalin-block']);
+    expect(h.hand).toEqual(['cmb-thalin-parry', 'cmb-thalin-sweep', 'cmb-thalin-evade']);
+  });
+
+  it('accumulates several cards when no single card blocks enough', () => {
+    const s = freshGame();
+    const h = heroOf(s);
+    // Need 6 shields: Block(4) + Evade(2) = 6 with two cards; Parry left in hand.
+    h.hand = ['cmb-thalin-parry', 'cmb-thalin-evade', 'cmb-thalin-block'];
+    h.discard = [];
+    applyAtom(s, cat, h.id, { op: 'discardShields', n: 6 });
+    expect(h.discard.sort()).toEqual(['cmb-thalin-block', 'cmb-thalin-evade']);
+    expect(h.hand).toEqual(['cmb-thalin-parry']);
+  });
+});
+
 describe('atom: gainItem / discardItem', () => {
   it('gainItem appends the named item', () => {
     const s = freshGame();
@@ -1164,6 +1191,7 @@ describe('meta: op coverage', () => {
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
     'sauronDrawShadow', 'counterPlot', 'healPer', 'clearAdjacent', 'handToLife', 'placeFavorToken',
     'combatReward', 'redeemGrace', 'removeCharacter', 'damageMinion', 'bankFavor',
+    'discardShields',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {

@@ -559,9 +559,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 4 card(s) to negate the damage",
+            "label": "Discard cards (4 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 4
             },
             "eff": {
@@ -925,9 +925,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 6 card(s) to negate the damage",
+            "label": "Discard cards (6 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 6
             },
             "eff": {
@@ -1031,9 +1031,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 6 card(s) to negate the damage",
+            "label": "Discard cards (6 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 6
             },
             "eff": {
@@ -1300,9 +1300,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 8 card(s) to negate the damage",
+            "label": "Discard cards (8 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 8
             },
             "eff": {
@@ -1811,9 +1811,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 6 card(s) to negate the damage",
+            "label": "Discard cards (6 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 6
             },
             "eff": {
@@ -2499,9 +2499,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 7 card(s) to negate the damage",
+            "label": "Discard cards (7 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 7
             },
             "eff": {
@@ -3843,9 +3843,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 4 card(s) to negate the damage",
+            "label": "Discard cards (4 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 4
             },
             "eff": {
@@ -4015,9 +4015,9 @@
         "prompt": "A blow lands — discard cards to block it?",
         "options": [
           {
-            "label": "Discard 5 card(s) to negate the damage",
+            "label": "Discard cards (5 shields) to negate the damage",
             "cost": {
-              "op": "discardHand",
+              "op": "discardShields",
               "n": 5
             },
             "eff": {

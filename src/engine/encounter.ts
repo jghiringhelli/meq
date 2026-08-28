@@ -12,7 +12,7 @@
 // (no stored continuations) and fully deterministic.
 
 import type {
-  Catalog, GameState, HeroId, EffTree, Atom, Cond, Metric, EffOption, LocationId,
+  Catalog, GameState, HeroId, HeroState, EffTree, Atom, Cond, Metric, EffOption, LocationId,
 } from './types';
 import { STORY_FINALE } from './types';
 import { placeCharacterUnique } from './characters';
@@ -127,13 +127,19 @@ export function evalCond(s: GameState, cat: Catalog, heroId: HeroId, c: Cond): b
 
 // ---- affordability (for disabling illegal choice options) ---------------
 
-function canAfford(s: GameState, _cat: Catalog, heroId: HeroId, cost?: Atom): boolean {
+/** Total shield icons (= combat defense) across the hero's current hand. */
+function handShieldTotal(cat: Catalog, h: HeroState): number {
+  return h.hand.reduce((n, id) => n + (cat.combatCards[id]?.defense ?? 0), 0);
+}
+
+function canAfford(s: GameState, cat: Catalog, heroId: HeroId, cost?: Atom): boolean {
   if (!cost) return true;
   const h = s.heroes.find((x) => x.id === heroId);
   if (!h) return false;
   switch (cost.op) {
     case 'loseFavor': return h.favor >= cost.n;
     case 'discardHand': return h.hand.length >= cost.n;
+    case 'discardShields': return handShieldTotal(cat, h) >= cost.n;
     case 'discardItem': return h.items.length >= cost.n;
     default: return true;
   }
@@ -410,6 +416,24 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       const moved = hero.hand.splice(0, n);
       hero.discard.push(...moved);
       return `discard ${n} card(s)`;
+    }
+    case 'discardShields': {
+      // Faithful shield-block: discard hand cards whose combat defense (the
+      // shield icons printed on each card) sums to at least `n`, negating that
+      // much damage. Discard the highest-defense cards first so the fewest
+      // cards leave the hand to reach the required block.
+      const order = [...hero.hand].sort(
+        (a, b) => (cat.combatCards[b]?.defense ?? 0) - (cat.combatCards[a]?.defense ?? 0),
+      );
+      let blocked = 0; const moved: string[] = [];
+      for (const id of order) {
+        if (blocked >= atom.n) break;
+        blocked += cat.combatCards[id]?.defense ?? 0;
+        const i = hero.hand.indexOf(id);
+        if (i >= 0) hero.discard.push(hero.hand.splice(i, 1)[0]);
+        moved.push(id);
+      }
+      return `discard ${moved.length} card(s) (${blocked} shields) to block ${atom.n} damage`;
     }
     case 'forceCombat': {
       const mid = findMonsterByName(cat, atom.monster);

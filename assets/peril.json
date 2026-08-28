@@ -16,19 +16,15 @@
       "region": "",
       "effectKey": "",
       "tree": {
-        "k": "seq",
-        "steps": [
+        "k": "choice",
+        "prompt": "The hounds close in — discard cards to block the damage?",
+        "options": [
           {
-            "k": "op",
-            "atom": {
-              "op": "damage",
+            "label": "Discard cards (6 shields) to negate the damage",
+            "cost": {
+              "op": "discardShields",
               "n": 6
-            }
-          },
-          {
-            "k": "optional",
-            "prompt": "Discard cards to reduce the damage; if reduced to 0, gain 1 favor or training",
-            "cost": null,
+            },
             "eff": {
               "k": "choice",
               "prompt": "Choose your reward",
@@ -56,6 +52,17 @@
                   }
                 }
               ]
+            }
+          },
+          {
+            "label": "Take 6 damage",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damage",
+                "n": 6
+              }
             }
           }
         ]
