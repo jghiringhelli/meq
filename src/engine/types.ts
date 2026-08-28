@@ -234,6 +234,8 @@ export type Atom =
   | { op: 'clearAdjacent' }                          // remove all influence + monster tokens within 1 space of the hero
   | { op: 'handToLife' }                             // shuffle the hero's whole hand into his life pool
   | { op: 'placeFavorToken'; location: string; n: number } // place N favor tokens on a named location
+  | { op: 'removeCharacter'; region: string }       // Sauron discards one Character token from a region
+  | { op: 'damageMinion'; n: number; region: string } // deal N damage to a minion in a region
   | { op: 'counterPlot'; scope?: 'haven' }          // hero removes an active plot from play (optionally one affecting a Haven)
   | { op: 'reviveRelocateMinion' };                 // they-are-terrible: full-heal a minion (board or defeated) and place it on an influenced location
 

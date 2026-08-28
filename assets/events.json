@@ -181,11 +181,32 @@
       ],
       "effectKind": "mechanical",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "loseFavor",
-          "n": 1
-        }
+        "k": "choice",
+        "prompt": "Sauron chooses one",
+        "options": [
+          {
+            "label": "Discard 1 favor",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "loseFavor",
+                "n": 1
+              }
+            }
+          },
+          {
+            "label": "Discard 1 Character from Rohan",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "removeCharacter",
+                "region": "rohan"
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },
@@ -204,11 +225,33 @@
       "ops": [],
       "effectKind": "flavor",
       "tree": {
-        "k": "op",
-        "atom": {
-          "op": "discardMonsterToken",
-          "n": 2
-        }
+        "k": "choice",
+        "prompt": "Heroes choose one",
+        "options": [
+          {
+            "label": "Remove up to 2 monster tokens",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "discardMonsterToken",
+                "n": 2
+              }
+            }
+          },
+          {
+            "label": "Deal 2 damage to a minion in Mirkwood",
+            "cost": null,
+            "eff": {
+              "k": "op",
+              "atom": {
+                "op": "damageMinion",
+                "n": 2,
+                "region": "mirkwood"
+              }
+            }
+          }
+        ]
       },
       "partial": false
     },

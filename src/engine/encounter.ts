@@ -549,6 +549,36 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       placeFavorToken(s, loc, atom.n);
       return `+${atom.n} favor token on ${cat.locations[loc]?.name ?? loc}`;
     }
+    case 'removeCharacter': {
+      const rgn = findRegion(cat, atom.region) ?? atom.region;
+      for (const [loc, arr] of Object.entries(s.map.charactersAt ?? {})) {
+        if (cat.locations[loc]?.regionId === rgn && arr.length) {
+          const who = arr.shift();
+          if (!arr.length) delete s.map.charactersAt![loc];
+          return `removed character ${who} from ${cat.locations[loc]?.name ?? loc}`;
+        }
+      }
+      return 'no character to remove';
+    }
+    case 'damageMinion': {
+      const rgn = findRegion(cat, atom.region) ?? atom.region;
+      for (const [loc, arr] of Object.entries(s.map.minionsAt ?? {})) {
+        if (cat.locations[loc]?.regionId !== rgn || !arr.length) continue;
+        const mid = arr[0];
+        const max = cat.minions[mid]?.health ?? 1;
+        const cur = (s.map.minionHealth ||= {})[mid] ?? max;
+        const nh = cur - atom.n;
+        if (nh <= 0) {
+          arr.shift();
+          if (!arr.length) delete s.map.minionsAt![loc];
+          delete s.map.minionHealth[mid];
+          return `destroyed minion ${cat.minions[mid]?.name ?? mid}`;
+        }
+        s.map.minionHealth[mid] = nh;
+        return `dealt ${atom.n} damage to ${cat.minions[mid]?.name ?? mid}`;
+      }
+      return 'no minion to damage';
+    }
     case 'counterPlot': {
       const active = s.sauron.activePlots ?? [];
       if (!active.length) return 'no active plot to counter';

@@ -756,6 +756,37 @@ describe('atom: combatReward', () => {
   });
 });
 
+describe('atom: removeCharacter', () => {
+  it('discards one Character token from the named region', () => {
+    const s = freshGame();
+    const loc = Object.values(cat.locations).find((l: any) => l.regionId === 'rohan-and-gondor')!.id;
+    s.map.charactersAt = { [loc]: ['theoden', 'eomer'] };
+    const msg = applyAtom(s, cat, activeId(s), { op: 'removeCharacter', region: 'rohan' });
+    expect(s.map.charactersAt[loc]).toHaveLength(1);
+    expect(msg).toContain('removed character');
+  });
+
+  it('fizzles when no Character is present in the region', () => {
+    const s = freshGame();
+    s.map.charactersAt = {};
+    expect(applyAtom(s, cat, activeId(s), { op: 'removeCharacter', region: 'rohan' })).toContain('no character');
+  });
+});
+
+describe('atom: damageMinion', () => {
+  it('wears a minion down and destroys it at 0 health', () => {
+    const s = freshGame();
+    const loc = Object.values(cat.locations).find((l: any) => l.regionId === 'mist-mountains-and-mirkwood')!.id;
+    const mid = Object.keys(cat.minions)[0];
+    s.map.minionsAt = { [loc]: [mid] };
+    s.map.minionHealth = { [mid]: 3 };
+    applyAtom(s, cat, activeId(s), { op: 'damageMinion', n: 2, region: 'mirkwood' });
+    expect(s.map.minionHealth[mid]).toBe(1);
+    applyAtom(s, cat, activeId(s), { op: 'damageMinion', n: 2, region: 'mirkwood' });
+    expect(s.map.minionsAt[loc] ?? []).toHaveLength(0);
+  });
+});
+
 describe('atom: advanceMarker', () => {
   it('advances a named coloured marker directly', () => {
     const s = freshGame();
@@ -1113,7 +1144,7 @@ describe('meta: op coverage', () => {
     'forceSauronDiscard', 'lookSauronHand', 'plotPeekReorder', 'plotFromDiscard', 'plotTutor',
     'sauronMoveCharacter', 'reviveRelocateMinion', 'explore', 'reusable',
     'sauronDrawShadow', 'counterPlot', 'healPer', 'clearAdjacent', 'handToLife', 'placeFavorToken',
-    'combatReward', 'redeemGrace',
+    'combatReward', 'redeemGrace', 'removeCharacter', 'damageMinion',
   ]);
 
   it('every op used in the catalog has a focused behavioural test', () => {
