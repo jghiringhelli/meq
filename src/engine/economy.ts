@@ -144,6 +144,19 @@ const CONSULT_CORRUPTION_PLOTS: Record<string, string> = {
   'denethor-falls-into-madness': 'Denethor',
 };
 
+/** Whether consulting `character` right now would self-corrupt the hero: an
+ *  active corruption plot has tainted that Character (case-insensitive match on
+ *  the board's lowercased token key). Lets the hero AI avoid the tainted
+ *  consult while still using every other Character for favor. */
+export function consultWouldCorrupt(s: GameState, character: string): boolean {
+  const active = new Set((s.sauron.activePlots ?? []).map((p) => p.eventId));
+  const key = character.trim().toLowerCase();
+  for (const [plotId, tainted] of Object.entries(CONSULT_CORRUPTION_PLOTS)) {
+    if (active.has(plotId) && tainted.trim().toLowerCase() === key) return true;
+  }
+  return false;
+}
+
 export function heroConsultCharacter(
   state: GameState, cat: Catalog, heroId: HeroId, character: string, choice: 'favor' | 'ability' = 'favor',
 ): GameState {

@@ -12,10 +12,12 @@ import {
   engageableMonsters, canExplore, encounterPlan, resolveChoice, resolveEncounter,
   chooseEncounter, legalMoves, heroDiscardPlot, heroRetrieveFavor, favorHere, targetablePlot,
   heroSurvey, canSurvey, autoResolvePendingTree, heroTradeFavor, otherHeroesHere,
+  heroConsultCharacter, charactersHere, consultWouldCorrupt,
 } from './game';
 import { ambushPending } from './mechanics';
 import { isPerilous } from './influence';
 import { corruptionBlocksSocial, corruptionFavorGainCap } from './corruption';
+import { solveCombatOption } from './combatSolver';
 
 // ---- local PRNG (independent of the game rng) --------------------------
 export type Rng = () => number;
@@ -49,6 +51,7 @@ export type HeroAction =
   | { kind: 'rest' }
   | { kind: 'counter-plot' }
   | { kind: 'retrieve-favor' }
+  | { kind: 'consult'; character: string; choice: 'favor' | 'ability' }
   | { kind: 'survey' }
   | { kind: 'trade-favor'; fromId: HeroId; toId: HeroId; n: number }
   | { kind: 'end' };
@@ -420,6 +423,28 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
   return step ? { kind: 'move', to: step } : null;
 }
 
+/** Consulting a Character present at the hero's location yields +2 favor (Eleanor
+ *  +1 more) — the heroes' richest, most reliable favor source and the classic
+ *  "ask the characters for favours" tactic experienced players lean on. Worth an
+ *  action whenever there is a plot race to fund AND favor is the actual
+ *  bottleneck (the hero cannot yet afford the cheapest active plot's counter).
+ *  Skips a Character whose consult would self-corrupt (an active corruption plot
+ *  taints them) and Isolated heroes (who may not consult). */
+function planConsult(s: GameState, cat: Catalog, hero: HeroState): HeroAction | null {
+  const active = s.sauron.activePlots ?? [];
+  if (!active.length) return null; // no plot race → no favor need
+  if (corruptionBlocksSocial(cat, hero)) return null; // Isolated: cannot consult
+  const cheapest = Math.min(
+    ...active.map((e) => cat.plots.find((p) => p.id === e.eventId)?.favorToCounter ?? 2),
+  );
+  if (hero.favor >= cheapest) return null; // already able to break a plot — don't burn the token
+  for (const c of charactersHere(s, hero.id)) {
+    if (consultWouldCorrupt(s, c)) continue;
+    return { kind: 'consult', character: c, choice: 'favor' };
+  }
+  return null;
+}
+
 /** True when Sauron has an active plot the heroes ought to break but this hero
  *  can't yet afford — a cue to go earn favor (explore) rather than idle. */
 function urgentUnaffordablePlot(s: GameState, cat: Catalog, hero: HeroState): boolean {
@@ -562,7 +587,7 @@ export const STRATEGIES: Record<string, HeroStrategy> = {
  *  the simulations pointed at — the "best" line depends on the mission. */
 export const missionAware: HeroStrategy = {
   name: 'mission-aware',
-  combatOption: (_s, _cat, opts) => opts[0].id,
+  combatOption: (s, cat, opts, rng) => solveCombatOption(s, cat, opts, rng),
   encounterOption: (_s, opts) => firstEnabled(opts),
   heroAction: (s, cat, heroId, rng) => {
     const kind = cat.heroMissions[s.secretHeroMission ?? cat.scenario.heroMission]?.condition?.kind ?? '';
@@ -580,6 +605,11 @@ export const missionAware: HeroStrategy = {
     // fight against a weak foe standing here (user tactic) to stock the cards the
     // march needs.
     if (plot && (plot.kind === 'counter-plot' || plot.kind === 'trade-favor')) return plot;
+    // Fund the plot race: consulting a co-located Character for favor (the classic
+    // "ask the characters for favours" tactic) is the heroes' best favor source —
+    // do it before marching or fighting when favor is the bottleneck.
+    const consult = planConsult(s, cat, hero);
+    if (consult) return consult;
     const easyFoe = engageableMonsters(s, heroId).find((m) => worthFightingForCards(s, cat, hero, m));
     if (easyFoe) return { kind: 'engage', monsterId: easyFoe };
     if (plot) return plot;
@@ -707,6 +737,7 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
     case 'rest': return heroRest(s, cat, heroId);
     case 'counter-plot': return heroDiscardPlot(s, cat, heroId);
     case 'retrieve-favor': return heroRetrieveFavor(s, cat, heroId);
+    case 'consult': return heroConsultCharacter(s, cat, heroId, act.character, act.choice);
     case 'survey': return heroSurvey(s, cat, heroId);
     case 'trade-favor': return heroTradeFavor(s, cat, act.fromId, act.toId, act.n);
     case 'end': return endHeroActions(s, cat);

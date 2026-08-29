@@ -25,7 +25,7 @@ export {
   heroDarkPath, heroRetrieveFavor, heroConsultCharacter, heroCompleteQuest,
   heroDiscardPlot, heroTradeFavor, heroTradeItem, heroCleanseCorruption,
   favorHere, charactersHere, plotHere, targetablePlot, canCleanse, canDarkPath, canCompleteQuest, otherHeroesHere,
-  canDiscardPlot, plotCounterCost,
+  canDiscardPlot, plotCounterCost, consultWouldCorrupt,
   heroSurvey, canSurvey,
 } from './economy';
 
