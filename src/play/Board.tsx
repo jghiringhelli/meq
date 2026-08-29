@@ -150,6 +150,22 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
     return figs;
   };
 
+  // Info payload for a location — every named node is inspectable (region,
+  // type, current influence/favor/occupants) so the whole map reads like the
+  // physical board's reference.
+  const locInfo = (l: (typeof locs)[number]): InspectPayload => {
+    const inf = state.sauron.locationInfluence?.[l.id] ?? 0;
+    const fav = state.map.favorAt?.[l.id] ?? 0;
+    const heroesHere = (state.map.heroesAt?.[l.id] ?? []).map((h) => cat.heroes[h]?.name ?? h);
+    const lines = [`Region: ${l.regionName ?? l.regionColor} (${l.regionColor})`, `Type: ${l.kind}`];
+    if (inf) lines.push(`Sauron influence: ${inf}`);
+    if (fav) lines.push(`Favor tokens: ${fav}`);
+    if (heroesHere.length) lines.push(`Heroes here: ${heroesHere.join(', ')}`);
+    const enc = l.kind === 'haven' ? 'Haven' : (l.regionName ?? l.regionColor);
+    if (enc) lines.push(`Encounter deck: ${enc}`);
+    return { title: l.name, subtitle: `${l.regionName ?? l.regionColor} · ${l.kind}`, lines };
+  };
+
   // Visible viewport size expressed in board (viewBox) units. Because the board
   // is fit with preserveAspectRatio="meet", one axis is letterboxed, so the
   // visible area is LARGER than w×h on that axis — we must account for it or the
@@ -313,19 +329,21 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
             <g key={l.id} transform={`translate(${l.coords.x},${l.coords.y})`}
               className={isTarget ? 'node target' : 'node'}
               onMouseEnter={() => setHover(l.id)} onMouseLeave={() => setHover(null)}
-              onClick={() => { if (!drag.current?.moved && isTarget) onMove?.(l.id); }}
-              style={{ cursor: isTarget ? 'pointer' : 'default' }}>
+              onClick={() => {
+                if (drag.current?.moved) return;
+                if (isTarget) onMove?.(l.id);
+                else inspect(locInfo(l));
+              }}
+              style={{ cursor: 'pointer' }}>
 
-              {/* Lit circle: a legal move target (or a hovered node) fills the
-                  interior — up to the printed inner border — with a translucent
-                  wash of its REGION colour, instead of a plain gold/white ring. */}
-              <circle r={rr}
-                fill={isTarget || isHover ? regionCol : 'transparent'}
-                fillOpacity={isTarget ? 0.32 : isHover ? 0.16 : 0}
+              {/* Lit circle: a legal move target (or a hovered node) is marked
+                  with a BORDER in its REGION colour — the interior fill is left
+                  to Sauron's influence overlay, so the two never collide. */}
+              <circle r={rr} fill="transparent"
                 stroke={isTarget || isHover ? regionCol : 'transparent'}
-                strokeWidth={isTarget ? 8 : 5}
-                strokeOpacity={isTarget ? 0.9 : 0.55} />
-              {isTarget && <circle r={rr + 8} fill="none" stroke={regionCol} strokeWidth={4} strokeOpacity={0.45} />}
+                strokeWidth={isTarget ? 10 : 6}
+                strokeOpacity={isTarget ? 0.95 : 0.7} />
+              {isTarget && <circle r={rr + 8} fill="none" stroke={regionCol} strokeWidth={4} strokeOpacity={0.5} />}
               {influence > 0 && <circle r={rr + 2} fill={infColor} fillOpacity={0.10 + infLevel * 0.07} stroke={infColor} strokeWidth={4} strokeOpacity={0.35 + infLevel * 0.14} />}
               {CAL && <circle r={10} fill="#ff2d2d" stroke="#000" strokeWidth={2} />}
 
@@ -479,12 +497,57 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
           );
         })()}
 
+        {/* Interactive board furniture: the printed reference regions are
+            clickable and open an info panel with their live state — the top
+            Story track (turn, phase, every marker) and, at the tower's base,
+            Sauron's Actions / Shadow Pool economy. */}
+        {(() => {
+          const st = state.story.sauron ?? { yellow: 0, red: 0, black: 0 };
+          const R = STORY_FINALE;
+          const storyInfo = () => inspect({
+            title: 'Story Track', subtitle: `Turn ${state.story.turn} · ${state.phase}`,
+            lines: [
+              `Hero (green): space ${Math.min(R, state.story.heroMarker ?? 0)}/${R}`,
+              `Ring (yellow): space ${Math.min(R, st.yellow)}/${R}`,
+              `War (red): space ${Math.min(R, st.red)}/${R}`,
+              `Corruption (black): space ${Math.min(R, st.black)}/${R}`,
+            ],
+            text: 'Each Story Step Sauron advances his three markers toward FINALE; the Hero marker advances as the heroes complete quests. Whoever reaches FINALE on their track wins the game.',
+          });
+          const actionsInfo = () => inspect({
+            title: 'Sauron Actions — the Eye', subtitle: 'Action Step economy',
+            lines: [
+              `Eye actions this step: ${state.sauronActionsLeft ?? '—'}`,
+              `Shadow Pool (chest): ${state.sauron.influence}`,
+              `Shadow hand: ${state.sauron.shadowHand?.length ?? 0} cards`,
+              `Doctrine: ${state.sauron.doctrine ?? 'balanced'}`,
+            ],
+            text: 'During the Action Step Sauron spends Eye actions: (1) Gain influence — up to 2 into the Shadow Pool, the rest as extension; (2) Draw Shadow & Plot cards; (3) Command up to X minions/monster tokens (max 1 new monster token).',
+          });
+          const zones: { key: string; x: number; y: number; w: number; h: number; on: () => void; tip: string }[] = [
+            { key: 'story', x: 2760, y: 40, w: 3200, h: 230, on: storyInfo, tip: 'Story track — turn, phase & markers' },
+            { key: 'actions', x: 5130, y: 2960, w: 940, h: 700, on: actionsInfo, tip: 'Sauron Actions & Shadow Pool' },
+          ];
+          return (
+            <g>
+              {zones.map((z) => (
+                <rect key={'zone' + z.key} x={z.x} y={z.y} width={z.w} height={z.h}
+                  fill="transparent" style={{ cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); z.on(); }}>
+                  <title>{z.tip}</title>
+                </rect>
+              ))}
+            </g>
+          );
+        })()}
+
         {/* Sauron's Plot track — the three plot slots sit on the Dark Tower
             along the board's right edge (each slot bears Sauron's emblem in
             the board art, numbered 1–3 top→bottom). An active plot's card art
             overlays its slot; empty slots let the tower emblem show through. */}
         {(() => {
           const active = state.sauron.activePlots ?? [];
+          const openPlots = () => window.dispatchEvent(new CustomEvent('meq-open-ref', { detail: 'plots' }));
           const cx = 5577, w = 215, h = 380;          // tower plot-slot geometry (board px)
           const ys = [850, 1450, 2050];               // slot centres, top → bottom
           return (
@@ -497,11 +560,17 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
                 if (!p) {
                   return (
                     <rect key={'plotslot' + i} x={x} y={y} width={w} height={h} rx={10}
-                      fill="none" stroke="#6b4a3a" strokeWidth={2} strokeDasharray="10 8" opacity={0.4} />
+                      fill="transparent" stroke="#6b4a3a" strokeWidth={2} strokeDasharray="10 8" opacity={0.4}
+                      pointerEvents="auto" style={{ cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); openPlots(); }}>
+                      <title>Empty plot slot — click to browse the Plot deck</title>
+                    </rect>
                   );
                 }
                 return (
-                  <g key={'plotslot' + i} pointerEvents="auto" style={{ cursor: 'help' }}>
+                  <g key={'plotslot' + i} pointerEvents="auto" style={{ cursor: 'pointer' }}
+                    onClick={(e) => { e.stopPropagation(); inspect({ title: p.name, img, subtitle: `Active Plot ${i + 1}`,
+                      lines: [`Affects: ${p.affectsText || '—'}`, `Favor to counter: ${p.favorToCounter ?? '—'}`], text: p.effect || '' }); }}>
                     <title>{`${p.name}\nAffects: ${p.affectsText || '—'}\nFavor to counter: ${p.favorToCounter ?? '—'}\n\n${p.effect || ''}`}</title>
                     <rect x={x} y={y} width={w} height={h} rx={10}
                       fill="#1a0d0d" stroke="#c0392b" strokeWidth={5} opacity={0.97} />
