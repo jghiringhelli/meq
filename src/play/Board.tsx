@@ -283,6 +283,7 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
           const infColor = ['', '#e0574a', '#b8342a', '#7a1414', '#2e0606'][infLevel];
           const isTarget = targetSet.has(l.id);
           const isHover = hover === l.id;
+          const regionCol = REGION_COLOR[l.regionColor] ?? '#c9a24a';
           const questHeroes = state.map.questAt?.[l.id] ?? [];
           const eventPlotsHere = (state.sauron.activeEventPlots ?? []).filter((m) => m.location === l.id);
           const figs = buildFigs(l.id);
@@ -315,12 +316,16 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
               onClick={() => { if (!drag.current?.moved && isTarget) onMove?.(l.id); }}
               style={{ cursor: isTarget ? 'pointer' : 'default' }}>
 
-              {/* hit + highlight ring; the art already draws the location circle */}
-              <circle r={rr} fill="transparent"
-                stroke={isTarget ? '#ffd970' : isHover ? '#ffffff' : 'transparent'}
-                strokeWidth={isTarget ? 10 : 6}
-                strokeOpacity={isTarget ? 0.95 : 0.8} />
-              {isTarget && <circle r={rr + 8} fill="none" stroke="#ffd970" strokeWidth={4} strokeOpacity={0.5} />}
+              {/* Lit circle: a legal move target (or a hovered node) fills the
+                  interior — up to the printed inner border — with a translucent
+                  wash of its REGION colour, instead of a plain gold/white ring. */}
+              <circle r={rr}
+                fill={isTarget || isHover ? regionCol : 'transparent'}
+                fillOpacity={isTarget ? 0.32 : isHover ? 0.16 : 0}
+                stroke={isTarget || isHover ? regionCol : 'transparent'}
+                strokeWidth={isTarget ? 8 : 5}
+                strokeOpacity={isTarget ? 0.9 : 0.55} />
+              {isTarget && <circle r={rr + 8} fill="none" stroke={regionCol} strokeWidth={4} strokeOpacity={0.45} />}
               {influence > 0 && <circle r={rr + 2} fill={infColor} fillOpacity={0.10 + infLevel * 0.07} stroke={infColor} strokeWidth={4} strokeOpacity={0.35 + infLevel * 0.14} />}
               {CAL && <circle r={10} fill="#ff2d2d" stroke="#000" strokeWidth={2} />}
 
