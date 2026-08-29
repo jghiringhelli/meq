@@ -174,7 +174,10 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
   }, [w, h]);
   const onPointerDown = (e: React.PointerEvent) => {
     drag.current = { x: e.clientX, y: e.clientY, ox: view.x, oy: view.y, moved: false };
-    try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    // Do NOT setPointerCapture here: capturing on pointer-down retargets the
+    // following `click` to the <svg>, so child on-map handlers (a node's Travel
+    // click, a deck pile opening its reference) never fire. Capture only once a
+    // real DRAG begins (in onPointerMove), which keeps plain clicks intact.
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const d = drag.current;
@@ -182,8 +185,11 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
     const { f } = viewport();
     const scale = 1 / f; // client px → viewBox units (uniform under "meet")
     const dx = (e.clientX - d.x) * scale, dy = (e.clientY - d.y) * scale;
-    if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
-    setView((v) => ({ z: v.z, ...clampPan(v.z, d.ox + dx, d.oy + dy) }));
+    if (!d.moved && Math.abs(dx) + Math.abs(dy) > 3) {
+      d.moved = true;
+      try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    }
+    if (d.moved) setView((v) => ({ z: v.z, ...clampPan(v.z, d.ox + dx, d.oy + dy) }));
   };
   const endDrag = () => { setTimeout(() => { drag.current = null; }, 0); };
   const reset = () => setView({ z: 1, x: 0, y: 0 });
@@ -393,6 +399,18 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
                   </g>
                 );
               })()}
+
+              {/* Travel hit overlay: when this node is a legal move target, a
+                  transparent disc on TOP of any tokens captures the click for the
+                  move — otherwise a monster/influence chip's inspect handler
+                  (which stops propagation) would swallow it and the hero could
+                  never travel here. Drawn last so it wins the hit test. */}
+              {isTarget && onMove && (
+                <circle r={rr} fill="transparent" style={{ cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); if (!drag.current?.moved) onMove(l.id); }}>
+                  <title>{`Travel to ${l.name}`}</title>
+                </circle>
+              )}
             </g>
           );
         })}

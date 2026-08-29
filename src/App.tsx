@@ -327,7 +327,7 @@ export default function App() {
           />
         )}
         <h1>Middle-earth Quest</h1>
-        <span className="subtitle">round {state.round}
+        <span className="subtitle">Turn {state.story.turn} · {PHASE_STEPS.find((s) => s.phases.includes(state.phase))?.label ?? state.phase}
           {state.winner ? ` · WINNER: ${state.winner}` : ''}</span>
         <PhaseTrack phase={state.phase} />
         <div style={{ flex: 1 }} />

@@ -35,7 +35,10 @@ function Line({ e }: { e: LogEvent }) {
 
 export default function SauronSummary({ state }: { state: GameState }) {
   const { setup, lastTurn, round } = useMemo(() => deriveSummary(state.log), [state.log]);
-  const [showSetup, setShowSetup] = useState(false);
+  // Show the one-time setup recap expanded by default at the very start of the
+  // game (before Sauron has taken a turn) so the player sees what the Eye set up;
+  // once Sauron has played, it collapses to keep the panel compact.
+  const [showSetup, setShowSetup] = useState(lastTurn.length === 0);
 
   if (setup.length === 0 && lastTurn.length === 0) return null;
 
