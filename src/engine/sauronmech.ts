@@ -5,6 +5,7 @@
 import type { Catalog, GameState, HeroId, HeroState, LocationId, CardId, Plot, ShadowCard, StoryMarkerColor, SauronDoctrine } from './types';
 import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman, statValue } from './encounter';
 import { influenceAt, plotMakesPerilous } from './influence';
+import { plotPlacement } from './plotReqs';
 import { shuffle } from './rng';
 import { corruptionPerilBonus, corruptionSauronShadowRedraw } from './corruption';
 import { log } from './log';
@@ -198,15 +199,20 @@ export function advancePlots(s: GameState, cat: Catalog, _late: boolean, log?: L
   const ranked = hand
     .map((id) => cat.plots.find((p) => p.id === id))
     .filter((p): p is Plot => !!p && !p.starting && !played.has(p.id))
-    .map((p) => ({ p, cost: num(p.influenceCost) }))
-    .filter((r) => s.sauron.influence >= r.cost)
+    // Faithful: a plot may be played only when both its Shadow-Pool cost AND its
+    // printed board requirement (concentrated influence / a monster or minion in
+    // a region / a location's contents) are currently satisfied. The requirement
+    // must be PREPARED over turns, so the strong marker-plots cannot be stacked
+    // instantly — see plotReqs.plotPlacement.
+    .map((p) => ({ p, cost: num(p.influenceCost), place: plotPlacement(s, cat, p) }))
+    .filter((r) => s.sauron.influence >= r.cost && r.place.ok)
     .sort((a, b) => plotPriority(s, b.p) - plotPriority(s, a.p));
   const pick = ranked[0];
   if (!pick) return false;
 
   const p = pick.p;
   s.sauron.plotHand = hand.filter((id) => id !== p.id); // leaves the hand into a slot
-  applyPlotCard(s, cat, p, pick.cost, log);
+  applyPlotCard(s, cat, p, pick.cost, log, pick.place.ok ? pick.place.location : undefined);
   return true;
 }
 
@@ -260,12 +266,13 @@ export function drawPlots(s: GameState, cat: Catalog, n: number, log?: Logger): 
  *  the active plot slots. Its colored story marker advances during each Story
  *  Step (see runSauronRefresh), NOT on play. Shared by the Eye bot and a human
  *  Sauron's interactive Plot Step. `paidCost` is only for the log line. */
-export function applyPlotCard(s: GameState, cat: Catalog, p: Plot, paidCost: number, log?: Logger): void {
+export function applyPlotCard(s: GameState, cat: Catalog, p: Plot, paidCost: number, log?: Logger, placeAt?: LocationId): void {
   const active = (s.sauron.activePlots ??= []);
   s.sauron.plotTrack[p.id] = p.track.length;
   const marker = (p.marker ?? 'red') as StoryMarkerColor;
   const advance = p.advance ?? p.track.length;
-  active.push({ eventId: p.id, step: p.track.length, location: (p.affects || undefined) as never });
+  const location = (placeAt ?? (p.affects || undefined)) as never;
+  active.push({ eventId: p.id, step: p.track.length, location });
   log?.(`plays plot ${p.name} — feeds the ${marker} marker (+${advance}/turn, req ${paidCost}, counter ${p.favorToCounter ?? 0} favor)`);
 
   // Gollum plots discard other active Gollum plots when they enter play.

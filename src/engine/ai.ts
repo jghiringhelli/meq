@@ -10,11 +10,12 @@
 // from Sauron's perspective. A cautious blend of the mean and worst case is
 // used so the Eye respects a hero who might play their best answer.
 
-import type { Catalog, GameState, CardId, CombatCard, HeroState } from './types';
+import type { Catalog, GameState, CardId, CombatCard, HeroState, Plot } from './types';
 import { resolveBout } from './effects';
 import { shuffle } from './rng';
 import { isTrainedCard } from './mechanics';
 import { bestPlacementToward, placeInfluenceAction, influenceAt, graphDistance, placementTargets, isHaven } from './influence';
+import { plotPlacement, plotPrepTarget } from './plotReqs';
 
 // Trained cards are Skill-deck cards — never part of a starting deck, so their
 // appearance in a hero's public discard reveals a trained card.
@@ -273,6 +274,34 @@ function influencedNeighbours(s: GameState, cat: Catalog, loc: string): number {
   }, 0);
 }
 
+/** Place one influence toward the board requirement of the Eye's strongest
+ *  not-yet-playable hand plot (influence-based conditions only). This is how the
+ *  automa PREPARES a marker-plot over several turns: it grows the concentration
+ *  of influence a plot like "Orcs in the Mountains" (8 influence near Mount
+ *  Gundabad) needs before it can be played. Skips when the plot slots are full
+ *  (nothing to prepare) or no hand plot has an influence requirement to build
+ *  toward. Returns true if it placed. */
+function eyePreparePlotInfluence(s: GameState, cat: Catalog, log?: (msg: string) => void): boolean {
+  const active = s.sauron.activePlots ?? [];
+  if (active.length >= 3) return false; // slots full — no benefit to preparing more
+  const held = new Set(active.map((e) => e.eventId));
+  const cands = (s.sauron.plotHand ?? [])
+    .map((id) => cat.plots.find((p) => p.id === id))
+    .filter((p): p is Plot => !!p && !held.has(p.id) && !plotPlacement(s, cat, p).ok)
+    .map((p) => ({ p, target: plotPrepTarget(s, cat, p) }))
+    .filter((c): c is { p: Plot; target: string } => !!c.target)
+    // Prefer the highest-advance plot (its marker gain is the biggest payoff).
+    .sort((a, b) => (b.p.advance ?? b.p.track.length) - (a.p.advance ?? a.p.track.length));
+  for (const c of cands) {
+    const loc = bestPlacementToward(s, cat, c.target);
+    if (!loc) continue;
+    if (placeInfluenceAction(s, cat, loc, 1) <= 0) continue;
+    log?.(`places influence at ${cat.locations[loc]?.name ?? loc} (preparing plot ${c.p.name}, now ${influenceAt(s, loc)})`);
+    return true;
+  }
+  return false;
+}
+
 /** One "Place Influence" action: extend influence one step toward the most-
  *  corrupted hero's projected next step (path pressure), respecting the
  *  extension rule. Board influence tokens are drawn from the (unlimited)
@@ -280,6 +309,11 @@ function influencedNeighbours(s: GameState, cat: Catalog, loc: string): number {
  *  grown by the Place-Influence action (≤2/turn) and spent on spawns/plots
  *  (rulebook pp. 15-16). Returns true if any influence was placed. */
 export function eyePlaceInfluenceOnce(s: GameState, cat: Catalog, log?: (msg: string) => void): boolean {
+  // Faithful preparation: before pressuring hero roads, the Eye invests in the
+  // BOARD STATE its strongest hand plot needs (concentrated influence near a
+  // named location) so that plot becomes playable in a later Plot Step. This is
+  // why marker-plots take several turns to land instead of stacking instantly.
+  if (eyePreparePlotInfluence(s, cat, log)) return true;
   const heroes = s.heroes.filter((h) => h.status === 'active')
     .sort((a, b) => b.corruption - a.corruption);
   // Perilize the ROAD each low-wisdom hero must take to break a plot (heroes must

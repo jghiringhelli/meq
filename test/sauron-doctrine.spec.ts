@@ -12,14 +12,17 @@ import type { SauronDoctrine } from '../src/engine/types';
 //    starving it is attrition's whole point.
 // NOTE: this used to assert attrition grinds more *corruption*. Removing the two
 // invented Shadow-Pool costs (playing a Plot / placing a monster no longer spends
-// pool influence — rulebook p.13/p.18) made the faithful games shorter and more
-// Sauron-dominated, which collapsed the corruption differential between doctrines.
-// The favour-drain differential, which is what attrition literally optimises
-// (fav*40 in plotPriority), stays large and robust — so we measure that instead.
-// It is checked against the plain `heuristic` hero, NOT the mission-aware brain:
-// mission-aware weaves around the perilised corridor and banks turns on havens,
-// so it largely RESISTS the grind (that resistance is the point of the hero-AI
-// work) — making the doctrine's mechanism only observable against a non-dodging hero.
+// pool influence — rulebook p.13/p.18) AND later enforcing each Plot's printed
+// board requirement (plotReqs — faithful multi-turn plot preparation) slowed the
+// Eye and lengthened games, letting heroes rest off corruption; that collapsed —
+// then inverted — the corruption differential between doctrines. Attrition's
+// Shadow-pressure signal (it plays MORE Shadow cards and perilises MORE nodes),
+// which is what attrition literally optimises, stays large and robust — so we
+// measure that instead. Checked against the plain `heuristic` hero, NOT the
+// mission-aware brain: mission-aware weaves around the perilised corridor and
+// banks turns on havens, so it largely RESISTS the grind (that resistance is the
+// point of the hero-AI work) — making the doctrine's mechanism only observable
+// against a non-dodging hero.
 describe('sauron doctrine', () => {
   it('newGame seats the Eye on the tempo doctrine by default', () => {
     expect(newGame(cat, 1).sauron.doctrine).toBe('tempo');
@@ -32,12 +35,22 @@ describe('sauron doctrine', () => {
     }
   });
 
-  it('attrition grinds the heroes harder than balanced (more Shadow pressure + corruption)', () => {
+  it('attrition applies more Shadow pressure (more Shadow cards + perils) than balanced', () => {
     // The attrition doctrine "wears the heroes down" — it prizes corrupting
     // Shadow cards and is less reluctant to hand-dump, so over many games it
-    // plays MORE Shadow cards and inflicts MORE corruption than a balanced Eye.
-    // (Hero end-favour is a poor proxy: heroes retrieve favour, so it is noisy.)
-    const agg = (doctrine: SauronDoctrine, key: 'shadowPlays' | 'finalCorruption'): number => {
+    // plays MORE Shadow cards and perilises MORE locations than a balanced Eye.
+    // NOTE: this once also asserted attrition inflicts more CORRUPTION. Enforcing
+    // each Plot card's printed board requirement (plotReqs — plots must be
+    // prepared over turns, no instant marker-stacking) slowed the Eye to a
+    // faithful pace; the resulting longer games let heroes bank favour and rest
+    // off corruption, so the corruption differential inverted (attrition < balanced)
+    // while attrition's Shadow-pressure signal — the mechanism it literally
+    // optimises — stayed large and robust. We measure that instead. Checked against
+    // the plain `heuristic` hero, NOT the mission-aware brain: mission-aware weaves
+    // around the perilised corridor and banks turns on havens, largely RESISTING
+    // the grind (that resistance is the point of the hero-AI work) — making the
+    // doctrine's mechanism only observable against a non-dodging hero.
+    const agg = (doctrine: SauronDoctrine, key: 'shadowPlays' | 'perils'): number => {
       let v = 0;
       for (const h of ['thalin', 'eleanor']) {
         for (const base of [1000, 2000]) {
@@ -49,6 +62,6 @@ describe('sauron doctrine', () => {
       return v;
     };
     expect(agg('attrition', 'shadowPlays')).toBeGreaterThan(agg('balanced', 'shadowPlays'));
-    expect(agg('attrition', 'finalCorruption')).toBeGreaterThan(agg('balanced', 'finalCorruption'));
+    expect(agg('attrition', 'perils')).toBeGreaterThan(agg('balanced', 'perils'));
   }, 240000);
 });
