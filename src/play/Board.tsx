@@ -40,6 +40,25 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 const CAL = false; // calibration: show a dot at every node centre
 const MIN_ZOOM = 1, MAX_ZOOM = 5;
 
+// "Turn Reference" phase highlight. The board art (top-left parchment) prints
+// the turn sequence; we light the line(s) matching the current engine phase so
+// the player always sees "you are here". The printed order famously has a step
+// out of place vs. the manual, so we map by MEANING (not printed position):
+// each engine phase points at the y-band(s) of the line(s) it represents on the
+// reference art (measured in reference-image pixels, then scaled to the board).
+const TR_REF_W = 6112, TR_REF_H = 4203;
+const TR_BANDS: Record<string, [number, number][]> = {
+  // Heroes ready & rest — the "Hero Rally Step" and the hero-turn "Rest Step".
+  HeroRefresh: [[805, 841], [1063, 1099]],
+  // Ambush → Travel (Move / Combat-Peril / Explore) → Encounter, plus the free
+  // Exploring actions (Retrieve Favor … Discard Plots): one contiguous block.
+  HeroActions: [[1100, 1570]],
+  SauronRefresh: [[839, 875]],   // Story Step
+  SauronEvents: [[877, 947]],    // Plot Step + Event Step
+  SauronMinions: [[948, 984]],   // Action Step
+  StoryAdvance: [[992, 1028]],   // Hero Draw Step (end-of-turn housekeeping)
+};
+
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
 export default function Board({ state, cat, moveTargets, onMove }: Props) {
@@ -230,6 +249,21 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
         style={{ cursor: drag.current ? 'grabbing' : 'grab' }}>
         <g transform={`translate(${w / 2 + view.x} ${h / 2 + view.y}) scale(${view.z}) translate(${-w / 2} ${-h / 2})`}>
         {image && <image href={image} x={0} y={0} width={w} height={h} />}
+        {image && (() => {
+          const bands = TR_BANDS[state.phase];
+          if (!bands) return null;
+          const sx = w / TR_REF_W, sy = h / TR_REF_H;
+          const x = 108 * sx, bw = 356 * sx;
+          return (
+            <g pointerEvents="none">
+              {bands.map(([y0b, y1b], i) => (
+                <rect key={'trhl' + i} x={x} y={y0b * sy} width={bw} height={(y1b - y0b) * sy}
+                  rx={10 * sx} fill="#ffd970" fillOpacity={0.20}
+                  stroke="#ffd970" strokeOpacity={0.85} strokeWidth={5 * sx} />
+              ))}
+            </g>
+          );
+        })()}
 
         {cat.edges.map((e, i) => {
           const a = cat.locations[e.a].coords, b = cat.locations[e.b].coords;
