@@ -524,9 +524,42 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
             ],
             text: 'During the Action Step Sauron spends Eye actions: (1) Gain influence — up to 2 into the Shadow Pool, the rest as extension; (2) Draw Shadow & Plot cards; (3) Command up to X minions/monster tokens (max 1 new monster token).',
           });
+          const favorInfo = () => {
+            const boardFavor = Object.values(state.map.favorAt ?? {}).reduce((a, b) => a + b, 0);
+            const favorLocs = Object.entries(state.map.favorAt ?? {}).filter(([, n]) => n > 0);
+            const chars = Object.entries(state.map.charactersAt ?? {}).flatMap(([lid, cs]) => (cs ?? []).map((c) => `${pretty(c)} at ${cat.locations[lid]?.name ?? lid}`));
+            const allies = state.heroes.flatMap((hh) => (hh.allies ?? []).map((a) => `${pretty(a)} (with ${cat.heroes[hh.id]?.name ?? hh.id})`));
+            const lines = state.heroes.map((hh) => `${cat.heroes[hh.id]?.name ?? hh.id}: ${hh.favor} favor${hh.bankedFavor ? ` (+${hh.bankedFavor} banked)` : ''}`);
+            lines.push(`Favor tokens on the board: ${boardFavor}${favorLocs.length ? ` (${favorLocs.map(([l, n]) => `${cat.locations[l]?.name ?? l} ×${n}`).join(', ')})` : ''}`);
+            if (allies.length) lines.push(`Allies recruited: ${allies.join(', ')}`);
+            if (chars.length) lines.push(`Characters on the board: ${chars.join(', ')}`);
+            inspect({
+              title: 'Favor & Characters', subtitle: 'Hero economy',
+              lines,
+              text: 'Heroes earn Favor from quests and encounters and spend it to counter Sauron plots, redeem Corruption, and recruit Characters. Favor tokens dropped on the board are picked up with the free Retrieve Favor action. Recruited Characters become allies that travel with their hero.',
+            });
+          };
+          const influenceInfo = () => {
+            const li = state.sauron.locationInfluence ?? {};
+            const total = Object.values(li).reduce((a, b) => a + b, 0);
+            const spots = Object.entries(li).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+            const lines = [
+              `Shadow Pool (chest): ${state.sauron.influence}`,
+              `Influence on the map: ${total} across ${spots.length} location(s)`,
+            ];
+            for (const [lid, n] of spots.slice(0, 8)) lines.push(`  ${cat.locations[lid]?.name ?? lid}: ${n}`);
+            if (spots.length > 8) lines.push(`  …and ${spots.length - 8} more`);
+            inspect({
+              title: 'Influence', subtitle: 'Sauron\'s reach',
+              lines,
+              text: 'Sauron places Influence on locations to make them perilous (heroes there draw Peril cards) and to fuel plots. Influence in the Shadow Pool (chest) is Sauron\'s spendable reserve. Heroes reduce influence through quests, encounters, and clearing effects.',
+            });
+          };
           const zones: { key: string; x: number; y: number; w: number; h: number; on: () => void; tip: string }[] = [
             { key: 'story', x: 2760, y: 40, w: 3200, h: 230, on: storyInfo, tip: 'Story track — turn, phase & markers' },
             { key: 'actions', x: 5130, y: 2960, w: 940, h: 700, on: actionsInfo, tip: 'Sauron Actions & Shadow Pool' },
+            { key: 'favor', x: 1225, y: 90, w: 925, h: 480, on: favorInfo, tip: 'Favor & Characters — hero economy' },
+            { key: 'influence', x: 1660, y: 3615, w: 915, h: 480, on: influenceInfo, tip: 'Influence — Sauron\'s reach' },
           ];
           return (
             <g>
@@ -537,6 +570,36 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
                   <title>{z.tip}</title>
                 </rect>
               ))}
+            </g>
+          );
+        })()}
+
+        {/* Minion reference cards (left column): the five printed minion cards
+            are always inspectable — clicking any opens its description, so the
+            player can review a minion's stats/ability whether it is deployed on
+            the map, in reserve, or defeated. (Card bounds measured off the art;
+            a reserve token, when present, is drawn on top with the same info.) */}
+        {(() => {
+          const cards: { id: string; y: number; h: number }[] = [
+            { id: 'minion-black-serpent', y: 2400, h: 300 },
+            { id: 'minion-mouth-of-sauron', y: 2740, h: 300 },
+            { id: 'minion-gothmog', y: 3100, h: 300 },
+            { id: 'minion-ringwraiths', y: 3450, h: 300 },
+            { id: 'minion-witch-king', y: 3800, h: 370 },
+          ];
+          return (
+            <g>
+              {cards.map((c) => {
+                const m = cat.minions[c.id];
+                if (!m) return null;
+                return (
+                  <rect key={'mcard' + c.id} x={960} y={c.y} width={560} height={c.h}
+                    fill="transparent" style={{ cursor: 'pointer' }}
+                    onClick={(e) => { e.stopPropagation(); inspect({ title: m.name, img: minionArt(m.image), subtitle: 'Minion reference card', text: m.ability }); }}>
+                    <title>{`${m.name} — click for its description`}</title>
+                  </rect>
+                );
+              })}
             </g>
           );
         })()}
