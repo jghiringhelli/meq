@@ -272,8 +272,12 @@ export default function RefTabs({ state, cat }: { state: GameState; cat: Catalog
   // The board's on-map deck piles dispatch this to open their reference listing.
   useEffect(() => {
     const onOpen = (e: Event) => {
-      const key = (e as CustomEvent<string>).detail;
-      if (tabs.some((t) => t.key === key && t.groups.length)) { setGroupKey(null); setOpen(key); }
+      const raw = (e as CustomEvent<string>).detail;
+      const [key, groupSel] = raw.split(':');
+      if (tabs.some((t) => t.key === key && t.groups.length)) {
+        setGroupKey(groupSel ?? null);
+        setOpen(key);
+      }
     };
     window.addEventListener('meq-open-ref', onOpen as EventListener);
     return () => window.removeEventListener('meq-open-ref', onOpen as EventListener);

@@ -96,6 +96,10 @@ export function newGame(cat: Catalog, seed: number, heroIds?: HeroId[], humanSid
     state.heroes.push(hero);
     (state.map.heroesAt[h.startLocation] ||= []).push(hid);
     assignStartingQuest(state, cat, hero);
+    // Public recap of this hero's opening hand (the hero player's own cards).
+    const handNames = hero.hand.map((cid) => cat.combatCards[cid]?.name ?? cid);
+    log(state, 'setup', hid,
+      `${h.name} starts at ${cat.locations[h.startLocation]?.name ?? h.startLocation} with ${hero.hand.length} cards: ${handNames.join(', ')}`);
   });
 
   // Sauron's two starting lieutenants sit on the board at their designated
@@ -183,6 +187,14 @@ function seedStartingPlot(state: GameState, cat: Catalog): void {
   // the board (N per Shadow Stronghold, M in extension, K in the Shadow Pool).
   applyStartingPlotInfluence(state, cat, chosen.effect ?? '');
   log(state, 'setup', 'Sauron', `starting plot: ${chosen.name} (feeds ${marker} marker +${advance}/turn)`);
+  // Public recap of exactly WHERE the starting influence landed, so the hero
+  // player can read the board at a glance (Shadow Pool + every seeded location).
+  const inf = state.sauron.locationInfluence ?? {};
+  const placed = Object.entries(inf).filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, n]) => `${cat.locations[id]?.name ?? id} (${n})`);
+  log(state, 'setup', 'Sauron',
+    `starting influence — Shadow Pool: ${state.sauron.influence}; on the map: ${placed.length ? placed.join(', ') : 'none'}`);
 }
 
 /** Seed Sauron's starting hands from the shuffled decks (rulebook / starting-plot

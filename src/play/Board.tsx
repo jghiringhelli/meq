@@ -336,14 +336,25 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
               }}
               style={{ cursor: 'pointer' }}>
 
-              {/* Lit circle: a legal move target (or a hovered node) is marked
-                  with a BORDER in its REGION colour — the interior fill is left
-                  to Sauron's influence overlay, so the two never collide. */}
-              <circle r={rr} fill="transparent"
-                stroke={isTarget || isHover ? regionCol : 'transparent'}
-                strokeWidth={isTarget ? 10 : 6}
-                strokeOpacity={isTarget ? 0.95 : 0.7} />
-              {isTarget && <circle r={rr + 8} fill="none" stroke={regionCol} strokeWidth={4} strokeOpacity={0.5} />}
+              {/* Lit ring: a legal move target (or a hovered node) is ringed in
+                  its REGION colour ENTIRELY OUTSIDE the printed circle, so the
+                  highlight never covers the location's name banner or art. A
+                  soft wide glow sits behind a crisp ring; targets gently pulse. */}
+              {(isTarget || isHover) && (() => {
+                const rG = rr + 24; // just outside the printed circle's outer ring
+                return (
+                  <g pointerEvents="none">
+                    <circle r={rG} fill="none" stroke={regionCol}
+                      strokeWidth={isTarget ? 24 : 16} strokeOpacity={isTarget ? 0.22 : 0.13}>
+                      {isTarget && <animate attributeName="stroke-opacity" values="0.28;0.10;0.28" dur="1.7s" repeatCount="indefinite" />}
+                    </circle>
+                    <circle r={rG} fill="none" stroke={regionCol}
+                      strokeWidth={isTarget ? 7 : 5} strokeOpacity={isTarget ? 0.95 : 0.7}>
+                      {isTarget && <animate attributeName="r" values={`${rG - 2};${rG + 3};${rG - 2}`} dur="1.7s" repeatCount="indefinite" />}
+                    </circle>
+                  </g>
+                );
+              })()}
               {influence > 0 && <circle r={rr + 2} fill={infColor} fillOpacity={0.10 + infLevel * 0.07} stroke={infColor} strokeWidth={4} strokeOpacity={0.35 + infLevel * 0.14} />}
               {CAL && <circle r={10} fill="#ff2d2d" stroke="#000" strokeWidth={2} />}
 
@@ -479,8 +490,23 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
             (Drawn before the tower so active plot cards keep their own hover.) */}
         {(() => {
           const openRef = (key: string) => window.dispatchEvent(new CustomEvent('meq-open-ref', { detail: key }));
+          // The left column holds the six regional Encounter decks, stacked
+          // top-to-bottom in this fixed printed order (identified by their card
+          // back gem colours). Each slot opens that region's sub-tab directly.
+          const encOrder = [
+            'Haven',
+            'Eriador and Enedwaith',
+            'Rhudaur and Grey Mountains',
+            'Mist Mountains and Mirkwood',
+            'Rohan and Gondor',
+            'Mordor and Brown Lands',
+          ];
+          const encTop = 1690, encH = 2320, bandH = encH / encOrder.length;
           const piles: { key: string; x: number; y: number; w: number; h: number; label: string }[] = [
-            { key: 'encounters', x: 70, y: 1690, w: 500, h: 2320, label: 'Encounter decks' },
+            ...encOrder.map((region, i) => ({
+              key: `encounters:${region}`, x: 70, y: Math.round(encTop + bandH * i),
+              w: 500, h: Math.round(bandH), label: `${region} encounters`,
+            })),
             { key: 'plots', x: 5470, y: 640, w: 300, h: 1640, label: 'Plot deck' },
             { key: 'shadow', x: 5190, y: 3715, w: 870, h: 470, label: 'Shadow Pool' },
           ];

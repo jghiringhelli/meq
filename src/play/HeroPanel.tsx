@@ -35,6 +35,9 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
   const def = cat.heroes[hero.id];
   const fig = heroArt(hero.id).figure;
   const noAct = hero.actionsRemaining <= 0 || !!ambush;
+  // Rest step (rulebook p.20): optional, once per turn, and only BEFORE any
+  // Travel step — i.e. at the very start of the turn, before the hero has moved.
+  const canRestNow = !hero.restedThisTurn && !hero.hasMovedThisTurn && (hero.travelStepsThisTurn ?? 0) === 0;
   const inspect = useInspect();
   return (
     <div className="hero-panel">
@@ -47,7 +50,7 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
           ? `corruption cards: ${hero.corruptionCards.map((id) => cat.corruption[id]?.name ?? id).join(', ')}`
           : 'corruption'}>☠ {hero.corruption}</span>
         <span title="hand cards — the Travel step repeats until the hand is spent">🂠 hand {hero.hand.length}</span>
-        <span title="Rest step: available once per turn">{hero.restedThisTurn ? 'rested' : 'can rest'}</span>
+        <span title="Rest step: available once per turn, only before the hero moves">{hero.restedThisTurn ? 'rested' : canRestNow ? 'can rest' : 'rest unavailable'}</span>
         <span>{cat.locations[hero.location]?.name}</span>
       </div>
       {(hero.allies?.length || hero.items.length || (hero.levels && Object.keys(hero.levels).length)) ? (
@@ -107,11 +110,11 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
             </button>
           ))}
           <button onClick={onExplore} disabled={!canExplore || noAct}>Explore</button>
-          <button onClick={onRest} disabled={noAct}>Rest</button>
+          <button onClick={onRest} disabled={noAct || !canRestNow}>Rest</button>
           {hero.id === 'beravor' && !hero.restedThisTurn && cat.locations[hero.location]?.kind !== 'haven'
             && cat.locations[hero.location]?.kind !== 'stronghold'
             && ((state.map.monstersAt[hero.location]?.length ?? 0) + (state.map.minionsAt?.[hero.location]?.length ?? 0)) === 0 && (
-            <button onClick={onRestTrain} disabled={noAct} title="Survivalist: rest and take training instead of healing">Rest (train)</button>
+            <button onClick={onRestTrain} disabled={noAct || !canRestNow} title="Survivalist: rest and take training instead of healing">Rest (train)</button>
           )}
           {econ.favorHere > 0 && (
             <button onClick={econ.onRetrieveFavor} disabled={noAct}>Retrieve favor ({econ.favorHere})</button>

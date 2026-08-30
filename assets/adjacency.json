@@ -5,7 +5,8 @@
     "source": "text/*.xls (owner-supplied MEQ fulltext)",
     "notes": [
       "Derived region-spine edges with cycled terrain so every hero terrain card is usable. Ã¢Å¸Â¨ownerÃ¢Å¸Â© replace with true board adjacency.",
-      "Edges for the 32 image-derived nodes are proximity placeholders (cycled terrain); replace with true board paths."
+      "Edges for the 32 image-derived nodes are proximity placeholders (cycled terrain); replace with true board paths.",
+      "Board-verified true paths (owner-confirmed): Fornost{Bree,Old Forest,Weathertop(hill3),North Downs(hill2)}; Amon Hen{Lothlorien(woods2),Emyn Muil(mtn3),Plains of Rohan(plains2)}."
     ]
   },
   "edges": [
@@ -113,18 +114,6 @@
       "cost": 1
     },
     {
-      "a": "belfalas",
-      "b": "amon-hen",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "amon-hen",
-      "b": "isengard",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
       "a": "fangorn",
       "b": "osgiliath",
       "terrain": "hill",
@@ -164,18 +153,6 @@
       "a": "the-woodland-realm",
       "b": "erebor",
       "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "erebor",
-      "b": "fornost",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "fornost",
-      "b": "lothl-rien",
-      "terrain": "mountain",
       "cost": 1
     },
     {
@@ -225,12 +202,6 @@
       "a": "hills-of-evendim",
       "b": "the-shire",
       "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "hills-of-evendim",
-      "b": "fornost",
-      "terrain": "swamp",
       "cost": 1
     },
     {
@@ -302,7 +273,7 @@
     {
       "a": "the-north-downs",
       "b": "fornost",
-      "terrain": "plains",
+      "terrain": "hill",
       "cost": 2
     },
     {
@@ -433,12 +404,6 @@
     },
     {
       "a": "dol-guldur",
-      "b": "amon-hen",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "dol-guldur",
       "b": "gladden-fields",
       "terrain": "mountain",
       "cost": 1
@@ -494,8 +459,8 @@
     {
       "a": "plains-of-rohan",
       "b": "amon-hen",
-      "terrain": "swamp",
-      "cost": 1
+      "terrain": "plains",
+      "cost": 2
     },
     {
       "a": "plains-of-rohan",
@@ -623,6 +588,36 @@
       "b": "sea-of-udun",
       "terrain": "mountain",
       "cost": 2
+    },
+    {
+      "a": "fornost",
+      "b": "bree",
+      "terrain": "",
+      "cost": 1
+    },
+    {
+      "a": "fornost",
+      "b": "old-forest",
+      "terrain": "",
+      "cost": 1
+    },
+    {
+      "a": "fornost",
+      "b": "weathertop",
+      "terrain": "hill",
+      "cost": 3
+    },
+    {
+      "a": "amon-hen",
+      "b": "lothl-rien",
+      "terrain": "woods",
+      "cost": 2
+    },
+    {
+      "a": "amon-hen",
+      "b": "emyn-muil",
+      "terrain": "mountain",
+      "cost": 3
     }
   ]
 }
