@@ -26,6 +26,7 @@ interface RefTab { key: string; icon: string; label: string; groups: RefGroup[];
 
 const byName = (a: RefItem, b: RefItem) => a.name.localeCompare(b.name);
 const pretty = (s: string) => s.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const locName = (cat: Catalog, id: string) => cat.locations[id]?.name ?? id;
 
 // ---- per-kind id → RefItem resolvers ----------------------------------
 function plotItem(cat: Catalog, id: CardId): RefItem {
@@ -74,6 +75,105 @@ function aggregate(ids: CardId[], resolve: (id: CardId) => RefItem): RefItem[] {
   return Object.entries(counts)
     .map(([id, n]) => ({ ...resolve(id), count: n }))
     .sort(byName);
+}
+
+/** Live board-state overview: a single convenient panel listing where every
+ *  public thing sits on the map — Sauron influence, heroes, minions, monsters,
+ *  allies, favor, quest markers — plus the story markers. Hidden information is
+ *  respected: to a hero, unrevealed monster/rumor tokens are shown only as a
+ *  face-down count (their identity is disclosed only where revealed, or when the
+ *  viewer plays Sauron). */
+function boardGroups(cat: Catalog, state: GameState): RefGroup[] {
+  const m = state.map;
+  const heroView = state.humanSide !== 'Sauron';
+  const sections: RefSection[] = [];
+
+  // Story markers (public).
+  const st = state.story;
+  const sm = st.sauron ?? { yellow: 0, red: 0, black: 0 };
+  sections.push({
+    label: 'Story markers', empty: '—', items: [
+      { id: 'sm-hero', name: 'Heroes (green)', sub: `space ${st.heroMarker ?? 0} / ${st.length}` },
+      { id: 'sm-yellow', name: 'Sauron · yellow', sub: `space ${sm.yellow}` },
+      { id: 'sm-red', name: 'Sauron · red', sub: `space ${sm.red}` },
+      { id: 'sm-black', name: 'Sauron · black', sub: `space ${sm.black}` },
+    ],
+  });
+
+  // Sauron influence (public: tokens are visible on the board).
+  const inf = state.sauron.locationInfluence ?? {};
+  const infItems: RefItem[] = Object.entries(inf)
+    .filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1])
+    .map(([id, n]) => ({ id: `inf-${id}`, name: locName(cat, id), sub: `${n} influence` }));
+  infItems.unshift({ id: 'inf-pool', name: 'Shadow Pool', sub: `${state.sauron.influence} influence` });
+  sections.push({ label: 'Sauron influence', items: infItems, empty: 'none on the map' });
+
+  // Heroes.
+  sections.push({
+    label: 'Heroes', empty: 'none',
+    items: state.heroes.map((h) => ({
+      id: `hero-${h.id}`, name: cat.heroes[h.id]?.name ?? h.id,
+      img: heroArt(h.id).portrait || heroArt(h.id).figure,
+      sub: `${locName(cat, h.location)} · ${h.favor}✦ · life ${h.life} · corr ${h.corruption} · ${h.items.length} items`,
+    })),
+  });
+
+  // Minions (named elites — public), with carried-over health when tracked.
+  const minionItems: RefItem[] = [];
+  for (const [loc, ids] of Object.entries(m.minionsAt ?? {})) {
+    for (const id of ids) {
+      const mm = cat.minions[id];
+      const hp = m.minionHealth?.[id];
+      minionItems.push({
+        id: `min-${loc}-${id}`, name: mm?.name ?? id, img: minionArt(mm?.image ?? ''),
+        sub: `${locName(cat, loc)}${hp != null ? ` · health ${hp}` : ''}`,
+      });
+    }
+  }
+  sections.push({ label: 'Minions', items: minionItems.sort(byName), empty: 'none on the board' });
+
+  // Monsters — hidden-info aware.
+  const revealed = new Set(m.revealedMonstersAt ?? []);
+  const monLocs = new Set<string>([...Object.keys(m.monstersAt ?? {}), ...Object.keys(m.rumorsAt ?? {})]);
+  const monItems: RefItem[] = [];
+  for (const loc of monLocs) {
+    const mons = m.monstersAt?.[loc] ?? [];
+    const rumors = m.rumorsAt?.[loc] ?? 0;
+    if (!mons.length && !rumors) continue;
+    if (!heroView || revealed.has(loc)) {
+      const parts = mons.map((id) => cat.monsters[id]?.name ?? id);
+      if (rumors) parts.push(`${rumors} false rumor${rumors > 1 ? 's' : ''}`);
+      monItems.push({ id: `mon-${loc}`, name: locName(cat, loc), sub: parts.join(', ') });
+    } else {
+      const tokens = mons.length + rumors;
+      monItems.push({ id: `mon-${loc}`, name: locName(cat, loc), sub: `${tokens} face-down token${tokens > 1 ? 's' : ''}` });
+    }
+  }
+  sections.push({ label: 'Monsters', items: monItems.sort(byName), empty: 'none on the board' });
+
+  // Characters / allies placed on the board.
+  const charItems: RefItem[] = [];
+  for (const [loc, names] of Object.entries(m.charactersAt ?? {})) {
+    for (const nm of names) charItems.push({ id: `char-${loc}-${nm}`, name: pretty(nm), img: characterArt(nm), sub: locName(cat, loc) });
+  }
+  sections.push({ label: 'Characters / allies', items: charItems.sort(byName), empty: 'none placed' });
+
+  // Favor tokens sitting on the board (retrievable).
+  sections.push({
+    label: 'Favor on the board', empty: 'none',
+    items: Object.entries(m.favorAt ?? {}).filter(([, n]) => n > 0)
+      .map(([loc, n]) => ({ id: `fav-${loc}`, name: locName(cat, loc), sub: `${n} favor` })).sort(byName),
+  });
+
+  // Active quest markers.
+  const questItems: RefItem[] = [];
+  for (const [loc, ids] of Object.entries(m.questAt ?? {})) {
+    if (!ids.length) continue;
+    questItems.push({ id: `q-${loc}`, name: locName(cat, loc), sub: ids.map((id) => cat.heroes[id]?.name ?? id).join(', ') });
+  }
+  sections.push({ label: 'Quest markers', items: questItems.sort(byName), empty: 'none active' });
+
+  return [{ key: 'all', label: '', sections }];
 }
 
 function buildTabs(cat: Catalog, state: GameState): RefTab[] {
@@ -234,6 +334,7 @@ function buildTabs(cat: Catalog, state: GameState): RefTab[] {
   }];
 
   return [
+    { key: 'board', icon: '📍', label: 'Board', groups: boardGroups(cat, state) },
     { key: 'monsters', icon: '👹', label: 'Bestiary', groups: one(monsters) },
     { key: 'minions', icon: '☠', label: 'Minions', groups: one(minions) },
     { key: 'heroes', icon: '🛡', label: 'Heroes', groups: one(heroes) },
