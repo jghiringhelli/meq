@@ -67,6 +67,10 @@ export type LocationKind = 'haven' | 'wild' | string;
 export interface Location {
   id: LocationId; name: string; regionId: RegionId; regionName: string;
   regionColor: string; kind: LocationKind;
+  /** Category flags (single source of truth in locations.json). A location
+   *  belongs to exactly one geographic region (regionId) and independently
+   *  carries these flags. `kind`/`perilous` are derived from them at load. */
+  haven: boolean; fortress: boolean; peril: boolean;
   plotSlot: boolean; encounterDeck: CardId[];
   /** Shadow Stronghold only: the red max-influence number on its tower icon. */
   strongholdMax?: number;

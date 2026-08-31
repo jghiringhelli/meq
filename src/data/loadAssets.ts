@@ -33,6 +33,16 @@ function byId<T extends { id: string }>(rows: T[]): Record<string, T> {
   return out;
 }
 
+/** Derive the legacy `kind`/`perilous` fields from the canonical flag model so
+ *  existing readers keep working while flags remain the single JSON source. */
+function toLocation(r: Omit<Location, 'kind' | 'perilous'>): Location {
+  return {
+    ...r,
+    kind: r.haven ? 'haven' : r.fortress ? 'stronghold' : 'wild',
+    perilous: r.peril,
+  };
+}
+
 /** Expand each combat card's `copies` into a per-deck list of card ids. */
 function buildDecks(cards: CombatCard[]): Record<string, CardId[]> {
   const decks: Record<string, CardId[]> = {};
@@ -70,7 +80,7 @@ export function loadCatalog(): Catalog {
   const cat: Catalog = {
     version: (heroesData._meta as { schema: string }).schema,
     heroes: byId(heroesData.heroes as Hero[]),
-    locations: byId(locationsData.locations as Location[]),
+    locations: byId((locationsData.locations as Array<Omit<Location, 'kind' | 'perilous'>>).map(toLocation)),
     edges: adjacencyData.edges as PathEdge[],
     combatCards: byId(combatCards),
     monsters: byId(monstersData.monsters as Monster[]),

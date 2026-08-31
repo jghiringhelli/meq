@@ -15,7 +15,6 @@
       "id": "the-shire",
       "name": "The Shire",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
@@ -26,13 +25,15 @@
         "x": 1802,
         "y": 1284
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-grey-havens",
       "name": "The Grey Havens",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
@@ -43,13 +44,15 @@
         "x": 1390,
         "y": 1345
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "bree",
       "name": "Bree",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
@@ -60,13 +63,15 @@
         "x": 2331,
         "y": 1437
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "old-forest",
       "name": "Old Forest",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
@@ -78,13 +83,15 @@
         "x": 2114,
         "y": 1233
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "enedwaith-plains",
       "name": "Enedwaith Plains",
       "regionColor": "Yellow",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
@@ -95,13 +102,15 @@
         "x": 2459,
         "y": 2421
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "tharbad",
       "name": "Tharbad",
       "regionColor": "Yellow",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
@@ -112,13 +121,15 @@
         "x": 2515,
         "y": 1898
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "weathertop",
       "name": "Weathertop",
       "regionColor": "Purple",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": true,
@@ -130,13 +141,15 @@
         "x": 2601,
         "y": 1265
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-trollshaws",
       "name": "The Trollshaws",
       "regionColor": "Purple",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": true,
@@ -147,13 +160,15 @@
         "x": 2938,
         "y": 1274
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-iron-hills",
       "name": "The Iron Hills",
       "regionColor": "Grey",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": true,
@@ -164,13 +179,15 @@
         "x": 4846,
         "y": 828
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "ered-mithrin",
       "name": "Ered Mithrin",
       "regionColor": "Grey",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": true,
@@ -181,13 +198,15 @@
         "x": 3814,
         "y": 633
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-northern-waste",
       "name": "The Northern Waste",
       "regionColor": "Grey",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": true,
@@ -198,13 +217,15 @@
         "x": 3529,
         "y": 404
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "rhosgobel",
       "name": "Rhosgobel",
       "regionColor": "Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
@@ -215,13 +236,15 @@
         "x": 3974,
         "y": 1655
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "high-pass",
       "name": "High Pass",
       "regionColor": "Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
@@ -232,13 +255,15 @@
         "x": 3542,
         "y": 1175
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "lake-esgaroth",
       "name": "Esgaroth",
       "regionColor": "Light Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
@@ -249,13 +274,15 @@
         "x": 4369,
         "y": 1072
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "gladden-fields",
       "name": "Gladden Fields",
       "regionColor": "Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
@@ -266,13 +293,15 @@
         "x": 3689,
         "y": 1595
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-forest-trail",
       "name": "The Forest Trail",
       "regionColor": "Light Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
@@ -283,13 +312,15 @@
         "x": 3802,
         "y": 1043
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "fangorn",
       "name": "Fangorn",
       "regionColor": "Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
@@ -300,13 +331,15 @@
         "x": 3258,
         "y": 2462
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "osgiliath",
       "name": "Osgiliath",
       "regionColor": "Light Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": true,
@@ -317,13 +350,15 @@
         "x": 4226,
         "y": 3392
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "belfalas",
       "name": "Belfalas",
       "regionColor": "Light Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": true,
@@ -334,13 +369,15 @@
         "x": 3324,
         "y": 3701
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "amon-hen",
       "name": "Amon Hen",
       "regionColor": "Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": true,
@@ -351,13 +388,15 @@
         "x": 3713,
         "y": 2298
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "isengard",
       "name": "Isengard",
       "regionColor": "Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": true,
@@ -368,13 +407,15 @@
         "x": 2933,
         "y": 2428
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-dead-marshes",
       "name": "The Dead Marshes",
       "regionColor": "Brown",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": true,
@@ -385,13 +426,15 @@
         "x": 4173,
         "y": 2769
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "emyn-muil",
       "name": "Emyn Muil",
       "regionColor": "Brown",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": true,
@@ -402,13 +445,15 @@
         "x": 3954,
         "y": 2569
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "mount-doom",
       "name": "Mount Doom",
       "regionColor": "Brown",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": true,
@@ -419,15 +464,17 @@
         "x": 4662,
         "y": 3093
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "edoras",
       "name": "Edoras",
       "regionColor": "Blue",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-the-court-of-th-oden",
@@ -437,15 +484,17 @@
         "x": 3355,
         "y": 2985
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "minas-tirith",
       "name": "Minas Tirith",
       "regionColor": "Light Blue",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "rohan-and-gondor",
+      "regionName": "Rohan and Gondor",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-the-houses-of-healing",
@@ -455,15 +504,17 @@
         "x": 4089,
         "y": 3145
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-woodland-realm",
       "name": "The Woodland Realm",
       "regionColor": "Light Green",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-the-halls-of-an-elven-king",
@@ -473,15 +524,17 @@
         "x": 4089,
         "y": 942
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "erebor",
       "name": "Erebor",
       "regionColor": "Grey",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "rhudaur-and-grey-mountains",
+      "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-the-lonely-mountain",
@@ -491,15 +544,17 @@
         "x": 4333,
         "y": 793
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "fornost",
       "name": "Fornost",
       "regionColor": "Orange",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "eriador-and-enedwaith",
+      "regionName": "Eriador and Enedwaith",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-the-northern-fortress",
@@ -509,15 +564,17 @@
         "x": 2204,
         "y": 970
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "lothl-rien",
       "name": "Lothlorien",
       "regionColor": "Green",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-the-golden-wood"
@@ -526,15 +583,17 @@
         "x": 3416,
         "y": 2252
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "rivendell",
       "name": "Rivendell",
       "regionColor": "Green",
-      "kind": "haven",
-      "regionId": "haven",
-      "regionName": "Haven",
+      "regionId": "mist-mountains-and-mirkwood",
+      "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": true,
       "encounterDeck": [
         "enc-haven-inladris"
@@ -543,13 +602,15 @@
         "x": 3259,
         "y": 1296
       },
-      "image": ""
+      "image": "",
+      "haven": true,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "blue-mountains",
       "name": "Blue Mountains",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -574,13 +635,15 @@
         "x": 1152,
         "y": 983
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "harlindon",
       "name": "Harlindon",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -605,13 +668,15 @@
         "x": 1048,
         "y": 1485
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "hills-of-evendim",
       "name": "Hills of Evendim",
       "regionColor": "Orange",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -636,13 +701,15 @@
         "x": 1808,
         "y": 926
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "eregion",
       "name": "Eregion",
       "regionColor": "Yellow",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -667,13 +734,15 @@
         "x": 2939,
         "y": 1657
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "dunland",
       "name": "Dunland",
       "regionColor": "Yellow",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -698,13 +767,15 @@
         "x": 2768,
         "y": 2182
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "mouth-of-the-greyflood",
       "name": "Mouth of the Greyflood",
       "regionColor": "Yellow",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -729,13 +800,15 @@
         "x": 2039,
         "y": 2424
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-north-downs",
       "name": "The North Downs",
       "regionColor": "Purple",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": false,
@@ -760,13 +833,15 @@
         "x": 2562,
         "y": 667
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "ettenmoors",
       "name": "Ettenmoors",
       "regionColor": "Purple",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": false,
@@ -791,14 +866,15 @@
         "x": 3187,
         "y": 976
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "ruins-of-angmar",
       "name": "Ruins of Angmar",
       "regionColor": "Purple",
-      "kind": "wild",
-      "perilous": true,
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": false,
@@ -823,13 +899,15 @@
         "x": 2902,
         "y": 509
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": true
     },
     {
       "id": "moria",
       "name": "Moria",
       "regionColor": "Yellow",
-      "kind": "wild",
       "regionId": "eriador-and-enedwaith",
       "regionName": "Eriador and Enedwaith",
       "plotSlot": false,
@@ -855,13 +933,14 @@
         "y": 2055
       },
       "image": "",
-      "perilous": true
+      "haven": false,
+      "fortress": false,
+      "peril": true
     },
     {
       "id": "mount-gundabad",
       "name": "Mount Gundabad",
       "regionColor": "Grey",
-      "kind": "stronghold",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": false,
@@ -889,13 +968,14 @@
       "image": "",
       "influenceStrength": 3,
       "strongholdMax": 3,
-      "perilous": true
+      "haven": false,
+      "fortress": true,
+      "peril": true
     },
     {
       "id": "the-redhorn-gate",
       "name": "The Redhorn Gate",
       "regionColor": "Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": false,
@@ -920,13 +1000,15 @@
         "x": 3257,
         "y": 1834
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-withered-heath",
       "name": "The Withered Heath",
       "regionColor": "Grey",
-      "kind": "wild",
       "regionId": "rhudaur-and-grey-mountains",
       "regionName": "Rhudaur and Grey Mountains",
       "plotSlot": false,
@@ -951,13 +1033,15 @@
         "x": 4157,
         "y": 551
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-forest-road",
       "name": "The Forest Road",
       "regionColor": "Light Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": false,
@@ -982,13 +1066,15 @@
         "x": 4030,
         "y": 1232
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-bight",
       "name": "The Bight",
       "regionColor": "Light Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": false,
@@ -1013,13 +1099,15 @@
         "x": 4405,
         "y": 1687
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "south-eaves",
       "name": "South Eaves",
       "regionColor": "Light Green",
-      "kind": "wild",
       "regionId": "mist-mountains-and-mirkwood",
       "regionName": "Mist Mountains and Mirkwood",
       "plotSlot": false,
@@ -1044,13 +1132,15 @@
         "x": 4382,
         "y": 2010
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "rhun",
       "name": "Rhun",
       "regionColor": "Brown",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1075,13 +1165,15 @@
         "x": 4830,
         "y": 2078
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "dol-guldur",
       "name": "Dol Guldur",
       "regionColor": "Brown",
-      "kind": "stronghold",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1109,13 +1201,14 @@
       "image": "",
       "influenceStrength": 3,
       "strongholdMax": 3,
-      "perilous": true
+      "haven": false,
+      "fortress": true,
+      "peril": true
     },
     {
       "id": "dagorlad",
       "name": "Dagorlad",
       "regionColor": "Brown",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1140,13 +1233,15 @@
         "x": 4531,
         "y": 2559
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "the-nindalf",
       "name": "The Nindalf",
       "regionColor": "Brown",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1171,13 +1266,15 @@
         "x": 3924,
         "y": 2905
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "gap-of-rohan",
       "name": "Gap of Rohan",
       "regionColor": "Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1202,13 +1299,15 @@
         "x": 2889,
         "y": 2710
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "helm-s-deep",
       "name": "Helm's Deep",
       "regionColor": "Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1233,13 +1332,15 @@
         "x": 3163,
         "y": 2735
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "plains-of-rohan",
       "name": "Plains of Rohan",
       "regionColor": "Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1264,13 +1365,15 @@
         "x": 3579,
         "y": 2570
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "dunharrow",
       "name": "Dunharrow",
       "regionColor": "Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1295,13 +1398,15 @@
         "x": 3782,
         "y": 3157
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "anfalas",
       "name": "Anfalas",
       "regionColor": "Light Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1326,13 +1431,15 @@
         "x": 2736,
         "y": 3337
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "morthond",
       "name": "Morthond",
       "regionColor": "Light Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1357,13 +1464,15 @@
         "x": 3169,
         "y": 3194
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "pelagir",
       "name": "Pelargir",
       "regionColor": "Light Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1388,13 +1497,15 @@
         "x": 3995,
         "y": 3618
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "near-harad",
       "name": "Near Harad",
       "regionColor": "Light Blue",
-      "kind": "wild",
       "regionId": "rohan-and-gondor",
       "regionName": "Rohan and Gondor",
       "plotSlot": false,
@@ -1419,13 +1530,15 @@
         "x": 4186,
         "y": 3963
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "minas-morgul",
       "name": "Minas Morgul",
       "regionColor": "Red",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1450,13 +1563,15 @@
         "x": 4344,
         "y": 3129
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "plains-of-gorgoroth",
       "name": "Plains of Gorgoroth",
       "regionColor": "Red",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1481,13 +1596,15 @@
         "x": 4507,
         "y": 3317
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "sea-of-udun",
       "name": "Sea of Udun",
       "regionColor": "Red",
-      "kind": "wild",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1512,13 +1629,15 @@
         "x": 4444,
         "y": 2851
       },
-      "image": ""
+      "image": "",
+      "haven": false,
+      "fortress": false,
+      "peril": false
     },
     {
       "id": "barad-dur",
       "name": "Barad-Dur",
       "regionColor": "Red",
-      "kind": "stronghold",
       "regionId": "mordor-and-brown-lands",
       "regionName": "Mordor and Brown Lands",
       "plotSlot": false,
@@ -1546,7 +1665,9 @@
       "image": "",
       "influenceStrength": 6,
       "strongholdMax": 6,
-      "perilous": true
+      "haven": false,
+      "fortress": true,
+      "peril": true
     }
   ]
 }

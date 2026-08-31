@@ -217,6 +217,11 @@ function baseState(): { s: S; heroId: HeroId } {
   const s = freshGame();
   const h = heroOf(s);
   h.status = 'active';
+  // Card-path routing is forced explicitly via forceCond; start from a clean
+  // influence slate so `influenceInRegion` equals exactly what setMetric writes
+  // at the hero's location (setup pre-seeds stronghold/perilous influence which
+  // now correctly falls inside havens' true geographic region).
+  s.sauron.locationInfluence = {};
   return { s, heroId: h.id };
 }
 
