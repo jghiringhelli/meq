@@ -155,9 +155,9 @@ describe('M6 — Beravor Survivalist rest option', () => {
 // --- Boat / water paths (rulebook p.22) -------------------------------------
 describe('Boat — water paths cost 1 any-card, ignoring the printed icon', () => {
   const woodsCard = Object.values(cat.combatCards).find((c) => c.terrain === 'woods')!.id;
-  const atShire = (s: ReturnType<typeof freshGame>) => {
+  const atStart = (s: ReturnType<typeof freshGame>) => {
     const hero = activeHero(s);
-    hero.location = 'the-shire';
+    hero.location = 'harlindon';
     hero.hand = [woodsCard]; // holds the matching-terrain card for the water edge
     hero.items = [];
     return hero;
@@ -165,7 +165,7 @@ describe('Boat — water paths cost 1 any-card, ignoring the printed icon', () =
 
   it('without a Boat, the woods-icon water path is paid with the matching card', () => {
     const s = freshGame();
-    const hero = atShire(s);
+    const hero = atStart(s);
     const mv = legalMoves(cat, hero).find((m) => m.to === 'the-grey-havens');
     expect(mv).toBeTruthy();
     expect(mv!.viaAnyCards).toBe(false); // must spend the woods card
@@ -173,7 +173,7 @@ describe('Boat — water paths cost 1 any-card, ignoring the printed icon', () =
 
   it('with a Boat, the same water path is crossed with any one card (cost 1)', () => {
     const s = freshGame();
-    const hero = atShire(s);
+    const hero = atStart(s);
     hero.items = ['Boat'];
     const mv = legalMoves(cat, hero).find((m) => m.to === 'the-grey-havens');
     expect(mv).toBeTruthy();
@@ -183,13 +183,13 @@ describe('Boat — water paths cost 1 any-card, ignoring the printed icon', () =
 
   it('a Horse does NOT ease water paths (only a Boat does)', () => {
     const s = freshGame();
-    const hero = atShire(s);
+    const hero = atStart(s);
     hero.hand = ['x1', 'x2']; // no matching-terrain card → any-card fallback
     hero.items = ['item-horse'];
     const mv = legalMoves(cat, hero).find((m) => m.to === 'the-grey-havens');
     expect(mv).toBeTruthy();
     expect(mv!.viaAnyCards).toBe(true);
-    expect(mv!.cost).toBe(1); // horse gives no discount on water (base cost stays)
+    expect(mv!.cost).toBe(2); // horse gives no discount on water (base cost 2 stays)
   });
 });
 
@@ -264,6 +264,10 @@ describe('M3 — Sauron chooses Combat or Peril', () => {
     const mv = legalMoves(cat, hero).find((m) => cat.locations[m.to]?.kind !== 'haven');
     if (!mv) return null;
     const to = mv.to;
+    // Travel spends `mv.cost` any-cards BEFORE the Combat-or-Peril check, so top the
+    // hand up to leave exactly `hand` cards at the decision point — the "well-armed"
+    // signal the automa reads is the post-payment hand.
+    hero.hand = Array.from({ length: hand + mv.cost }, (_, i) => `dummy-${i}`);
     // Seat a foe at the destination and make it perilous with heavy influence.
     (s.map.monstersAt as Record<string, string[]>)[to] = foe === 'monster' ? [anyMonster] : [];
     (s.map.minionsAt ||= {})[to] = foe === 'minion' ? [anyMinion] : [];

@@ -6,7 +6,7 @@ import type { GameState, Terrain } from '../src/engine/types';
 
 /** Put the single hero, active, on a location with a known mix of cheap and
  *  cost-2 neighbouring paths, with a fully controlled hand. */
-function movable(hand: string[], loc = 'blue-mountains'): GameState {
+function movable(hand: string[], loc = 'bree'): GameState {
   const s = freshGame();
   s.phase = 'HeroActions';
   s.activeHeroIndex = 0;
@@ -32,53 +32,54 @@ function cardOf(terrain: Terrain): string {
 
 describe('interactive Travel payment model', () => {
   it('exposes both payment routes per neighbouring path', () => {
-    const s = movable([cardOf('woods'), cardOf('woods')]);
+    const s = movable([cardOf('hill'), cardOf('hill')]);
     const opts = moveOptions(cat, s.heroes[0]);
-    const grey = opts.find((o) => o.to === 'the-grey-havens');
-    const harl = opts.find((o) => o.to === 'harlindon');
-    // blue-mountains -> the-grey-havens is a cost-1 woods path; hand holds woods.
-    expect(grey).toBeTruthy();
-    expect(grey!.anyCardCost).toBe(1);
-    expect(grey!.terrainPayable).toBe(true);
-    // blue-mountains -> harlindon is a cost-2 swamp path; hand has no swamp.
-    expect(harl!.anyCardCost).toBe(2);
-    expect(harl!.terrainPayable).toBe(false);
+    const of = opts.find((o) => o.to === 'old-forest');
+    const th = opts.find((o) => o.to === 'tharbad');
+    // bree -> old-forest is a cost-1 "any card" path (no terrain icon); the empty
+    // terrain is never matchable, so terrainPayable is false and anyCardCost is 1.
+    expect(of).toBeTruthy();
+    expect(of!.anyCardCost).toBe(1);
+    expect(of!.terrainPayable).toBe(false);
+    // bree -> tharbad is a cost-2 hill path; hand holds hill.
+    expect(th!.anyCardCost).toBe(2);
+    expect(th!.terrainPayable).toBe(true);
   });
 
   it('accepts one matching-terrain card as a valid payment', () => {
-    const woods = cardOf('woods');
-    const s = movable([woods, cardOf('plains')]);
-    expect(validateMovePayment(cat, s.heroes[0], 'the-grey-havens', [woods])).toBe(true);
+    const hill = cardOf('hill');
+    const s = movable([hill, cardOf('plains')]);
+    expect(validateMovePayment(cat, s.heroes[0], 'tharbad', [hill])).toBe(true);
   });
 
   it('requires exactly the printed number of any-cards on a cost-2 path', () => {
-    const a = cardOf('plains'); const b = cardOf('hill');
+    const a = cardOf('plains'); const b = cardOf('woods');
     const s = movable([a, b]);
-    // harlindon = cost-2, no swamp in hand: two any-cards pay, one does not.
-    expect(validateMovePayment(cat, s.heroes[0], 'harlindon', [a, b])).toBe(true);
-    expect(validateMovePayment(cat, s.heroes[0], 'harlindon', [a])).toBe(false);
+    // tharbad = cost-2 hill, no hill in hand: two any-cards pay, one does not.
+    expect(validateMovePayment(cat, s.heroes[0], 'tharbad', [a, b])).toBe(true);
+    expect(validateMovePayment(cat, s.heroes[0], 'tharbad', [a])).toBe(false);
   });
 
   it('rejects a selection with cards not in hand', () => {
-    const s = movable([cardOf('woods')]);
-    expect(validateMovePayment(cat, s.heroes[0], 'the-grey-havens', [cardOf('mountain')])).toBe(false);
+    const s = movable([cardOf('hill')]);
+    expect(validateMovePayment(cat, s.heroes[0], 'tharbad', [cardOf('mountain')])).toBe(false);
   });
 
   it('heroMove spends exactly the chosen cards and relocates', () => {
-    const woods = cardOf('woods');
+    const hill = cardOf('hill');
     const keep = cardOf('plains');
-    const s = movable([woods, keep]);
-    const s2 = heroMove(s, cat, s.heroes[0].id, 'the-grey-havens', [woods]);
+    const s = movable([hill, keep]);
+    const s2 = heroMove(s, cat, s.heroes[0].id, 'tharbad', [hill]);
     const h = s2.heroes[0];
-    expect(h.location).toBe('the-grey-havens');
+    expect(h.location).toBe('tharbad');
     expect(h.hand).toEqual([keep]);
-    expect(h.discard).toContain(woods);
+    expect(h.discard).toContain(hill);
   });
 
   it('heroMove throws on an invalid explicit card selection', () => {
     const a = cardOf('plains');
-    const s = movable([a, cardOf('hill')]);
-    // one any-card is not enough for the cost-2 harlindon path
-    expect(() => heroMove(s, cat, s.heroes[0].id, 'harlindon', [a])).toThrow();
+    const s = movable([a, cardOf('woods')]);
+    // one any-card is not enough for the cost-2 tharbad path
+    expect(() => heroMove(s, cat, s.heroes[0].id, 'tharbad', [a])).toThrow();
   });
 });

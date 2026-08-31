@@ -11,449 +11,439 @@
   },
   "edges": [
     {
-      "a": "the-shire",
+      "a": "blue-mountains",
+      "b": "the-grey-havens",
+      "terrain": "mountain",
+      "cost": 2
+    },
+    {
+      "a": "harlindon",
       "b": "the-grey-havens",
       "terrain": "woods",
-      "cost": 1,
+      "cost": 2,
       "water": true
     },
     {
       "a": "the-grey-havens",
-      "b": "bree",
-      "terrain": "swamp",
+      "b": "hills-of-evendim",
+      "terrain": "hill",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "the-grey-havens",
+      "b": "the-shire",
+      "terrain": "",
       "cost": 1
     },
     {
-      "a": "bree",
+      "a": "hills-of-evendim",
+      "b": "the-shire",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "hills-of-evendim",
       "b": "old-forest",
-      "terrain": "mountain",
+      "terrain": "hill",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "the-shire",
+      "b": "old-forest",
+      "terrain": "woods",
+      "cost": 2
+    },
+    {
+      "a": "old-forest",
+      "b": "fornost",
+      "terrain": "",
       "cost": 1
     },
     {
       "a": "old-forest",
+      "b": "bree",
+      "terrain": "",
+      "cost": 1
+    },
+    {
+      "a": "fornost",
+      "b": "bree",
+      "terrain": "",
+      "cost": 1
+    },
+    {
+      "a": "fornost",
+      "b": "the-north-downs",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "fornost",
+      "b": "weathertop",
+      "terrain": "hill",
+      "cost": 3
+    },
+    {
+      "a": "bree",
+      "b": "tharbad",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "tharbad",
+      "b": "eregion",
+      "terrain": "plains",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "tharbad",
+      "b": "dunland",
+      "terrain": "",
+      "cost": 1
+    },
+    {
+      "a": "tharbad",
       "b": "enedwaith-plains",
       "terrain": "plains",
-      "cost": 1
+      "cost": 3
+    },
+    {
+      "a": "tharbad",
+      "b": "mouth-of-the-greyflood",
+      "terrain": "plains",
+      "cost": 3,
+      "water": true
+    },
+    {
+      "a": "eregion",
+      "b": "dunland",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "eregion",
+      "b": "moria",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "eregion",
+      "b": "the-redhorn-gate",
+      "terrain": "mountain",
+      "cost": 4
+    },
+    {
+      "a": "moria",
+      "b": "lothl-rien",
+      "terrain": "hill",
+      "cost": 2
     },
     {
       "a": "enedwaith-plains",
-      "b": "tharbad",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "weathertop",
-      "b": "the-trollshaws",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "the-trollshaws",
-      "b": "the-iron-hills",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "the-iron-hills",
-      "b": "ered-mithrin",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "ered-mithrin",
-      "b": "the-northern-waste",
+      "b": "gap-of-rohan",
       "terrain": "plains",
-      "cost": 1
+      "cost": 2
+    },
+    {
+      "a": "dunland",
+      "b": "gap-of-rohan",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "eregion",
+      "b": "rivendell",
+      "terrain": "woods",
+      "cost": 3,
+      "water": true
+    },
+    {
+      "a": "enedwaith-plains",
+      "b": "anfalas",
+      "terrain": "plains",
+      "cost": 3
+    },
+    {
+      "a": "isengard",
+      "b": "gap-of-rohan",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "isengard",
+      "b": "fangorn",
+      "terrain": "woods",
+      "cost": 2
     },
     {
       "a": "tharbad",
       "b": "weathertop",
       "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "rhosgobel",
-      "b": "high-pass",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "high-pass",
-      "b": "lake-esgaroth",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "lake-esgaroth",
-      "b": "gladden-fields",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "gladden-fields",
-      "b": "the-forest-trail",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "the-forest-trail",
-      "b": "fangorn",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "the-northern-waste",
-      "b": "rhosgobel",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "osgiliath",
-      "b": "belfalas",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "fangorn",
-      "b": "osgiliath",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "the-dead-marshes",
-      "b": "emyn-muil",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "emyn-muil",
-      "b": "mount-doom",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "isengard",
-      "b": "the-dead-marshes",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "edoras",
-      "b": "minas-tirith",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "minas-tirith",
-      "b": "the-woodland-realm",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "the-woodland-realm",
-      "b": "erebor",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "lothl-rien",
-      "b": "rivendell",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "mount-doom",
-      "b": "edoras",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "blue-mountains",
-      "b": "the-grey-havens",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "blue-mountains",
-      "b": "harlindon",
-      "terrain": "swamp",
-      "cost": 2
-    },
-    {
-      "a": "blue-mountains",
-      "b": "hills-of-evendim",
-      "terrain": "mountain",
-      "cost": 2
-    },
-    {
-      "a": "harlindon",
-      "b": "the-grey-havens",
-      "terrain": "plains",
-      "cost": 1,
-      "water": true
-    },
-    {
-      "a": "harlindon",
-      "b": "the-shire",
-      "terrain": "hill",
-      "cost": 2
-    },
-    {
-      "a": "hills-of-evendim",
-      "b": "the-shire",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "hills-of-evendim",
-      "b": "old-forest",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "eregion",
-      "b": "the-redhorn-gate",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "eregion",
-      "b": "the-trollshaws",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "eregion",
-      "b": "moria",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "dunland",
-      "b": "isengard",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "dunland",
-      "b": "tharbad",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "dunland",
-      "b": "moria",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "mouth-of-the-greyflood",
-      "b": "enedwaith-plains",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "mouth-of-the-greyflood",
-      "b": "tharbad",
-      "terrain": "woods",
-      "cost": 2
-    },
-    {
-      "a": "mouth-of-the-greyflood",
-      "b": "dunland",
-      "terrain": "swamp",
       "cost": 2
     },
     {
       "a": "the-north-downs",
       "b": "ruins-of-angmar",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "the-north-downs",
-      "b": "fornost",
-      "terrain": "hill",
-      "cost": 2
-    },
-    {
-      "a": "the-north-downs",
-      "b": "weathertop",
-      "terrain": "hill",
-      "cost": 2
-    },
-    {
-      "a": "ettenmoors",
-      "b": "rivendell",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "ettenmoors",
-      "b": "mount-gundabad",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "ettenmoors",
-      "b": "the-trollshaws",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "ruins-of-angmar",
-      "b": "mount-gundabad",
       "terrain": "plains",
-      "cost": 1
+      "cost": 2
+    },
+    {
+      "a": "the-north-downs",
+      "b": "ettenmoors",
+      "terrain": "plains",
+      "cost": 2
     },
     {
       "a": "ruins-of-angmar",
+      "b": "ettenmoors",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "weathertop",
       "b": "ettenmoors",
       "terrain": "hill",
       "cost": 2
     },
     {
-      "a": "moria",
-      "b": "the-redhorn-gate",
-      "terrain": "woods",
+      "a": "weathertop",
+      "b": "the-trollshaws",
+      "terrain": "",
       "cost": 1
     },
     {
-      "a": "moria",
-      "b": "lothl-rien",
+      "a": "weathertop",
+      "b": "bree",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "the-trollshaws",
+      "b": "rivendell",
+      "terrain": "woods",
+      "cost": 2
+    },
+    {
+      "a": "ruins-of-angmar",
+      "b": "the-northern-waste",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "ruins-of-angmar",
+      "b": "mount-gundabad",
       "terrain": "mountain",
-      "cost": 1
+      "cost": 4
     },
     {
       "a": "mount-gundabad",
       "b": "the-northern-waste",
-      "terrain": "plains",
+      "terrain": "",
       "cost": 1
+    },
+    {
+      "a": "the-northern-waste",
+      "b": "ered-mithrin",
+      "terrain": "mountain",
+      "cost": 4
+    },
+    {
+      "a": "ered-mithrin",
+      "b": "the-withered-heath",
+      "terrain": "mountain",
+      "cost": 4
     },
     {
       "a": "the-withered-heath",
       "b": "erebor",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "the-withered-heath",
-      "b": "ered-mithrin",
       "terrain": "mountain",
-      "cost": 1
+      "cost": 3
     },
     {
       "a": "the-withered-heath",
-      "b": "the-woodland-realm",
+      "b": "the-iron-hills",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "erebor",
+      "b": "the-iron-hills",
+      "terrain": "mountain",
+      "cost": 3
+    },
+    {
+      "a": "mount-gundabad",
+      "b": "high-pass",
+      "terrain": "mountain",
+      "cost": 4
+    },
+    {
+      "a": "erebor",
+      "b": "lake-esgaroth",
+      "terrain": "hill",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "the-iron-hills",
+      "b": "lake-esgaroth",
+      "terrain": "hill",
+      "cost": 2
+    },
+    {
+      "a": "the-iron-hills",
+      "b": "rhun",
       "terrain": "plains",
+      "cost": 4
+    },
+    {
+      "a": "high-pass",
+      "b": "gladden-fields",
+      "terrain": "mountain",
+      "cost": 3
+    },
+    {
+      "a": "the-redhorn-gate",
+      "b": "gladden-fields",
+      "terrain": "mountain",
+      "cost": 3
+    },
+    {
+      "a": "gladden-fields",
+      "b": "rhosgobel",
+      "terrain": "",
       "cost": 1
     },
     {
-      "a": "the-forest-road",
-      "b": "the-woodland-realm",
+      "a": "lothl-rien",
+      "b": "gladden-fields",
+      "terrain": "hill",
+      "cost": 3,
+      "water": true
+    },
+    {
+      "a": "lothl-rien",
+      "b": "fangorn",
       "terrain": "woods",
-      "cost": 1
+      "cost": 2
+    },
+    {
+      "a": "rivendell",
+      "b": "high-pass",
+      "terrain": "mountain",
+      "cost": 4
+    },
+    {
+      "a": "high-pass",
+      "b": "the-forest-trail",
+      "terrain": "mountain",
+      "cost": 4
+    },
+    {
+      "a": "high-pass",
+      "b": "the-forest-road",
+      "terrain": "woods",
+      "cost": 3
+    },
+    {
+      "a": "rhosgobel",
+      "b": "the-forest-road",
+      "terrain": "woods",
+      "cost": 2
+    },
+    {
+      "a": "rhosgobel",
+      "b": "the-bight",
+      "terrain": "woods",
+      "cost": 4
     },
     {
       "a": "the-forest-road",
-      "b": "the-forest-trail",
-      "terrain": "swamp",
-      "cost": 1
+      "b": "lake-esgaroth",
+      "terrain": "woods",
+      "cost": 3
+    },
+    {
+      "a": "lake-esgaroth",
+      "b": "the-bight",
+      "terrain": "woods",
+      "cost": 4
     },
     {
       "a": "the-bight",
       "b": "south-eaves",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "the-bight",
-      "b": "rhosgobel",
       "terrain": "woods",
-      "cost": 1
+      "cost": 2
     },
     {
-      "a": "the-bight",
-      "b": "rhun",
-      "terrain": "swamp",
+      "a": "the-woodland-realm",
+      "b": "the-forest-trail",
+      "terrain": "woods",
       "cost": 2
+    },
+    {
+      "a": "the-woodland-realm",
+      "b": "the-forest-road",
+      "terrain": "woods",
+      "cost": 2
+    },
+    {
+      "a": "the-woodland-realm",
+      "b": "lake-esgaroth",
+      "terrain": "woods",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "lothl-rien",
+      "b": "amon-hen",
+      "terrain": "woods",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "fangorn",
+      "b": "plains-of-rohan",
+      "terrain": "woods",
+      "cost": 2
+    },
+    {
+      "a": "fangorn",
+      "b": "gap-of-rohan",
+      "terrain": "",
+      "cost": 1
     },
     {
       "a": "south-eaves",
-      "b": "rhun",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "south-eaves",
-      "b": "rhosgobel",
+      "b": "emyn-muil",
       "terrain": "plains",
       "cost": 2
-    },
-    {
-      "a": "rhun",
-      "b": "dagorlad",
-      "terrain": "hill",
-      "cost": 2
-    },
-    {
-      "a": "dol-guldur",
-      "b": "rhosgobel",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "dol-guldur",
-      "b": "gladden-fields",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "dagorlad",
-      "b": "sea-of-udun",
-      "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "dagorlad",
-      "b": "the-dead-marshes",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "the-nindalf",
-      "b": "the-dead-marshes",
-      "terrain": "hill",
-      "cost": 1
     },
     {
       "a": "gap-of-rohan",
       "b": "helm-s-deep",
-      "terrain": "swamp",
-      "cost": 1
-    },
-    {
-      "a": "gap-of-rohan",
-      "b": "isengard",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "gap-of-rohan",
-      "b": "edoras",
       "terrain": "plains",
-      "cost": 1
+      "cost": 2
+    },
+    {
+      "a": "helm-s-deep",
+      "b": "plains-of-rohan",
+      "terrain": "plains",
+      "cost": 2
     },
     {
       "a": "helm-s-deep",
       "b": "edoras",
-      "terrain": "hill",
-      "cost": 1
+      "terrain": "mountain",
+      "cost": 3
     },
     {
-      "a": "helm-s-deep",
-      "b": "fangorn",
-      "terrain": "woods",
+      "a": "plains-of-rohan",
+      "b": "edoras",
+      "terrain": "",
       "cost": 1
     },
     {
@@ -463,160 +453,213 @@
       "cost": 2
     },
     {
-      "a": "plains-of-rohan",
-      "b": "lothl-rien",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "dunharrow",
-      "b": "the-nindalf",
+      "a": "edoras",
+      "b": "dunharrow",
       "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "dunharrow",
-      "b": "minas-tirith",
-      "terrain": "woods",
-      "cost": 1
+      "cost": 3
     },
     {
       "a": "anfalas",
       "b": "morthond",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "anfalas",
-      "b": "edoras",
-      "terrain": "plains",
-      "cost": 2
-    },
-    {
-      "a": "anfalas",
-      "b": "gap-of-rohan",
       "terrain": "hill",
-      "cost": 2
+      "cost": 3
     },
     {
       "a": "morthond",
-      "b": "edoras",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "morthond",
-      "b": "helm-s-deep",
+      "b": "belfalas",
       "terrain": "swamp",
-      "cost": 1
+      "cost": 3,
+      "water": true
+    },
+    {
+      "a": "belfalas",
+      "b": "pelagir",
+      "terrain": "plains",
+      "cost": 3,
+      "water": true
     },
     {
       "a": "pelagir",
       "b": "osgiliath",
-      "terrain": "mountain",
+      "terrain": "",
       "cost": 1
     },
     {
       "a": "pelagir",
       "b": "near-harad",
       "terrain": "plains",
-      "cost": 1
+      "cost": 2
     },
     {
       "a": "pelagir",
       "b": "minas-tirith",
       "terrain": "hill",
-      "cost": 1,
+      "cost": 2,
       "water": true
     },
     {
-      "a": "near-harad",
-      "b": "osgiliath",
-      "terrain": "plains",
-      "cost": 2
-    },
-    {
-      "a": "near-harad",
-      "b": "plains-of-gorgoroth",
-      "terrain": "hill",
-      "cost": 2
-    },
-    {
-      "a": "minas-morgul",
-      "b": "plains-of-gorgoroth",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "minas-morgul",
+      "a": "osgiliath",
       "b": "minas-tirith",
-      "terrain": "swamp",
+      "terrain": "",
       "cost": 1
     },
     {
-      "a": "plains-of-gorgoroth",
-      "b": "mount-doom",
-      "terrain": "mountain",
-      "cost": 1
-    },
-    {
-      "a": "plains-of-gorgoroth",
-      "b": "osgiliath",
+      "a": "osgiliath",
+      "b": "near-harad",
       "terrain": "plains",
-      "cost": 1
-    },
-    {
-      "a": "sea-of-udun",
-      "b": "the-dead-marshes",
-      "terrain": "hill",
-      "cost": 1
-    },
-    {
-      "a": "barad-dur",
-      "b": "mount-doom",
-      "terrain": "woods",
-      "cost": 1
-    },
-    {
-      "a": "barad-dur",
-      "b": "plains-of-gorgoroth",
-      "terrain": "swamp",
       "cost": 2
     },
     {
-      "a": "barad-dur",
-      "b": "sea-of-udun",
-      "terrain": "mountain",
-      "cost": 2
-    },
-    {
-      "a": "fornost",
-      "b": "bree",
-      "terrain": "",
-      "cost": 1
-    },
-    {
-      "a": "fornost",
-      "b": "old-forest",
-      "terrain": "",
-      "cost": 1
-    },
-    {
-      "a": "fornost",
-      "b": "weathertop",
+      "a": "dunharrow",
+      "b": "minas-tirith",
       "terrain": "hill",
       "cost": 3
     },
     {
       "a": "amon-hen",
-      "b": "lothl-rien",
+      "b": "emyn-muil",
+      "terrain": "mountain",
+      "cost": 3,
+      "water": true
+    },
+    {
+      "a": "edoras",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "cost": 4
+    },
+    {
+      "a": "dunharrow",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "cost": 2
+    },
+    {
+      "a": "minas-tirith",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "osgiliath",
+      "b": "minas-morgul",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "emyn-muil",
+      "b": "dagorlad",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "emyn-muil",
+      "b": "the-dead-marshes",
+      "terrain": "swamp",
+      "cost": 3
+    },
+    {
+      "a": "emyn-muil",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "cost": 2,
+      "water": true
+    },
+    {
+      "a": "the-dead-marshes",
+      "b": "the-nindalf",
+      "terrain": "swamp",
+      "cost": 3
+    },
+    {
+      "a": "the-dead-marshes",
+      "b": "dagorlad",
+      "terrain": "plains",
+      "cost": 3
+    },
+    {
+      "a": "dagorlad",
+      "b": "rhun",
+      "terrain": "plains",
+      "cost": 3
+    },
+    {
+      "a": "lake-esgaroth",
+      "b": "rhun",
+      "terrain": "plains",
+      "cost": 3
+    },
+    {
+      "a": "the-bight",
+      "b": "rhun",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "the-dead-marshes",
+      "b": "sea-of-udun",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "dagorlad",
+      "b": "sea-of-udun",
+      "terrain": "plains",
+      "cost": 3
+    },
+    {
+      "a": "sea-of-udun",
+      "b": "minas-morgul",
+      "terrain": "mountain",
+      "cost": 3
+    },
+    {
+      "a": "sea-of-udun",
+      "b": "mount-doom",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "minas-morgul",
+      "b": "plains-of-gorgoroth",
+      "terrain": "mountain",
+      "cost": 2
+    },
+    {
+      "a": "plains-of-gorgoroth",
+      "b": "mount-doom",
+      "terrain": "mountain",
+      "cost": 3
+    },
+    {
+      "a": "mount-doom",
+      "b": "barad-dur",
+      "terrain": "plains",
+      "cost": 2
+    },
+    {
+      "a": "dol-guldur",
+      "b": "rhosgobel",
+      "terrain": "woods",
+      "cost": 4
+    },
+    {
+      "a": "dol-guldur",
+      "b": "south-eaves",
       "terrain": "woods",
       "cost": 2
     },
     {
-      "a": "amon-hen",
+      "a": "dol-guldur",
+      "b": "lothl-rien",
+      "terrain": "woods",
+      "cost": 3
+    },
+    {
+      "a": "dol-guldur",
       "b": "emyn-muil",
-      "terrain": "mountain",
+      "terrain": "plains",
       "cost": 3
     }
   ]

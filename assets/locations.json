@@ -854,7 +854,8 @@
         "x": 3150,
         "y": 2055
       },
-      "image": ""
+      "image": "",
+      "perilous": true
     },
     {
       "id": "mount-gundabad",
@@ -887,7 +888,8 @@
       },
       "image": "",
       "influenceStrength": 3,
-      "strongholdMax": 3
+      "strongholdMax": 3,
+      "perilous": true
     },
     {
       "id": "the-redhorn-gate",
@@ -1106,7 +1108,8 @@
       },
       "image": "",
       "influenceStrength": 3,
-      "strongholdMax": 3
+      "strongholdMax": 3,
+      "perilous": true
     },
     {
       "id": "dagorlad",
@@ -1482,7 +1485,7 @@
     },
     {
       "id": "sea-of-udun",
-      "name": "Plains of Udûn",
+      "name": "Sea of Udun",
       "regionColor": "Red",
       "kind": "wild",
       "regionId": "mordor-and-brown-lands",
@@ -1542,7 +1545,8 @@
       },
       "image": "",
       "influenceStrength": 6,
-      "strongholdMax": 6
+      "strongholdMax": 6,
+      "perilous": true
     }
   ]
 }
