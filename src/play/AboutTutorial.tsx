@@ -19,15 +19,17 @@ export default function AboutTutorial() {
         <div className="about-body">
           <h3>Your goal</h3>
           <p>
-            You lead the <strong>heroes</strong>: thwart Sauron by <strong>breaking his Plots</strong>
-            {' '}and advancing your own quests and secret mission. <strong>Sauron wins</strong> if his
-            three coloured story markers climb too far — any one marker reaching the
+            You can control <strong>either side</strong> — the <strong>heroes</strong> or
+            {' '}<strong>Sauron</strong> — solo against the AI or online with friends. The
+            {' '}<strong>heroes</strong> win by thwarting Sauron: <strong>breaking his Plots</strong>
+            {' '}and advancing their own quests and secret mission. <strong>Sauron wins</strong> if
+            his three coloured story markers climb too far — any one marker reaching the
             {' '}<em>Finale</em>, or all three reaching the <em>Shadow Falls</em> (the midpoint).
-            Every Plot Sauron plays feeds one of those markers each turn, so countering plots in
-            time is the whole game.
+            Every Plot Sauron plays feeds one of those markers each turn, so the race between
+            plots and counters is the whole game.
           </p>
 
-          <h3>A hero turn, step by step</h3>
+          <h3>Playing the heroes — a turn, step by step</h3>
           <ol>
             <li><strong>Draw</strong> — at the start of your turn you draw cards equal to your
               hero's fortitude. Cards are your fuel for movement and combat.</li>
@@ -49,7 +51,7 @@ export default function AboutTutorial() {
             <li><strong>End</strong> — your turn ends with the Encounter step if you didn't Explore.</li>
           </ol>
 
-          <h3>What experienced players do</h3>
+          <h3>What experienced hero players do</h3>
           <ul>
             <li><strong>Favor is everything</strong> — it breaks plots and cleanses corruption.
               Bank it, and break plots with pooled favor at the last safe moment.</li>
@@ -61,13 +63,36 @@ export default function AboutTutorial() {
               favor for a break none of you could afford alone.</li>
           </ul>
 
-          <h3>Sauron & the smart button</h3>
+          <h3>Playing Sauron</h3>
           <p>
-            The <strong>Sauron</strong> turn is played by the AI (or a human) and runs between
-            your turns; the panel on the right <strong>recaps what Sauron did</strong>, including
-            the opening setup. The glowing <strong>next-step button</strong> tells you the obvious
-            thing to do now, and warns you before you end a turn with actions still worth taking
-            (a favor to grab, a plot to break, a move to make out of the open).
+            Between the heroes' turns you take the <strong>Sauron</strong> turn: <strong>play a
+            Plot</strong> to push one of your three story markers toward victory, <strong>spread
+            influence</strong> across locations, <strong>move and place monsters</strong> to block
+            the heroes, and pressure them with <strong>Shadow cards and Peril</strong>. You don't
+            have to win a fight — you win by advancing your markers faster than the heroes can
+            break your plots, so protect the plots they most want to stop and force them into the
+            open, away from Havens, where you can steal their favor.
+          </p>
+          <p className="muted">
+            When the AI plays Sauron, the panel on the right <strong>recaps what it did</strong>
+            {' '}each turn, including the opening setup.
+          </p>
+
+          <h3>Playing online</h3>
+          <p>
+            Everything runs <strong>peer-to-peer</strong> in the browser — no accounts, no server.
+            {' '}<strong>Host online game</strong> creates a session with a 5-letter code; share it
+            and friends <strong>Join online game</strong> with that code and a name. Any player can
+            claim any open role — a hero, or Sauron — and any <strong>unclaimed or dropped role is
+            played by the AI</strong>, so a game never stalls if someone leaves. For a quick solo
+            game, use <strong>New game</strong> and pick which side you control.
+          </p>
+
+          <h3>The smart button</h3>
+          <p>
+            Whichever side you play, the glowing <strong>next-step button</strong> tells you the
+            obvious thing to do now and warns you before you end a turn with actions still worth
+            taking (a favor to grab, a plot to break or protect, a move to make out of the open).
           </p>
         </div>
       )}
@@ -102,7 +127,7 @@ export default function AboutTutorial() {
             </li>
             <li>Click <strong>“Load VASSAL module (.vmod)…”</strong> below and select that file.
               No need to rename or unzip it — the app reads the images inside and matches them to
-              the cards automatically. (Loading extracted files or a folder still works too.)</li>
+              the cards automatically. (Loading a folder of extracted images still works too.)</li>
           </ol>
           <p className="muted">
             The VASSAL module has some misspelled/mismatched file names. We keep our own

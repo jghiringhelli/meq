@@ -2,7 +2,7 @@
 // at runtime. The public build ships no copyrighted art, so this is how players
 // see the "real" scans. The canonical way is to pick the VASSAL module file
 // itself (a `.vmod`, which is just a ZIP): we unzip it in the browser and index
-// every image inside. A folder / individual image files still work as a
+// every image inside. A whole folder of extracted images still works as a
 // fallback. Selections use object URLs, so they last for the current page
 // session only — reloading the page clears them and the game falls back to the
 // built-in placeholders.
@@ -23,7 +23,6 @@ export const VMOD_URL = 'https://obj.vassalengine.org/images/0/05/Middle_Earth_Q
 export default function ArtLoader({ onLoaded }: Props) {
   const vmodRef = useRef<HTMLInputElement>(null);
   const dirRef = useRef<HTMLInputElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const urlsRef = useRef<string[]>([]);
   const [summary, setSummary] = useState<{ loaded: number; matched: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -110,7 +109,6 @@ export default function ArtLoader({ onLoaded }: Props) {
     setError(null);
     if (vmodRef.current) vmodRef.current.value = '';
     if (dirRef.current) dirRef.current.value = '';
-    if (fileRef.current) fileRef.current.value = '';
     onLoaded?.(0, expectedTotal);
   };
 
@@ -125,12 +123,10 @@ export default function ArtLoader({ onLoaded }: Props) {
       <div className="art-loader__actions art-loader__actions--secondary">
         <span className="muted">or, from extracted files:</span>
         <button type="button" onClick={() => dirRef.current?.click()} disabled={busy}>Load art folder…</button>
-        <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}>Load art files…</button>
       </div>
 
       <input ref={vmodRef} type="file" accept=".vmod,.zip" hidden onChange={(e) => ingestVmod(e.target.files?.[0] ?? null)} />
       <input ref={dirRef} type="file" multiple hidden onChange={(e) => ingest(e.target.files)} />
-      <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => ingest(e.target.files)} />
 
       {error && <p className="art-loader__summary art-loader__summary--error">{error}</p>}
 
