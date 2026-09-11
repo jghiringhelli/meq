@@ -259,7 +259,13 @@ export default function App() {
     return (
       <div className="app">
         <header className="app-header"><h1>Middle-earth Quest</h1>
-          <span className="subtitle">unofficial fan port · M1</span></header>
+          <span className="subtitle">unofficial fan port</span></header>
+        <p className="fan-disclaimer">
+          Unofficial, non-commercial fan project — not affiliated with, endorsed by, or
+          sponsored by Fantasy Flight Games, Asmodee, or the Tolkien Estate / Middle-earth
+          Enterprises. Ships no official artwork; you may optionally load your own copy of
+          the VASSAL module's images below, kept in your browser only.
+        </p>
         <main className="app-main">
           <p>{Object.keys(catalog.heroes).length} heroes · {Object.keys(catalog.locations).length} locations · {Object.keys(catalog.combatCards).length} combat cards loaded.</p>
           <div className="start-actions">

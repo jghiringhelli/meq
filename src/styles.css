@@ -22,6 +22,7 @@ body {
 }
 .app-header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
 .subtitle { color: #8a7c60; font-size: 0.85rem; }
+.fan-disclaimer { margin: 0.5rem 1.25rem 0; padding: 0.6rem 0.9rem; background: #241c12; border: 1px solid #4a3d28; border-radius: 6px; color: #b0a48a; font-size: 0.82rem; line-height: 1.4; }
 .app-main { padding: 1.25rem; }
 .catalog-summary ul { line-height: 1.7; }
 .error { color: var(--danger); }
