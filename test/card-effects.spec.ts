@@ -12,6 +12,7 @@ import {
   cat, freshGame, shadowCards, plots, events, encounters, perils, combatCards, label,
 } from './helpers';
 import { applyAtom, autoResolveTree, evalMetric, statValue } from '../src/engine/encounter';
+import { resolveTrainingChoice } from '../src/engine/mechanics';
 import { addCardInfluence, influenceAt } from '../src/engine/influence';
 
 type S = ReturnType<typeof freshGame>;
@@ -445,17 +446,25 @@ describe('atom: gainItem / discardItem', () => {
 });
 
 describe('atom: training', () => {
-  it('raises hero.training by n and grows the hero deck with skill cards', () => {
+  it('raises hero.training by n and grows the hero card pool with skill cards', () => {
     const s = freshGame();
     const h = heroOf(s);
     const training = h.training;
     const trained = h.trainedCount;
-    const deck = h.deck.length;
+    const total = h.deck.length + h.hand.length + h.discard.length;
     const skill = s.skillDeck!.length;
     applyAtom(s, cat, h.id, { op: 'training', n: 2 });
+    // Training is interactive (rulebook p.26: draw two, keep one) — resolve
+    // both pending "keep one" picks before checking the result.
+    while (s.pendingChoice?.kind === 'training') {
+      const optionId = s.pendingChoice.options[0].id;
+      s.pendingChoice = null;
+      resolveTrainingChoice(s, cat, optionId);
+    }
     expect(h.training).toBe(training + 2);
     expect(h.trainedCount).toBe(trained + 2);
-    expect(h.deck.length).toBe(deck + 2);
+    // Kept cards land in hand first (not the deck directly).
+    expect(h.deck.length + h.hand.length + h.discard.length).toBe(total + 2);
     expect(s.skillDeck!.length).toBeLessThan(skill); // consumed from the skill deck
   });
 });
@@ -1112,6 +1121,13 @@ describe('coverage: every catalog training atom raises hero.training', () => {
     const h = heroOf(s);
     const t = h.training;
     applyAtom(s, cat, h.id, atom);
+    // Training is now interactive (rulebook p.26: draw two Skill cards, keep
+    // one) — resolve any pending "keep one" pick(s) it raised before checking.
+    while (s.pendingChoice?.kind === 'training') {
+      const optionId = s.pendingChoice.options[0].id;
+      s.pendingChoice = null;
+      resolveTrainingChoice(s, cat, optionId);
+    }
     expect(h.training).toBe(t + atom.n);
   });
 });

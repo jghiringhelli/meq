@@ -11,7 +11,7 @@
 //    into "In deck" so the exact hand can never be deduced by elimination (only
 //    discards are public).
 import { useEffect, useMemo, useState } from 'react';
-import type { Catalog, GameState, CardId } from '../engine/types';
+import type { Catalog, GameState, CardId, LocationId } from '../engine/types';
 import { useInspect } from './CardInspector';
 import {
   monsterArt, minionArt, plotArt, shadowArt, perilArt, corruptionArt, heroArt,
@@ -151,12 +151,19 @@ function boardGroups(cat: Catalog, state: GameState): RefGroup[] {
   }
   sections.push({ label: 'Monsters', items: monItems.sort(byName), empty: 'none on the board' });
 
-  // Characters / allies placed on the board.
-  const charItems: RefItem[] = [];
+  // Characters / allies: ALWAYS list every Character in the game (all 8),
+  // showing where each is currently placed, or "not yet placed" if its Quote
+  // hasn't put it on the board yet — so the player can discover the full set
+  // rather than only ones already encountered.
+  const placedAt = new Map<string, LocationId>();
   for (const [loc, names] of Object.entries(m.charactersAt ?? {})) {
-    for (const nm of names) charItems.push({ id: `char-${loc}-${nm}`, name: pretty(nm), img: characterArt(nm), sub: locName(cat, loc) });
+    for (const nm of names) placedAt.set(nm, loc as LocationId);
   }
-  sections.push({ label: 'Characters / allies', items: charItems.sort(byName), empty: 'none placed' });
+  const charItems: RefItem[] = characterArtKeys().map((nm) => {
+    const loc = placedAt.get(nm);
+    return { id: `char-${nm}`, name: pretty(nm), img: characterArt(nm), sub: loc ? locName(cat, loc) : 'not yet placed' };
+  });
+  sections.push({ label: 'Characters / allies', items: charItems.sort(byName), empty: 'none' });
 
   // Favor tokens sitting on the board (retrievable).
   sections.push({

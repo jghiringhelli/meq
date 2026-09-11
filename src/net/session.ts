@@ -12,6 +12,7 @@ import Peer, { type DataConnection } from 'peerjs';
 import type { GameState } from '../engine/types';
 import type { Action } from '../engine/actions';
 import type { Roster, RoleId } from './roles';
+import { getLocalPlayerId } from './identity';
 
 /** Game ids are short + human-shareable; we prefix to avoid PeerJS id clashes. */
 const ID_PREFIX = 'meq-';
@@ -45,8 +46,7 @@ export interface PeerInfo { playerId: string; name: string }
 
 /** Wire protocol. */
 export type Msg =
-  | { type: 'hello'; name: string }
-  | { type: 'welcome'; playerId: string }
+  | { type: 'hello'; name: string; playerId: string }
   | { type: 'state'; state: GameState }
   | { type: 'roster'; roster: Roster }
   | { type: 'action'; action: Action }
@@ -63,9 +63,14 @@ export interface SessionCallbacks {
   onRoster?: (roster: Roster) => void;
   /** Host: a client asked to (un)claim a role. */
   onClaim?: (playerId: string, name: string, role: RoleId, release: boolean) => void;
-  /** Host: a player connected. */
+  /** Host: a player connected — `playerId` is their STABLE persistent id (see
+   *  net/identity.ts), so a reconnecting player is recognized as the same
+   *  person even though PeerJS gave their new connection a different network
+   *  peer id underneath. */
   onJoin?: (playerId: string, name: string) => void;
-  /** Host: a player disconnected. */
+  /** Host: a player disconnected (network-level) — `playerId` is their stable
+   *  persistent id. Does NOT necessarily mean they're gone for good; App.tsx
+   *  pairs this with a grace-period timer before fully releasing their role(s). */
   onLeave?: (playerId: string) => void;
   /** Client: the host kicked us. */
   onKicked?: () => void;
@@ -106,7 +111,14 @@ export function useGameSession(cbs: SessionCallbacks): Net {
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
   const peerRef = useRef<Peer | null>(null);
-  const connsRef = useRef<Map<string, DataConnection>>(new Map()); // host: playerId → conn
+  const connsRef = useRef<Map<string, DataConnection>>(new Map()); // host: network peer-id → conn
+  // Host: stable persistent playerId (see net/identity.ts) ↔ current live
+  // network peer-id. A reconnecting client gets a NEW network peer-id every
+  // time (PeerJS assigns it randomly), but sends its unchanging persistent id
+  // in `hello` — this map is how we recognize "the same person is back" and
+  // route messages to whichever connection they currently hold.
+  const personaToConnRef = useRef<Map<string, string>>(new Map());  // persistent id → network peer-id
+  const connToPersonaRef = useRef<Map<string, string>>(new Map());  // network peer-id → persistent id
   const hostConnRef = useRef<DataConnection | null>(null);          // client: conn to host
   const cbsRef = useRef(cbs);
   cbsRef.current = cbs;
@@ -133,24 +145,35 @@ export function useGameSession(cbs: SessionCallbacks): Net {
       peer.on('connection', (conn) => {
         conn.on('open', () => {
           connsRef.current.set(conn.peer, conn);
-          send(conn, { type: 'welcome', playerId: conn.peer });
         });
         conn.on('data', (raw) => {
           const msg = raw as Msg;
           if (msg.type === 'hello') {
-            setPeers((p) => [...p.filter((x) => x.playerId !== conn.peer), { playerId: conn.peer, name: msg.name }]);
-            cbsRef.current.onJoin?.(conn.peer, msg.name);
+            personaToConnRef.current.set(msg.playerId, conn.peer);
+            connToPersonaRef.current.set(conn.peer, msg.playerId);
+            setPeers((p) => [...p.filter((x) => x.playerId !== msg.playerId), { playerId: msg.playerId, name: msg.name }]);
+            cbsRef.current.onJoin?.(msg.playerId, msg.name);
           } else if (msg.type === 'action') {
-            cbsRef.current.onRemoteAction?.(conn.peer, msg.action);
+            const pid = connToPersonaRef.current.get(conn.peer) ?? conn.peer;
+            cbsRef.current.onRemoteAction?.(pid, msg.action);
           } else if (msg.type === 'claim' || msg.type === 'release') {
-            const name = peersNameOf(conn.peer);
-            cbsRef.current.onClaim?.(conn.peer, name, msg.role, msg.type === 'release');
+            const pid = connToPersonaRef.current.get(conn.peer) ?? conn.peer;
+            const name = peersNameOf(pid);
+            cbsRef.current.onClaim?.(pid, name, msg.role, msg.type === 'release');
           }
         });
         conn.on('close', () => {
           connsRef.current.delete(conn.peer);
-          setPeers((p) => p.filter((x) => x.playerId !== conn.peer));
-          cbsRef.current.onLeave?.(conn.peer);
+          const pid = connToPersonaRef.current.get(conn.peer);
+          connToPersonaRef.current.delete(conn.peer);
+          if (pid) {
+            // Only clear the persona→conn pointer if it still points at THIS
+            // (now-closed) connection — a fast reconnect may already have
+            // registered a newer one via a fresh 'hello'.
+            if (personaToConnRef.current.get(pid) === conn.peer) personaToConnRef.current.delete(pid);
+            setPeers((p) => p.filter((x) => x.playerId !== pid));
+            cbsRef.current.onLeave?.(pid);
+          }
         });
       });
     });
@@ -164,25 +187,25 @@ export function useGameSession(cbs: SessionCallbacks): Net {
   peersRef.current = peers;
 
   const join = useCallback(async (code: string, name: string): Promise<void> => {
+    const myId = getLocalPlayerId();
+    setPlayerId(myId); // stable identity, known immediately — no round trip needed
     const peer = new Peer(undefined as unknown as string, peerOptions());
     peerRef.current = peer;
     return new Promise<void>((resolve, reject) => {
-      peer.on('open', (id) => {
-        setPlayerId(id);
+      peer.on('open', () => {
         const conn = peer.connect(toPeerId(code), { reliable: true });
         hostConnRef.current = conn;
         conn.on('open', () => {
           setRole('client');
           setGameId(code);
           setConnected(true);
-          send(conn, { type: 'hello', name });
+          send(conn, { type: 'hello', name, playerId: myId });
           resolve();
         });
         conn.on('data', (raw) => {
           const msg = raw as Msg;
           if (msg.type === 'state') cbsRef.current.onState?.(msg.state);
           else if (msg.type === 'roster') cbsRef.current.onRoster?.(msg.roster);
-          else if (msg.type === 'welcome') setPlayerId(msg.playerId);
           else if (msg.type === 'kicked') { cbsRef.current.onKicked?.(); leave(); }
         });
         conn.on('close', () => { setConnected(false); setError('Disconnected from host.'); });
@@ -194,6 +217,8 @@ export function useGameSession(cbs: SessionCallbacks): Net {
   const leave = useCallback(() => {
     connsRef.current.forEach((c) => c.close());
     connsRef.current.clear();
+    personaToConnRef.current.clear();
+    connToPersonaRef.current.clear();
     hostConnRef.current?.close();
     hostConnRef.current = null;
     peerRef.current?.destroy();
@@ -220,8 +245,10 @@ export function useGameSession(cbs: SessionCallbacks): Net {
   }, [broadcast]);
 
   const kick = useCallback((pid: string) => {
-    const conn = connsRef.current.get(pid);
-    if (conn) { send(conn, { type: 'kicked' }); conn.close(); connsRef.current.delete(pid); }
+    const connId = personaToConnRef.current.get(pid);
+    const conn = connId ? connsRef.current.get(connId) : undefined;
+    if (conn) { send(conn, { type: 'kicked' }); conn.close(); connsRef.current.delete(conn.peer); }
+    if (connId) { personaToConnRef.current.delete(pid); connToPersonaRef.current.delete(connId); }
     setPeers((p) => p.filter((x) => x.playerId !== pid));
     cbsRef.current.onLeave?.(pid);
   }, []);

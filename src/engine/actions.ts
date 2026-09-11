@@ -9,6 +9,7 @@ import type { Catalog, GameState, HeroId, MonsterId, LocationId, CardId } from '
 import {
   advance, heroMove, heroRest, heroEngage, endHeroActions, resolveChoice,
   heroExplore, resolveEncounter, chooseEncounter, revealEncounter, dismissReveal,
+  dismissCombatSummary,
   heroDarkPath, heroRetrieveFavor, heroConsultCharacter, heroCompleteQuest,
   heroDiscardPlot, heroCleanseCorruption, heroTradeFavor, heroSurvey, resolveCombatOrPeril,
   resolveShadowReaction, resolveTreeDecision,
@@ -26,6 +27,7 @@ export type Action =
   | { t: 'chooseEncounter'; index: number }
   | { t: 'revealEncounter'; cardId?: CardId }
   | { t: 'dismissReveal' }
+  | { t: 'dismissCombatSummary' }
   | { t: 'resolveEncounter' }
   | { t: 'darkPath'; heroId: HeroId }
   | { t: 'retrieveFavor'; heroId: HeroId }
@@ -54,6 +56,7 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'chooseEncounter': return chooseEncounter(state, cat, action.index);
     case 'revealEncounter': return revealEncounter(state, cat, action.cardId);
     case 'dismissReveal': return dismissReveal(state);
+    case 'dismissCombatSummary': return dismissCombatSummary(state);
     case 'resolveEncounter': return resolveEncounter(state, cat);
     case 'darkPath': return heroDarkPath(state, cat, action.heroId);
     case 'retrieveFavor': return heroRetrieveFavor(state, cat, action.heroId);

@@ -4,13 +4,15 @@
     "provenance": "owner-verified",
     "source": "text/*.xls (owner-supplied MEQ fulltext)",
     "notes": [
-      "Monster reference stats + deck assignment."
+      "Monster reference stats + deck assignment.",
+      "health = WOUNDS column from text/Combat.pdf Monster Reference analysis sheet (owner-verified); distinct from fortitude which only sets combat hand size."
     ]
   },
   "monsters": [
     {
       "id": "mon-crebain",
       "name": "Crebain",
+      "health": 2,
       "fortitude": 7,
       "strength": 3,
       "wisdom": 2,
@@ -24,6 +26,7 @@
     {
       "id": "mon-agent",
       "name": "Agent",
+      "health": 3,
       "fortitude": 5,
       "strength": 3,
       "wisdom": 3,
@@ -37,6 +40,7 @@
     {
       "id": "mon-snaga",
       "name": "Snaga",
+      "health": 3,
       "fortitude": 6,
       "strength": 3,
       "wisdom": 2,
@@ -50,6 +54,7 @@
     {
       "id": "mon-orc",
       "name": "Orc",
+      "health": 3,
       "fortitude": 5,
       "strength": 4,
       "wisdom": 2,
@@ -63,6 +68,7 @@
     {
       "id": "mon-barrow-wight",
       "name": "Barrow Wight",
+      "health": 4,
       "fortitude": 5,
       "strength": 4,
       "wisdom": 2,
@@ -76,6 +82,7 @@
     {
       "id": "mon-southron",
       "name": "Southron",
+      "health": 4,
       "fortitude": 6,
       "strength": 3,
       "wisdom": 2,
@@ -89,6 +96,7 @@
     {
       "id": "mon-dunlending",
       "name": "Dunlending",
+      "health": 4,
       "fortitude": 5,
       "strength": 5,
       "wisdom": 2,
@@ -102,6 +110,7 @@
     {
       "id": "mon-uruk-hai",
       "name": "Uruk-Hai",
+      "health": 5,
       "fortitude": 6,
       "strength": 6,
       "wisdom": 2,
@@ -115,6 +124,7 @@
     {
       "id": "mon-warg-rider",
       "name": "Warg Rider",
+      "health": 5,
       "fortitude": 6,
       "strength": 4,
       "wisdom": 1,
@@ -128,6 +138,7 @@
     {
       "id": "mon-giant-spider",
       "name": "Giant Spider",
+      "health": 6,
       "fortitude": 7,
       "strength": 5,
       "wisdom": 1,
@@ -141,6 +152,7 @@
     {
       "id": "mon-huorn",
       "name": "Huorn",
+      "health": 7,
       "fortitude": 6,
       "strength": 7,
       "wisdom": 1,
@@ -154,6 +166,7 @@
     {
       "id": "mon-cave-troll",
       "name": "Cave Troll",
+      "health": 8,
       "fortitude": 8,
       "strength": 8,
       "wisdom": 0,
@@ -167,6 +180,7 @@
     {
       "id": "mon-oliphaunt",
       "name": "Oliphaunt",
+      "health": 9,
       "fortitude": 7,
       "strength": 10,
       "wisdom": 1,
@@ -180,6 +194,7 @@
     {
       "id": "mon-balrog",
       "name": "Balrog",
+      "health": 10,
       "fortitude": 9,
       "strength": 12,
       "wisdom": 0,

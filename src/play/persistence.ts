@@ -4,6 +4,7 @@ import type { GameState } from '../engine/types';
 
 const SAVE_KEY = 'meq.save.v1';
 const HISTORY_KEY = 'meq.history.v1';
+const NOTES_KEY_PREFIX = 'meq.notes.v1.';
 const SCHEMA = 1;
 
 interface SaveEnvelope {
@@ -86,26 +87,67 @@ export function clearHistory(): void {
   safeRemove(HISTORY_KEY);
 }
 
-/** Trigger a download of the full game state + log for a bug report. */
-export function exportProblemReport(seed: number, state: GameState): void {
+/**
+ * Personal notes, kept ONLY in this browser's localStorage — never part of
+ * `GameState`, never sent over the network, so they can never leak to (or be
+ * overwritten by) another player, even in an online multiplayer game. Keyed
+ * per game (`seed`) and, for a shared device where more than one local
+ * player might take notes (e.g. hotseat), per author name — defaults to a
+ * single shared slot ('me') which is all that's needed on separate devices,
+ * since each remote player's notes already live in their own browser.
+ */
+function notesKey(seed: number, author = 'me'): string {
+  return `${NOTES_KEY_PREFIX}${seed}.${author}`;
+}
+
+export function loadNotes(seed: number, author = 'me'): string {
+  return safeGet(notesKey(seed, author)) ?? '';
+}
+
+export function saveNotes(seed: number, text: string, author = 'me'): void {
+  if (text.trim() === '') { safeRemove(notesKey(seed, author)); return; }
+  safeSet(notesKey(seed, author), text);
+}
+
+export interface CrashInfo {
+  message: string;
+  stack?: string;
+  componentStack?: string;
+}
+
+/**
+ * Trigger a download of the full game state + log for a bug report. `description`
+ * is the player's own account of what went wrong (from the in-app report form);
+ * `crash` is populated automatically when this is called from the global error
+ * handler / ErrorBoundary after an uncaught exception.
+ */
+export function exportProblemReport(
+  seed: number,
+  state: GameState | null,
+  description?: string,
+  crash?: CrashInfo,
+): string {
   const bundle = {
     kind: 'meq-problem-report',
     schema: SCHEMA,
     exportedAt: new Date().toISOString(),
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    description: description ?? '',
+    crash: crash ?? null,
     seed,
-    phase: state.phase,
-    round: state.round,
-    winner: state.winner ?? null,
+    phase: state?.phase ?? null,
+    round: state?.round ?? null,
+    winner: state?.winner ?? null,
     state,
   };
   const json = JSON.stringify(bundle, null, 2);
+  const filename = `meq-report-seed${seed}-round${state?.round ?? 0}.json`;
   try {
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `meq-report-seed${seed}-round${state.round}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -117,4 +159,26 @@ export function exportProblemReport(seed: number, state: GameState): void {
       if (w) { w.document.write(`<pre>${json.replace(/</g, '&lt;')}</pre>`); }
     } catch { /* ignore */ }
   }
+  return filename;
+}
+
+/**
+ * Stash the most recent uncaught error so a later "Report a problem" click
+ * (e.g. from the ErrorBoundary fallback screen, which has no live GameState
+ * of its own) can still attach it. Kept out of GameState/network entirely.
+ */
+const LAST_CRASH_KEY = 'meq.last-crash.v1';
+
+export function recordCrash(crash: CrashInfo): void {
+  try { safeSet(LAST_CRASH_KEY, JSON.stringify({ ...crash, at: new Date().toISOString() })); } catch { /* ignore */ }
+}
+
+export function loadLastCrash(): (CrashInfo & { at: string }) | null {
+  const raw = safeGet(LAST_CRASH_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+export function clearLastCrash(): void {
+  safeRemove(LAST_CRASH_KEY);
 }

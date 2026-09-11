@@ -16,9 +16,11 @@ import RefTabs from './play/RefTabs';
 import HeroPanel from './play/HeroPanel';
 import CombatBoard from './play/CombatBoard';
 import ChoiceModal from './play/ChoiceModal';
+import CombatSummaryModal from './play/CombatSummaryModal';
 import EncounterPanel from './play/EncounterPanel';
 import RevealTray from './play/RevealTray';
 import LogPane from './play/LogPane';
+import NotesPanel from './play/NotesPanel';
 import NewGameSetup from './play/NewGameSetup';
 import SauronPanel from './play/SauronPanel';
 import SauronSummary from './play/SauronSummary';
@@ -29,13 +31,15 @@ import ArtLoader from './play/ArtLoader';
 import AboutTutorial from './play/AboutTutorial';
 import SmartNext from './play/SmartNext';
 import TravelModal from './play/TravelModal';
+import { useInspect } from './play/CardInspector';
+import ReportBugModal from './play/ReportBugModal';
 import { pendingHeroTasks } from './engine/turnTasks';
 import { advanceHeroSide, missionAware, mulberry32 } from './engine/heroAI';
 import { useGameSession } from './net/session';
-import { emptyRoster, type Roster } from './net/roles';
+import { emptyRoster, rolesOf, SAURON_ROLE, markDisconnected, markReconnected, type Roster } from './net/roles';
 import { applyRemoteAction, claimRole as hostClaimRole, dropPlayer } from './net/host';
 import {
-  saveGame, loadSavedGame, recordCompletedGame, exportProblemReport,
+  saveGame, loadSavedGame, recordCompletedGame,
   loadHistory, clearSavedGame, type HistoryEntry,
 } from './play/persistence';
 
@@ -43,6 +47,7 @@ export default function App() {
   const catalog = useMemo<Catalog | null>(() => {
     try { return loadCatalog(); } catch (e) { console.error(e); return null; }
   }, []);
+  const [reportOpen, setReportOpen] = useState(false);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9));
   const [state, setState] = useState<GameState | null>(null);
   const [setup, setSetup] = useState(false);
@@ -60,6 +65,12 @@ export default function App() {
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
   const netRef = useRef<ReturnType<typeof useGameSession> | null>(null);
+  // A dropped connection doesn't instantly evict a player — give them a grace
+  // window to reconnect (tab refresh, wifi hiccup) and resume their role(s)
+  // automatically via their stable persistent id (see net/identity.ts),
+  // instead of being treated as a stranger who has to re-claim their seat.
+  const RECONNECT_GRACE_MS = 3 * 60 * 1000;
+  const dropTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const net = useGameSession({
     onState: (s) => setState(s),
@@ -68,7 +79,11 @@ export default function App() {
       if (!catalog) return;
       setState((s) => (s ? applyRemoteAction(s, rosterRef.current, catalog, playerId, action) : s));
     },
-    onJoin: () => {
+    onJoin: (playerId) => {
+      // Cancel any pending grace-period eviction — this persistent id is back.
+      const pending = dropTimersRef.current.get(playerId);
+      if (pending) { clearTimeout(pending); dropTimersRef.current.delete(playerId); }
+      setRoster((r) => (r ? markReconnected(r, playerId) : r));
       const n = netRef.current; const s = stateRef.current; const r = rosterRef.current;
       if (n && s) n.broadcastState(s);
       if (n && r) n.broadcastRoster(r);
@@ -79,7 +94,16 @@ export default function App() {
         return hostClaimRole(r, s, playerId, name, role, release);
       });
     },
-    onLeave: (playerId) => setRoster((r) => dropPlayer(r, playerId)),
+    onLeave: (playerId) => {
+      // Reserve their role(s) — don't hand them to AI/open yet — and only
+      // fully release after the grace window if they never come back.
+      setRoster((r) => (r ? markDisconnected(r, playerId) : r));
+      const timer = setTimeout(() => {
+        setRoster((r) => (r ? dropPlayer(r, playerId) : r));
+        dropTimersRef.current.delete(playerId);
+      }, RECONNECT_GRACE_MS);
+      dropTimersRef.current.set(playerId, timer);
+    },
     onKicked: () => { window.alert('The host removed you from the game.'); setState(null); },
   });
   netRef.current = net;
@@ -101,19 +125,37 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roster]);
 
-  // When a human plays Sauron, the heroes are AI-driven: whenever control is on
-  // the heroes' side, run their turns autonomously until it returns to Sauron.
+  // Drive whichever hero roles are AI-controlled: in solo play (no roster)
+  // that means the WHOLE hero side, only when a human plays Sauron (the
+  // classic solo-vs-AI toggle). Online (host, with a roster) it's per-hero —
+  // a role stays AI-driven only while nobody has claimed it (open/ai), or its
+  // claimant is disconnected; a connected human owner always acts for
+  // themselves via the normal dispatch path, so the AI can never race ahead
+  // of them and "steal" their turn.
+  const isAiHero = useCallback((heroId: HeroId): boolean => {
+    if (net.role !== 'host') return state?.humanSide === 'Sauron';
+    if (!roster) return true; // freshly hosted, nobody has claimed anything yet
+    const c = roster[heroId];
+    return !c || c.kind !== 'human' || c.connected === false;
+  }, [net.role, roster, state?.humanSide]);
+
   useEffect(() => {
     if (!catalog || !state || state.winner) return;
     if (net.role === 'client') return;
-    if (state.humanSide !== 'Sauron' || state.activeSide !== 'Hero') return;
+    if (state.activeSide !== 'Hero') return;
+    // Solo mode keeps the original all-or-nothing gate (no roster to consult).
+    if (net.role !== 'host' && state.humanSide !== 'Sauron') return;
+    // Online: only bother running the driver if some hero role actually needs
+    // the AI right now — otherwise every hero present is human-controlled and
+    // this is a no-op loop that would just spin every render.
+    if (net.role === 'host' && !state.heroes.some((h) => isAiHero(h.id))) return;
     // Pause the AI hero driver ONLY for the decisions a human Sauron must make;
     // every other pending (hero choices, combat, encounters) is resolved inside
     // advanceHeroSide, so it must be allowed to run to reach/resume them.
     if (state.pendingCombatOrPeril || state.pendingShadowReaction || state.pendingTree) return;
-    const next = advanceHeroSide(state, catalog, missionAware, heroRng.current);
+    const next = advanceHeroSide(state, catalog, missionAware, heroRng.current, isAiHero);
     setState(next);
-  }, [catalog, state]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [catalog, state, net.role, isAiHero]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist the in-progress game on every change; archive it when it ends.
   useEffect(() => {
@@ -184,6 +226,28 @@ export default function App() {
     });
   }, [net]);
 
+  const inspect = useInspect();
+
+  // Which side(s) THIS browser's viewer is entitled to see secrets for. Solo /
+  // local hotseat play (net off) has no other human on the network to keep
+  // secrets from, so it falls back to the game-wide `humanSide` toggle as
+  // before. Online, it's derived from the roster: whichever role(s) this
+  // exact peer has actually claimed — never the shared `state.humanSide`
+  // flag, which reflects only whatever the host picked once at setup and is
+  // otherwise meaningless once several distinct humans are connected.
+  // NOTE: this hook must run on EVERY render (even before a game exists /
+  // `state` is null) to keep hook order stable — it's computed here, above
+  // the early `if (!state) return …` below, rather than after it.
+  const viewerSide: Side | 'both' | 'none' = useMemo(() => {
+    if (!state) return 'none';
+    if (net.role === 'off') return state.humanSide ?? 'Hero';
+    if (!roster) return 'none';
+    const mine = rolesOf(roster, net.playerId);
+    const hasSauron = mine.includes(SAURON_ROLE);
+    const hasHero = mine.some((r) => r !== SAURON_ROLE);
+    return hasSauron && hasHero ? 'both' : hasSauron ? 'Sauron' : hasHero ? 'Hero' : 'none';
+  }, [net.role, net.playerId, roster, state]);
+
   if (!catalog) return <div className="app"><p className="error">Catalog failed to load.</p></div>;
   if (joining) {
     return <JoinScreen net={net} onJoin={joinGame} onCancel={() => { leaveNet(); setJoining(false); }} />;
@@ -239,6 +303,23 @@ export default function App() {
   const activeHero = state.heroes[state.activeHeroIndex];
   const inHeroActions = state.phase === 'HeroActions' && !state.pendingCombat && !state.pendingChoice && !state.pendingReveal;
 
+  const seesHeroMission = viewerSide === 'Hero' || viewerSide === 'both';
+  // Do I actually control Sauron on THIS browser? Solo/off falls back to the
+  // game-wide toggle (viewerSide already does that); online it's the roster
+  // claim. Used to gate Sauron's decision UI (SauronPanel, the Combat-or-Peril
+  // and Shadow-reaction banners) so a hero-only client's screen is never
+  // blocked by a modal for a decision that isn't theirs to make — dispatch was
+  // already correctly role-checked server-side, but the UI wasn't.
+  const iControlSauron = viewerSide === 'Sauron' || viewerSide === 'both';
+  // Do I control the specific hero a pending tree-decision affects? Per-hero
+  // (not the coarse viewerSide) since online multiplayer can split hero roles
+  // across different people.
+  const iControlHero = (heroId: string): boolean => {
+    if (net.role === 'off') return state.humanSide === 'Hero';
+    if (!roster) return false;
+    return rolesOf(roster, net.playerId).includes(heroId);
+  };
+
   // Single mutation seam. Every player intent becomes a serializable Action so
   // it can also be sent over the wire (multiplayer). In a networked client the
   // action is forwarded to the host; otherwise it is applied locally.
@@ -265,6 +346,7 @@ export default function App() {
   const doEndTurn = () => dispatch({ t: 'endHeroActions' });
   const doChoice = (optId: string) => dispatch({ t: 'choice', optionId: optId });
   const doExplore = () => dispatch({ t: 'explore', heroId: activeHero.id });
+  const doDismissCombatSummary = () => dispatch({ t: 'dismissCombatSummary' });
   const doResolveEncounter = () => dispatch({ t: 'resolveEncounter' });
   const doChooseEncounter = (i: number) => dispatch({ t: 'chooseEncounter', index: i });
   const doRevealEncounter = (cardId?: string) => dispatch({ t: 'revealEncounter', cardId });
@@ -296,24 +378,73 @@ export default function App() {
     onQuest: doQuest, onDiscardPlot: doDiscardPlot, onCleanse: doCleanse, onTradeFavor: doTradeFavor,
   };
 
-  const moves = inHeroActions && activeHero.status === 'active' ? legalMoves(cat, activeHero) : [];
+  // Once the hero has taken his turn-ending action (Explore, Rest, etc.),
+  // actionsRemaining drops to 0 and Travel is no longer legal — the engine
+  // already throws on heroMove in this state, but the board must also stop
+  // offering (highlighting) moves so the player isn't shown a dead end.
+  const moves = inHeroActions && activeHero.status === 'active' && activeHero.actionsRemaining > 0
+    ? legalMoves(cat, activeHero) : [];
   const engageable = inHeroActions ? engageableMonsters(state, activeHero.id) : [];
   const ambush = inHeroActions && engageable.length > 0;
   const exploreHere = inHeroActions && !ambush && canExplore(state, cat, activeHero.id);
+
+  // The "obvious next thing" for the active hero's turn, in the natural order a
+  // player would work through their Explore actions: fight an ambush, retrieve
+  // free favor, consult a waiting character (opens a favor/ability choice),
+  // complete a satisfied quest, then explore — falling back to ending the turn
+  // only once none of those remain. Optional-but-costly moves (breaking a plot,
+  // cleansing corruption) are deliberately NOT auto-suggested here: they stay as
+  // manual buttons and only appear in the "you could still…" warning before
+  // ending the turn.
+  const prettyName = (id: string) => id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const nextHeroStep = (): { label: string; run: () => void } | null => {
+    if (!inHeroActions || activeHero.status !== 'active') return null;
+    if (ambush && engageable.length) {
+      const m = engageable[0];
+      const name = cat.monsters[m]?.name ?? cat.minions[m]?.name ?? m;
+      return { label: `Fight ${name} ▶`, run: () => doEngage(m) };
+    }
+    if (activeHero.actionsRemaining > 0) {
+      if (econ.favorHere > 0) {
+        return { label: `Retrieve ${econ.favorHere} favor ▶`, run: doRetrieveFavor };
+      }
+      if (econ.characters.length > 0) {
+        const c = econ.characters[0];
+        return {
+          label: `Consult ${prettyName(c)} ▶`,
+          run: () => inspect({
+            title: prettyName(c), subtitle: 'Consult this character',
+            text: 'Gain 2 favor, or recruit them as a permanent ally (they leave the board and travel with you).',
+            actions: [
+              { label: '✦✦ Gain 2 favor', onClick: () => doConsult(c, 'favor') },
+              { label: '→ Recruit ability', onClick: () => doConsult(c, 'ability') },
+            ],
+          }),
+        };
+      }
+      if (canQuestHere) return { label: 'Complete quest ▶', run: doQuest };
+    }
+    if (exploreHere) return { label: 'Explore ▶', run: doExplore };
+    return null;
+  };
+  const heroStep = nextHeroStep();
 
   // Smart next-step button: only when the human runs the heroes (a human Sauron
   // is guided by the SauronPanel instead). It ends the hero turn or advances the
   // dark side's AI step, glowing when nothing is left and warning otherwise.
   const anyPending = !!(state.pendingCombat || state.pendingChoice || state.pendingEncounter
-    || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction);
+    || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction
+    || state.lastCombatSummary);
   const smartMode: 'endTurn' | 'advance' | null =
-    state.winner || anyPending || state.humanSide === 'Sauron' ? null
+    state.winner || anyPending || iControlSauron ? null
       : inHeroActions ? 'endTurn'
         : state.phase !== 'HeroActions' ? 'advance' : null;
-  const smartTasks = smartMode === 'endTurn' ? pendingHeroTasks(state, cat) : [];
+  const smartTasks = smartMode === 'endTurn' && !heroStep ? pendingHeroTasks(state, cat) : [];
   const smartLabel = smartMode === 'endTurn'
-    ? 'End hero turn ▶'
+    ? (heroStep ? heroStep.label : 'End hero turn ▶')
     : (SMART_ADVANCE_LABELS[state.phase] ?? 'Continue ▶');
+  const smartProceed = smartMode === 'endTurn' && heroStep ? heroStep.run : doEndTurn;
+  const smartReady = smartMode === 'endTurn' ? (!!heroStep || smartTasks.length === 0) : true;
 
   return (
     <div className="app">
@@ -321,9 +452,9 @@ export default function App() {
         {smartMode && (
           <SmartNext
             label={smartLabel}
-            ready={smartTasks.length === 0}
+            ready={smartReady}
             tasks={smartTasks}
-            onProceed={smartMode === 'endTurn' ? doEndTurn : doAdvance}
+            onProceed={smartMode === 'endTurn' ? smartProceed : doAdvance}
           />
         )}
         <h1>Middle-earth Quest</h1>
@@ -333,16 +464,16 @@ export default function App() {
         <div style={{ flex: 1 }} />
         {!state.winner && state.phase !== 'HeroActions' && !state.pendingChoice && !state.pendingCombat
           && !state.pendingReveal && !state.pendingTree
-          && !(state.humanSide === 'Sauron' && state.activeSide === 'Sauron') && (
+          && !(iControlSauron && state.activeSide === 'Sauron') && (
           <button className="primary" onClick={doAdvance}>Advance phase ▶</button>
         )}
-        <button className="ghost" title="Download the full game state + log to report a bug"
-          onClick={() => exportProblemReport(seed, state)}>Report a problem</button>
+        <button className="ghost" title="Describe a bug and file a GitHub issue with a full technical snapshot"
+          onClick={() => setReportOpen(true)}>Report a problem</button>
         <button className="ghost" title="Delete the current game and return to the menu"
           onClick={deleteGame}>Delete game</button>
       </header>
 
-      <CounterBar state={state} cat={cat} />
+      <CounterBar state={state} cat={cat} revealHeroMission={seesHeroMission} />
       <DeckBar state={state} cat={cat} />
       <RefTabs state={state} cat={cat} />
       <PlotRow state={state} cat={cat} />
@@ -352,10 +483,12 @@ export default function App() {
           state={state} cat={cat}
           moveTargets={ambush ? [] : moves.map((m) => m.to)}
           onMove={inHeroActions && !ambush ? doMove : undefined}
+          consultable={econ.characters} consultDisabled={!inHeroActions || activeHero.actionsRemaining <= 0 || ambush}
+          onConsult={doConsult}
         />
         <aside className="side">
-          {state.humanSide !== 'Sauron' && <MissionPanel state={state} cat={cat} />}
-          {state.humanSide !== 'Sauron' && <SauronSummary state={state} />}
+          {seesHeroMission && <MissionPanel state={state} cat={cat} />}
+          {seesHeroMission && <SauronSummary state={state} />}
           <NetPanel net={net} state={state} cat={cat} roster={roster} onClaim={handleClaim} onKick={net.kick} />
           <TurnCycle state={state} cat={cat} />
           <HeroPanel
@@ -364,7 +497,8 @@ export default function App() {
             onRest={doRest} onRestTrain={doRestTrain} onEngage={doEngage} onEndTurn={doEndTurn} onExplore={doExplore}
             econ={econ}
           />
-          <LogPane state={state} />
+          <LogPane state={state} revealSide={viewerSide} />
+          <NotesPanel seed={seed} />
         </aside>
       </main>
 
@@ -373,13 +507,17 @@ export default function App() {
           onChoose={state.pendingChoice ? doChoice : undefined} />
       )}
 
-      {state.humanSide === 'Sauron' && state.activeSide === 'Sauron'
+      {state.lastCombatSummary && !state.pendingCombat && (
+        <CombatSummaryModal summary={state.lastCombatSummary} onContinue={doDismissCombatSummary} />
+      )}
+
+      {iControlSauron && net.role !== 'client' && state.activeSide === 'Sauron'
         && !state.winner && !state.pendingCombat && !state.pendingChoice && (
         <SauronPanel state={state} cat={cat} onApply={(next) => setState(next)} />
       )}
 
-      {state.pendingChoice && !state.pendingCombat && (
-        <ChoiceModal choice={state.pendingChoice} onChoose={doChoice} />
+      {state.pendingChoice && !state.pendingCombat && !state.lastCombatSummary && (
+        <ChoiceModal cat={cat} choice={state.pendingChoice} onChoose={doChoice} />
       )}
 
       {state.pendingEncounter && !state.pendingCombat && !state.pendingChoice && (
@@ -390,7 +528,7 @@ export default function App() {
         <RevealTray state={state} cat={cat} onDismiss={doDismissReveal} />
       )}
 
-      {state.pendingCombatOrPeril && !state.pendingCombat && state.humanSide === 'Sauron' && (
+      {state.pendingCombatOrPeril && !state.pendingCombat && iControlSauron && (
         <div className="banner combat-or-peril">
           <span>Combat or Peril at <b>{cat.locations[state.pendingCombatOrPeril.loc]?.name ?? state.pendingCombatOrPeril.loc}</b> — Sauron chooses:</span>
           <button onClick={() => doCombatOrPeril('combat')}>Force combat</button>
@@ -398,7 +536,7 @@ export default function App() {
         </div>
       )}
 
-      {state.pendingShadowReaction && state.humanSide === 'Sauron' && (
+      {state.pendingShadowReaction && iControlSauron && (
         <div className="banner shadow-reaction">
           <span>
             Shadow reaction (<b>{state.pendingShadowReaction.window}</b>
@@ -415,8 +553,8 @@ export default function App() {
       )}
 
       {state.pendingTree
-        && ((state.pendingTree.actor === 'sauron' && state.humanSide === 'Sauron')
-          || (state.pendingTree.actor === 'hero' && state.humanSide === 'Hero')) && (
+        && ((state.pendingTree.actor === 'sauron' && iControlSauron)
+          || (state.pendingTree.actor === 'hero' && iControlHero(state.pendingTree.heroId))) && (
         <div className="banner tree-decision">
           <span>
             <b>{state.pendingTree.source}</b> — {state.pendingTree.prompt}
@@ -438,6 +576,10 @@ export default function App() {
 
       {state.winner && (
         <div className="banner">Game over — {state.winner} wins: {state.winReason}</div>
+      )}
+
+      {reportOpen && (
+        <ReportBugModal seed={seed} state={state} onClose={() => setReportOpen(false)} />
       )}
     </div>
   );

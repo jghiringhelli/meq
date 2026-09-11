@@ -10,8 +10,8 @@ const GROUPS: Record<string, (t: string) => boolean> = {
   Hero: (t) => t.startsWith('hero') || t === 'move' || t === 'encounter' || t === 'peril',
 };
 
-function downloadLog(state: GameState) {
-  const blob = new Blob([dumpLogJson(state)], { type: 'application/json' });
+function downloadLog(state: GameState, revealSide: 'Hero' | 'Sauron' | 'both' | 'none') {
+  const blob = new Blob([dumpLogJson(state, true, revealSide)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -20,7 +20,13 @@ function downloadLog(state: GameState) {
   URL.revokeObjectURL(url);
 }
 
-export default function LogPane({ state }: { state: GameState }) {
+/** `revealSide`: which side's secret mission this viewer is entitled to see in
+ *  the downloaded JSON — pass the actual online role owner's side, or 'both'
+ *  for solo play (no other human to keep it secret from). Defaults to 'both'
+ *  for backward compatibility with solo/local callers. */
+export default function LogPane({ state, revealSide = 'both' }: {
+  state: GameState; revealSide?: 'Hero' | 'Sauron' | 'both' | 'none';
+}) {
   const [filter, setFilter] = useState<string>('All');
   const filtered = useMemo(() => {
     const pred = GROUPS[filter] ?? GROUPS.All;
@@ -36,7 +42,7 @@ export default function LogPane({ state }: { state: GameState }) {
               onClick={() => setFilter(g)}>{g}</button>
           ))}
           <button className="log-filter" title="Download full structured JSON log"
-            onClick={() => downloadLog(state)}>⭳ JSON</button>
+            onClick={() => downloadLog(state, revealSide)}>⭳ JSON</button>
         </span>
       </div>
       <div className="log-body">

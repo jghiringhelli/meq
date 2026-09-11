@@ -10,6 +10,7 @@ import { log } from './log';
 import { grantTraining, raiseAttribute } from './mechanics';
 import { restHero } from './heroLife';
 import { grantFavor } from './corruption';
+import { nextInt } from './rng';
 
 type Attr = 'fortitude' | 'strength' | 'agility' | 'wisdom';
 const ATTRS: Attr[] = ['fortitude', 'strength', 'agility', 'wisdom'];
@@ -76,6 +77,29 @@ export function questTargetLocation(cat: Catalog, quest: Quest, placedLoc: Locat
   const m = /Encounter cards\s+(?:in|at)\s+(.+?),/i.exec(quest.setup || '');
   if (m) return locByName(cat, m[1]);
   return null;
+}
+
+/** Human-readable, data-driven "how do I actually do this" note for a quest's
+ *  Task — surfaced in the UI (quest chip / tooltip) because the raw Task text
+ *  ("Defeat the Crebain.") assumes the reader already knows the substitution
+ *  rule from the quest's Setup sentence. Built from the same parsing used to
+ *  detect completion (parseTask) and the encounter-substitution regex used by
+ *  registerQuestCombat, so it always matches what the engine will actually do. */
+export function questHowTo(cat: Catalog, quest: Quest): string {
+  const spec = parseTask(cat, quest.task || '');
+  const parts: string[] = [];
+  const locName = (id: LocationId) => cat.locations[id]?.name ?? id;
+  const sub = /Encounter cards\s+(?:in|at)\s+(.+?),\s*combat\s+(?:a\s+|an\s+)?(.+?)\s+instead/i.exec(quest.setup || '');
+  if (spec.exploreLocs.length) {
+    const names = spec.exploreLocs.map(locName).join(' or ');
+    parts.push(`Travel to ${names} (a green quest marker shows the spot on the map), then use the Explore action there.`);
+  }
+  if (sub) {
+    parts.push(`Exploring there draws a combat against ${sub[2].trim()} instead of a normal Encounter card — win that fight (use the "Fight" button once it appears) to complete the quest.`);
+  } else if (spec.defeatNames.length) {
+    parts.push(`Defeat ${spec.defeatNames.join(' or ')} in combat (fight it via the "Fight" button when it is at your location) to complete the quest.`);
+  }
+  return parts.join(' ') || 'Follow the quest\u2019s Setup, then satisfy its Task via Explore or combat.';
 }
 
 function questById(cat: Catalog, id: string | undefined): Quest | undefined {
@@ -191,7 +215,7 @@ export function applyQuestReward(s: GameState, cat: Catalog, hero: HeroState, qu
   if (disc) {
     let n = parseInt(disc[1], 10);
     while (n-- > 0 && s.sauron.shadowHand.length) {
-      const idx = Math.abs(s.rngCursor) % s.sauron.shadowHand.length;
+      const idx = nextInt(s, s.sauron.shadowHand.length);
       const cid = s.sauron.shadowHand.splice(idx, 1)[0];
       s.sauron.shadowDiscard.push(cid);
     }

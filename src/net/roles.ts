@@ -11,7 +11,11 @@ export const SAURON_ROLE = 'Sauron';
 export type RoleId = string; // a heroId, or SAURON_ROLE
 
 export type Controller =
-  | { kind: 'human'; playerId: string; name: string }
+  // `connected` defaults to true when omitted (kept optional for old saves).
+  // false means the human still owns/reserves this role (nobody else can
+  // claim it and the roster remembers them) but their connection just isn't
+  // live right now — see markDisconnected/markReconnected below.
+  | { kind: 'human'; playerId: string; name: string; connected?: boolean }
   | { kind: 'ai' }
   | { kind: 'open' };
 
@@ -42,8 +46,14 @@ export function activeRole(state: GameState): RoleId {
 export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
   switch (action.t) {
     case 'advance':
-    case 'endHeroActions':
       return 'flow';
+    case 'endHeroActions':
+      // Ending YOUR hero's turn is a per-hero decision, not shared game flow —
+      // the active hero's own controller may end it themselves (a remote
+      // hero-role player must be able to finish their turn without asking the
+      // host to do it for them). Only actually-shared phase transitions
+      // ('advance') stay host-only.
+      return activeRole(state);
     case 'move':
     case 'rest':
     case 'engage':
@@ -71,6 +81,7 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
     case 'chooseEncounter':
     case 'revealEncounter':
     case 'dismissReveal':
+    case 'dismissCombatSummary':
     case 'resolveEncounter':
       return activeRole(state);
     default: {
@@ -111,11 +122,36 @@ export function assignRole(roster: Roster, role: RoleId, controller: Controller)
   return { ...roster, [role]: controller };
 }
 
-/** Release every role held by a player (e.g. on disconnect/kick) back to open. */
+/** Release every role held by a player (e.g. a kick, or a reconnection grace
+ *  period expiring) back to open. Use markDisconnected for a network drop
+ *  that should still give the same player (by persistent id) a chance to
+ *  seamlessly resume — this is the hard, permanent release. */
 export function releasePlayer(roster: Roster, playerId: string): Roster {
   const next: Roster = { ...roster };
   for (const [role, c] of Object.entries(next)) {
     if (c.kind === 'human' && c.playerId === playerId) next[role] = { kind: 'open' };
+  }
+  return next;
+}
+
+/** A player's connection dropped: keep their role(s) reserved (nobody else can
+ *  claim them, no immediate AI takeover) but flag them as offline so the UI
+ *  can show it. Pair with a host-side grace-period timer that calls
+ *  releasePlayer if they never come back. */
+export function markDisconnected(roster: Roster, playerId: string): Roster {
+  const next: Roster = { ...roster };
+  for (const [role, c] of Object.entries(next)) {
+    if (c.kind === 'human' && c.playerId === playerId) next[role] = { ...c, connected: false };
+  }
+  return next;
+}
+
+/** The same persistent playerId reconnected before the grace period elapsed —
+ *  seamlessly restore their role(s) to connected, no re-claim needed. */
+export function markReconnected(roster: Roster, playerId: string): Roster {
+  const next: Roster = { ...roster };
+  for (const [role, c] of Object.entries(next)) {
+    if (c.kind === 'human' && c.playerId === playerId) next[role] = { ...c, connected: true };
   }
   return next;
 }

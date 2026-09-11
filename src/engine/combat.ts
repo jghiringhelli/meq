@@ -98,7 +98,7 @@ export function beginCombat(
   const minFort = min && min.finale ? (s.sauron.finaleWraithFortitude ?? min.fortitude) : (min?.fortitude ?? 0);
   const defender = min
     ? makeMonster(s, cat, monsterId, minLife, min.name, min.combatDeck, min.strength, minFort)
-    : makeMonster(s, cat, monsterId, mon.fortitude, mon.name, mon.deck, mon.strength, mon.fortitude);
+    : makeMonster(s, cat, monsterId, mon.health, mon.name, mon.deck, mon.strength, mon.fortitude);
   s.pendingCombat = {
     attacker, defender, locationId, round: 1,
     reveal: {}, pendingEffects: [], report: [], resolved: false,
@@ -423,9 +423,11 @@ function moveToDiscard(c: Combatant, cid: CardId): void {
 function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' | 'escape' | 'standoff', reason: string): GameState {
   const pc = s.pendingCombat!;
   pc.resolved = true; pc.result = result;
+  const logStart = s.log.length;
   log(s, 'combat-end', 'system', `${reason} (winner: ${result})`);
 
   const hero = s.heroes.find((h) => h.id === pc.attacker.refId)!;
+  const damageTakenBefore = hero.damagePool.length;
   // Sync the shared card zones back: the life pool, hand, rest pool (discard),
   // and damage pool all live on the one persistent hero state.
   hero.deck = pc.attacker.deck;
@@ -533,6 +535,16 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
   if (result === 'defender' && !sauronAuto(s) && !s.winner) {
     raiseShadowReaction(s, cat, 'hero-defeated', { heroId: hero.id });
   }
+  // Post-combat "what happened" recap for the human UI (App.tsx renders a
+  // dismissible summary modal off this field; bots/tests ignore it — combat
+  // continuation is still driven purely by pendingCombat, unaffected here).
+  const isMinion = !!cat.minions[pc.defender.refId];
+  s.lastCombatSummary = {
+    result, heroId: hero.id, heroName: cat.heroes[hero.id]?.name ?? hero.id,
+    foeName: pc.defender.name, foeKind: isMinion ? 'minion' : 'monster',
+    rounds: pc.round, damageTaken: hero.damagePool.length - damageTakenBefore,
+    notes: s.log.slice(logStart + 1).map((e) => e.detail),
+  };
   return s;
 }
 

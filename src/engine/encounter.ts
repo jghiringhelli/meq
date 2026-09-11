@@ -23,6 +23,7 @@ import { addCardInfluence, removeInfluenceAt, regionInfluenceTotal, influenceAt,
 import { adjacentLocations } from './sauronPlay';
 import { drawPlots, drawShadow } from './sauronmech';
 import { placeFavorToken } from './economy';
+import { nextInt } from './rng';
 import {
   gainCorruption as gainCorruptionCards,
   discardCorruption as discardCorruptionCards,
@@ -171,9 +172,32 @@ export function planEncounter(
       case 'if':
         walk(evalCond(s, cat, heroId, node.cond) ? node.then : (node.else ?? { k: 'none' }));
         return;
-      case 'op':
+      case 'op': {
+        // "You may then move to an adjacent location" (e.g. A Path Through the
+        // Mountains) must let the HERO pick which neighbor — not silently
+        // teleport to whichever edge happens to be listed first in the map
+        // data. Raise a location-pick choice whenever there's more than one
+        // legal destination; a lone neighbor needs no real choice.
+        if (node.atom.op === 'moveAdjacent' && !node.atom.to) {
+          const hero = s.heroes.find((x) => x.id === heroId)!;
+          const dests = adjacentLocations(cat, hero.location);
+          if (dests.length > 1) {
+            const idx = cursor++;
+            const decision = decisions[idx];
+            if (decision === undefined || decision < 0 || decision >= dests.length) {
+              pending = {
+                prompt: 'Move to which adjacent location?',
+                options: dests.map((d) => ({ label: cat.locations[d]?.name ?? d, enabled: true })),
+              };
+              return;
+            }
+            atoms.push({ op: 'moveAdjacent', to: dests[decision] });
+            return;
+          }
+        }
         atoms.push(node.atom);
         return;
+      }
       case 'raw':
       case 'none':
         return;
@@ -376,7 +400,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       const applied = raiseAttribute(hero, stat, atom.n);
       return applied > 0 ? `+${applied} ${stat} (level ${hero.levels?.[stat] ?? 0}/2)` : `${stat} already at max level`;
     }
-    case 'moveAdjacent': { const to = firstAdjacent(cat, hero.location); if (to) relocateHero(s, heroId, to); return `move to ${to ?? '—'}`; }
+    case 'moveAdjacent': { const to = atom.to ?? firstAdjacent(cat, hero.location); if (to) relocateHero(s, heroId, to); return `move to ${cat.locations[to ?? '']?.name ?? to ?? '—'}`; }
     case 'moveToEncounter': { const id = findLocation(cat, atom.location); if (id) relocateHero(s, heroId, id); return `move to ${atom.location}`; }
     case 'placeCharacter': {
       if (atom.ifInPlay) {
@@ -418,7 +442,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       let done = 0;
       while (done < atom.n && s.sauron.shadowHand.length) {
         const len = s.sauron.shadowHand.length;
-        const idx = (((s.rngCursor + done) % len) + len) % len;
+        const idx = nextInt(s, len);
         s.sauron.shadowDiscard.push(s.sauron.shadowHand.splice(idx, 1)[0]);
         done++;
       }
@@ -481,7 +505,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       if (!ids.length) return '';
       let placed = 0;
       for (let i = 0; i < atom.n; i++) {
-        const idx = (((s.rngCursor + i) % ids.length) + ids.length) % ids.length;
+        const idx = nextInt(s, ids.length);
         (s.map.monstersAt[hero.location] ||= []).push(ids[idx]);
         placed++;
       }

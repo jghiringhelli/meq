@@ -24,13 +24,20 @@ export function log(
   state.log.push(e);
 }
 
-/** Serialise the full ordered event log to a JSON string for offline analysis. */
-export function dumpLogJson(state: GameState, pretty = true): string {
+/** Serialise the full ordered event log to a JSON string for offline analysis.
+ *  `revealSide` controls which side's secret mission is included — omit it (or
+ *  pass 'both') for solo/dev use (e.g. bug reports), but when a specific human
+ *  viewer's side is known (online multiplayer), pass their side so the export
+ *  never divulges the OTHER side's hidden mission through the ordinary "download
+ *  log" button. The event log itself never records secret hand contents. */
+export function dumpLogJson(
+  state: GameState, pretty = true, revealSide: 'Hero' | 'Sauron' | 'both' | 'none' = 'both',
+): string {
   const payload = {
     seed: state.seed,
     catalog: state.catalogRef,
-    heroMission: state.secretHeroMission,
-    sauronMission: state.secretSauronMission,
+    heroMission: (revealSide === 'Hero' || revealSide === 'both') ? state.secretHeroMission : undefined,
+    sauronMission: (revealSide === 'Sauron' || revealSide === 'both') ? state.secretSauronMission : undefined,
     winner: state.winner,
     winReason: state.winReason,
     events: state.log,

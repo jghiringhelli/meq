@@ -63,9 +63,11 @@ export default function TravelModal({ cat, hero, to, onConfirm, onCancel }: Prop
             return (
               <div key={key}
                 className={`card terrain-${c?.terrain} travel-card${on ? ' selected' : ''}${match ? ' match' : ''}`}
+                title={c ? `${c.name} · ${c.type} · A${c.attack}/D${c.defense} · ${c.terrain || 'any terrain'}${c.ability ? `\n${c.ability}` : ''}` : cid}
                 onClick={() => toggle(cid, i)}>
                 {img && <img className="card-art" src={img} alt="" />}
                 <div className="card-name">{c?.name ?? cid}</div>
+                <div className="card-line">{c ? `${c.type} · A${c.attack}/D${c.defense}` : ''}</div>
                 <div className="card-terrain">{c?.terrain || '—'}</div>
               </div>
             );

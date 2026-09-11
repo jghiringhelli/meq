@@ -3,6 +3,8 @@
 import { describe, it, expect } from 'vitest';
 import { plots, freshGame, cat, label } from './helpers';
 import { applyPlotCard, staticPlotValue } from '../src/engine/sauronmech';
+import { targetablePlot, canDiscardPlot } from '../src/engine/economy';
+import type { LocationId } from '../src/engine/types';
 
 const VALID_MARKER = new Set(['yellow', 'red', 'black']);
 
@@ -28,4 +30,42 @@ describe('plots — apply against a fresh game', () => {
       const s = freshGame();
       expect(() => applyPlotCard(s, cat, p, 0)).not.toThrow();
     });
+});
+
+describe('plots — location resolution fallback (regression)', () => {
+  it('a plot with only affectsText (no affects id) still resolves to its real board location', () => {
+    // gollum-is-captured is a real regression case: its data now carries
+    // affects: "sea-of-udun" directly, but the fallback path (affectsText ->
+    // locByName) is what plots relying solely on affectsText (e.g.
+    // s-monsters-in-the-east, orcs-in-the-mountains, gollum-is-tortured) need.
+    const p = plots.find((x) => x.id === 'gollum-is-tortured')!;
+    expect(p.affects).toBeFalsy();
+    expect(p.affectsText).toBeTruthy();
+    const s = freshGame();
+    applyPlotCard(s, cat, p, 0);
+    const placed = s.sauron.activePlots!.find((e) => e.eventId === p.id)!;
+    expect(placed.location).toBe('barad-dur');
+  });
+
+  it('gollum-is-captured resolves to Sea of Udun, not an undefined/garbled location', () => {
+    const p = plots.find((x) => x.id === 'gollum-is-captured')!;
+    const s = freshGame();
+    applyPlotCard(s, cat, p, 0);
+    const placed = s.sauron.activePlots!.find((e) => e.eventId === p.id)!;
+    expect(placed.location).toBe('sea-of-udun');
+  });
+
+  it('a hero cannot counter a plot from an unrelated plot-slot location', () => {
+    const p = plots.find((x) => x.id === 'gollum-is-captured')!;
+    const s = freshGame();
+    applyPlotCard(s, cat, p, 0);
+    // Lothlorien is a plot-slot location, but not where this plot is placed.
+    const hero = s.heroes[s.activeHeroIndex];
+    hero.location = 'lothl-rien' as LocationId;
+    expect(targetablePlot(s, cat, hero.id)).toBeUndefined();
+    expect(canDiscardPlot(s, cat, hero.id)).toBe(false);
+    // ...but it IS targetable from its real location, Sea of Udun.
+    hero.location = 'sea-of-udun' as LocationId;
+    expect(targetablePlot(s, cat, hero.id)?.eventId).toBe(p.id);
+  });
 });

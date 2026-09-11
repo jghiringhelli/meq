@@ -725,8 +725,14 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
   // The Encounter step needs something to draw; otherwise fall through to ending.
   if (act.kind === 'explore' && !canExplore(s, cat, heroId)) act = { kind: 'end' };
   // Ambush: while a foe stands on the hero, Travel is illegal — coerce any
-  // move/explore/counter-plot into engaging the foe first (rules-faithful).
-  if (ambushPending(s, hero, cat) && (act.kind === 'move' || act.kind === 'explore' || act.kind === 'counter-plot' || act.kind === 'retrieve-favor')) {
+  // move/explore/counter-plot/retrieve-favor/consult into engaging the foe
+  // first (rules-faithful; requireHeroTurn in economy.ts rejects ALL of these
+  // with an "Ambush" error otherwise — 'consult' was missing here and could
+  // throw an uncaught exception whenever an AI-controlled hero shared its
+  // ambushed location with a Character token, crashing the game/validator).
+  if (ambushPending(s, hero, cat)
+    && (act.kind === 'move' || act.kind === 'explore' || act.kind === 'counter-plot'
+      || act.kind === 'retrieve-favor' || act.kind === 'consult')) {
     const foes = engageableMonsters(s, heroId);
     if (foes.length) act = { kind: 'engage', monsterId: foes[0] };
   }
@@ -746,28 +752,46 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
 
 /** M15: drive the AI-controlled hero side one full "half turn" — from the start
  *  of the heroes' turn until control passes back to Sauron (or the game ends).
- *  Used when a human plays Sauron: the heroes act autonomously via `strat`. */
+ *  Used when a human plays Sauron: the heroes act autonomously via `strat`.
+ *
+ *  `isAiHero` lets a caller mix AI- and human-controlled heroes in the same
+ *  game (online multiplayer, where individual hero roles may be claimed by
+ *  real players while others are left to the AI): whenever the hero whose
+ *  decision is next due is NOT AI-controlled, the loop stops and returns
+ *  control to the caller instead of acting on that hero's behalf — the
+ *  human's own dispatched actions (via the normal UI/network path) take it
+ *  from there. Defaults to "every hero is AI" (solo-vs-human-Sauron mode). */
 export function advanceHeroSide(
-  s: GameState, cat: Catalog, strat: HeroStrategy, rng: Rng, maxSteps = 5000,
+  s: GameState, cat: Catalog, strat: HeroStrategy, rng: Rng,
+  isAiHero: (heroId: HeroId) => boolean = () => true, maxSteps = 5000,
 ): GameState {
   let steps = 0;
   while (!s.winner && s.activeSide === 'Hero' && steps < maxSteps) {
     steps++;
-    if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue; }
+    if (s.pendingChoice) {
+      const seat = s.pendingChoice.seat;
+      const heroId = typeof seat === 'number' ? s.heroes[seat]?.id : undefined;
+      if (heroId && !isAiHero(heroId)) break; // that hero's own controller decides
+      s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue;
+    }
     if (s.pendingShadowReaction) { break; }
     if (s.pendingTree) {
       if (s.pendingTree.actor === 'sauron') break; // human Sauron decides via the UI
+      if (!isAiHero(s.pendingTree.heroId)) break; // the affected hero's own controller decides
       s = autoResolvePendingTree(s, cat); continue;
     }
     if (s.pendingCombat) { break; }
     if (s.pendingCombatOrPeril) { break; }
     if (s.pendingEncounter) {
+      const heroId = s.heroes[s.activeHeroIndex]?.id;
+      if (heroId && !isAiHero(heroId)) break;
       const plan = encounterPlan(s, cat);
       if (plan && !plan.complete) { s = chooseEncounter(s, cat, strat.encounterOption(s, plan.pending!.options, rng)); continue; }
       s = resolveEncounter(s, cat); continue;
     }
     if (s.phase === 'HeroActions') {
       const hero = s.heroes[s.activeHeroIndex];
+      if (!isAiHero(hero.id)) break; // control returns to this hero's human owner
       if (hero.status !== 'active' || hero.actionsRemaining <= 0) { s = endHeroActions(s, cat); continue; }
       const act = strat.heroAction(s, cat, hero.id, rng);
       s = applyHeroAction(s, cat, hero.id, act);

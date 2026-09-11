@@ -6,7 +6,7 @@
 //    Token bump via raiseAttribute, capped at twice per attribute per game.
 import { describe, it, expect } from 'vitest';
 import { freshGame, cat } from './helpers';
-import { grantTraining, raiseAttribute, isTrainedCard } from '../src/engine/mechanics';
+import { grantTraining, raiseAttribute, isTrainedCard, resolveTrainingChoice } from '../src/engine/mechanics';
 
 describe('training — draws real Skill cards (not synthetic attribute cards)', () => {
   it('the synthetic advanced training cards no longer exist in the catalog', () => {
@@ -22,27 +22,40 @@ describe('training — draws real Skill cards (not synthetic attribute cards)', 
     expect(s.skillDiscard?.length).toBe(0);
   });
 
-  it('one level of training draws two Skill cards and keeps one', () => {
+  it('one level of training draws two Skill cards and pauses for the hero to pick one', () => {
     const s = freshGame();
     const hero = s.heroes[0];
-    const deck0 = hero.deck.length;
+    const hand0 = hero.hand.length;
     const skill0 = s.skillDeck!.length;
     grantTraining(s, cat, hero, 1);
-    expect(hero.deck.length).toBe(deck0 + 1);           // kept 1
+    // Rulebook p.26: draw two, THEN the hero chooses which to keep — the
+    // choice is interactive, not auto-resolved.
+    expect(s.pendingChoice?.kind).toBe('training');
+    expect(s.pendingChoice?.options.length).toBe(2);
+    // The UI needs the actual card to render its art/stats, not just a label.
+    expect(s.pendingChoice?.options[0].cardId).toBeDefined();
+    expect(cat.combatCards[s.pendingChoice!.options[0].cardId!]).toBeDefined();
     expect(s.skillDeck!.length).toBe(skill0 - 2);       // drew 2
+    expect(hero.trainedCount).toBe(0);                  // not applied yet
+
+    resolveTrainingChoice(s, cat, s.pendingChoice!.options[0].id);
+    expect(hero.hand.length).toBe(hand0 + 1);           // kept card goes to HAND
     expect(s.skillDiscard!.length).toBe(1);             // discarded the other
     expect(hero.trainedCount).toBe(1);
     expect(hero.training).toBe(1);
-    const kept = hero.deck.filter((id) => isTrainedCard(cat, id));
+    const kept = hero.hand.filter((id) => isTrainedCard(cat, id));
     expect(kept.length).toBe(1);
     expect(cat.combatCards[kept[0]].deck).toBe('skills');
   });
 
-  it('a kept Skill card raises the hero max health (part of the deck)', () => {
+  it('a kept Skill card raises the hero max health (part of the deck) once picked', () => {
     const s = freshGame();
     const hero = s.heroes[0];
     const before = hero.deck.length + hero.hand.length + hero.discard.length;
     grantTraining(s, cat, hero, 1);
+    // No change yet — the pick has not been made.
+    expect(hero.deck.length + hero.hand.length + hero.discard.length).toBe(before);
+    resolveTrainingChoice(s, cat, s.pendingChoice!.options[0].id);
     const after = hero.deck.length + hero.hand.length + hero.discard.length;
     expect(after).toBe(before + 1);
   });
@@ -52,9 +65,15 @@ describe('training — draws real Skill cards (not synthetic attribute cards)', 
     const hero = s.heroes[0];
     // 20 skill cards → at most 10 levels of training before the deck runs dry.
     grantTraining(s, cat, hero, 50);
+    let guard = 0;
+    while (s.pendingChoice?.kind === 'training' && guard++ < 20) {
+      const optionId = s.pendingChoice.options[0].id;
+      s.pendingChoice = null; // mirrors game.ts's resolveChoice, which clears before dispatching
+      resolveTrainingChoice(s, cat, optionId);
+    }
     expect(s.skillDeck!.length).toBe(0);
     expect(hero.trainedCount).toBeLessThanOrEqual(10);
-    expect(hero.deck.filter((id) => isTrainedCard(cat, id)).length).toBe(hero.trainedCount);
+    expect(hero.hand.filter((id) => isTrainedCard(cat, id)).length).toBe(hero.trainedCount);
   });
 });
 

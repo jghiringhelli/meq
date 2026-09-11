@@ -6,8 +6,9 @@ import type { Catalog, GameState, HeroId, HeroState, LocationId, CardId, Plot, S
 import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman, statValue } from './encounter';
 import { influenceAt, plotMakesPerilous } from './influence';
 import { plotPlacement } from './plotReqs';
-import { shuffle } from './rng';
+import { shuffle, nextInt } from './rng';
 import { corruptionPerilBonus, corruptionSauronShadowRedraw } from './corruption';
+import { locByName } from './quests';
 import { log } from './log';
 
 type Logger = ((msg: string) => void) | undefined;
@@ -271,7 +272,15 @@ export function applyPlotCard(s: GameState, cat: Catalog, p: Plot, paidCost: num
   s.sauron.plotTrack[p.id] = p.track.length;
   const marker = (p.marker ?? 'red') as StoryMarkerColor;
   const advance = p.advance ?? p.track.length;
-  const location = (placeAt ?? (p.affects || undefined)) as never;
+  // `affects` (a pre-resolved location id) is populated for only some plots in
+  // the data; the rest carry just the printed `affectsText` name (e.g. "Sea of
+  // Udun"). Fall back to a name lookup so EVERY plot with a real board location
+  // gets placed there — otherwise it silently has no map token and (worse)
+  // `targetablePlot`'s "no location" fallback lets a hero counter it from any
+  // plot-slot location on the board. A genuine "Sauron's choice" plot (whose
+  // affectsText describes a dynamic pick, not a name) correctly resolves to
+  // nothing here and keeps using `placeAt` when the Eye actually places it.
+  const location = (placeAt ?? (p.affects || locByName(cat, p.affectsText) || undefined)) as never;
   active.push({ eventId: p.id, step: p.track.length, location });
   log?.(`plays plot ${p.name} — feeds the ${marker} marker (+${advance}/turn, req ${paidCost}, counter ${p.favorToCounter ?? 0} favor)`);
 
@@ -300,7 +309,7 @@ export function drawShadow(s: GameState, cat: Catalog, size: number): void {
   while (s.sauron.shadowHand.length < size) {
     if (!pool.length) { s.sauron.shadowDiscard = []; pool = all.filter((id) => !s.sauron.shadowHand.includes(id)); }
     if (!pool.length) break;
-    const i = (((s.rngCursor + s.sauron.shadowHand.length) % pool.length) + pool.length) % pool.length;
+    const i = nextInt(s, pool.length);
     s.sauron.shadowHand.push(pool[i]);
     pool.splice(i, 1);
   }

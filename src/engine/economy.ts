@@ -4,8 +4,9 @@
 // player aid ("Explore: retrieve favor, consult characters, dark path, complete
 // quest, discard plot, trade with heroes").
 import type { Catalog, GameState, HeroId, HeroState, LocationId } from './types';
-import { clone, ambushPending } from './mechanics';
+import { clone, ambushPending, raiseAttribute, grantTraining } from './mechanics';
 import { log } from './log';
+import { nextInt } from './rng';
 import { adjacentLocations } from './sauronPlay';
 import { revealMonsters } from './encounter';
 import { completeCurrentQuest, questTaskReadyHere } from './quests';
@@ -39,7 +40,7 @@ export function charactersHere(state: GameState, heroId: HeroId): string[] {
 }
 
 /** The plot a hero can counter at their location: an active plot whose marker
- *  sits here (or any active plot, for off-board plots, when on a plot slot). */
+ *  sits here. */
 export function plotHere(state: GameState, cat: Catalog, heroId: HeroId): boolean {
   return targetablePlot(state, cat, heroId) !== undefined;
 }
@@ -50,16 +51,20 @@ export function canCompleteQuest(state: GameState, cat: Catalog, heroId: HeroId)
   return questTaskReadyHere(state, cat, heroId);
 }
 
-/** Pick the active plot this hero may counter: one placed at their location if
- *  any, else — when standing on a plot slot — an off-board plot. */
-export function targetablePlot(state: GameState, cat: Catalog, heroId: HeroId) {
+/** Pick the active plot this hero may counter: one placed at their location. */
+export function targetablePlot(state: GameState, _cat: Catalog, heroId: HeroId) {
   const h = heroAt(state, heroId);
   const active = state.sauron.activePlots ?? [];
-  const here = active.filter((e) => e.location === h.location);
-  if (here.length) return here[0];
-  const loc = cat.locations[h.location];
-  if (loc?.plotSlot) return active.find((e) => !e.location);
-  return undefined;
+  // A hero may only counter a plot that is actually placed at his current
+  // location. (There used to be a fallback letting ANY plot-slot location
+  // counter a locationless plot — but `plotSlot` marks ~half the board's
+  // ordinary locations, not a special "no-location plot" spot, so that
+  // fallback let a hero counter a plot from the wrong place entirely whenever
+  // a plot's location failed to resolve. Every plot with a real board
+  // location now resolves one via applyPlotCard; a plot that legitimately has
+  // none yet (a "Sauron's choice" plot not yet placed) simply isn't
+  // targetable until it is.)
+  return active.find((e) => e.location === h.location);
 }
 
 export const PLOT_DISCARD_COST = 2;
@@ -157,6 +162,74 @@ export function consultWouldCorrupt(s: GameState, character: string): boolean {
   return false;
 }
 
+/** Character token "Use Ability" effects (rulebook: consulting a Character
+ *  grants EITHER 2 favor OR the ability printed on his token, never both).
+ *  These 8 texts are owner-verified from the physical Character tokens (the
+ *  full set in the box — no Galadriel/Elrond tokens exist in this game). */
+function applyCharacterAbility(s: GameState, cat: Catalog, hero: HeroState, character: string): void {
+  const name = character.trim().toLowerCase();
+  switch (name) {
+    case 'gandalf': {
+      const got = raiseAttribute(hero, 'wisdom', 1);
+      log(s, 'hero-ability', hero.id, `Gandalf's ability: +${got} wisdom`, { character, choice: 'ability' });
+      break;
+    }
+    case 'boromir': {
+      const got = raiseAttribute(hero, 'strength', 1);
+      log(s, 'hero-ability', hero.id, `Boromir's ability: +${got} strength`, { character, choice: 'ability' });
+      break;
+    }
+    case 'aragorn': {
+      const got = raiseAttribute(hero, 'agility', 1);
+      log(s, 'hero-ability', hero.id, `Aragorn's ability: +${got} agility`, { character, choice: 'ability' });
+      break;
+    }
+    case 'théoden':
+    case 'theoden': {
+      hero.items.push('Horse');
+      log(s, 'hero-ability', hero.id, "Théoden's ability: gains a Horse Item card", { character, choice: 'ability' });
+      break;
+    }
+    case 'dain ii':
+    case 'dain': {
+      grantTraining(s, cat, hero, 2);
+      log(s, 'hero-ability', hero.id, "Dain II's ability: receives training twice", { character, choice: 'ability' });
+      break;
+    }
+    case 'denethor': {
+      if (hero.favor >= 3) {
+        hero.favor -= 3;
+        s.story.sauronProgress = Math.min(s.story.length, s.story.sauronProgress + 1);
+        log(s, 'hero-ability', hero.id, "Denethor's ability: pays 3 favor to advance the hero story marker 1 space", { character, choice: 'ability' });
+      } else {
+        log(s, 'hero-ability', hero.id, "Denethor's ability: not enough favor (needs 3) — no effect", { character, choice: 'ability' });
+      }
+      break;
+    }
+    case 'saruman': {
+      let n = 2;
+      while (n-- > 0 && s.sauron.shadowHand.length) {
+        const i = nextInt(s, s.sauron.shadowHand.length);
+        const cid = s.sauron.shadowHand.splice(i, 1)[0];
+        s.sauron.shadowDiscard.push(cid);
+      }
+      log(s, 'hero-ability', hero.id, "Saruman's ability: Sauron discards 2 random Shadow cards", { character, choice: 'ability' });
+      break;
+    }
+    case 'thranduil': {
+      const n = Math.min(2, s.sauron.influence);
+      s.sauron.influence -= n;
+      log(s, 'hero-ability', hero.id, `Thranduil's ability: removes ${n} influence from the Shadow Pool`, { character, choice: 'ability' });
+      break;
+    }
+    default:
+      // No owner-verified ability data for this Character — keep the previous
+      // placeholder (cosmetic ally) rather than silently doing nothing.
+      (hero.allies ||= []).push(character);
+      log(s, 'hero-consult', hero.id, `consulted ${character} for their ability (ally) — no ability data modeled yet`, { character, choice: 'ability' });
+  }
+}
+
 export function heroConsultCharacter(
   state: GameState, cat: Catalog, heroId: HeroId, character: string, choice: 'favor' | 'ability' = 'favor',
 ): GameState {
@@ -168,8 +241,7 @@ export function heroConsultCharacter(
   if (idx < 0) throw new Error(`${character} is not here`);
   here.splice(idx, 1); // the character always leaves the board once consulted
   if (choice === 'ability') {
-    (hero.allies ||= []).push(character);
-    log(s, 'hero-consult', heroId, `consulted ${character} for their ability (ally)`, { character, choice });
+    applyCharacterAbility(s, cat, hero, character);
   } else {
     grantFavor(cat, hero, 2);
     log(s, 'hero-consult', heroId, `consulted ${character} for 2 favor (total ${hero.favor})`, { character, choice });

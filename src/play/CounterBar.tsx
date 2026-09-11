@@ -67,7 +67,13 @@ function EyeTracksViz({ state }: { state: GameState }) {
   );
 }
 
-export default function CounterBar({ state, cat }: { state: GameState; cat: Catalog }) {
+export default function CounterBar({ state, cat, revealHeroMission = true }: {
+  state: GameState; cat: Catalog;
+  /** Whether THIS viewer is entitled to see the heroes' secret mission (hidden
+   *  from a human Sauron player online — defaults to true for solo/local play,
+   *  where there's no other human on the network to keep it secret from). */
+  revealHeroMission?: boolean;
+}) {
   return (
     <>
       <StoryTrackViz state={state} />
@@ -95,11 +101,17 @@ export default function CounterBar({ state, cat }: { state: GameState; cat: Cata
         <span className="sub" title="hidden from the heroes">mission: ???</span>
       </div>
       <EyeTracksViz state={state} />
-      {state.secretHeroMission && cat.heroMissions[state.secretHeroMission] && (
+      {revealHeroMission && state.secretHeroMission && cat.heroMissions[state.secretHeroMission] && (
         <div className="counter mission" title={cat.heroMissions[state.secretHeroMission].text}>
           <span className="label">Your Mission</span>
           <span className="value">{cat.heroMissions[state.secretHeroMission].name}</span>
           <span className="sub">{cat.heroMissions[state.secretHeroMission].text}</span>
+        </div>
+      )}
+      {!revealHeroMission && (
+        <div className="counter mission" title="hidden from Sauron">
+          <span className="label">Hero Mission</span>
+          <span className="value">???</span>
         </div>
       )}
       {state.heroes.map((h) => (

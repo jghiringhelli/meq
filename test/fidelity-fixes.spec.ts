@@ -8,6 +8,7 @@ import { adjacentLocations } from '../src/engine/sauronPlay';
 import { eyePlaceInfluenceOnce } from '../src/engine/ai';
 import { applyAction } from '../src/engine/actions';
 import { influenceAt } from '../src/engine/influence';
+import { applyHeroAction } from '../src/engine/heroAI';
 
 const boardInfluenceTotal = (s: ReturnType<typeof freshGame>) =>
   Object.values(s.sauron.locationInfluence ?? {}).reduce((n, v) => n + (v as number), 0);
@@ -306,6 +307,30 @@ describe('M3 — Sauron chooses Combat or Peril', () => {
     expect(asPeril.heroes[asPeril.activeHeroIndex].perilResolvedAt).toContain(ctx.to);
     const asCombat = resolveCombatOrPeril(moved, cat, 'combat');
     expect(ambushPending(asCombat, asCombat.heroes[asCombat.activeHeroIndex])).toBe(true);
+  });
+
+  it('coerces an AI "consult" action into engaging the ambushing foe instead of throwing (regression)', () => {
+    // Regression for a fuzzer-found bug: applyHeroAction's ambush-coercion list
+    // omitted 'consult', so an AI hero sharing its ambushed location with a
+    // Character token would crash with an uncaught "Ambush: fight the foe
+    // here before exploring" error instead of being redirected to combat.
+    const s = freshGame();
+    const hero = activeHero(s);
+    hero.status = 'active';
+    s.activeHeroIndex = s.heroes.indexOf(hero);
+    s.phase = 'HeroActions';
+    hero.actionsRemaining = 1;
+    // Move off the starting Haven — a foe/Character never forces combat in a Haven.
+    const nonHaven = legalMoves(cat, hero).find((m) => cat.locations[m.to]?.kind !== 'haven');
+    hero.location = nonHaven!.to;
+    const anyMonster = Object.keys(cat.monsters ?? {})[0];
+    (s.map.monstersAt as Record<string, string[]>)[hero.location] = [anyMonster];
+    (s.map.charactersAt ||= {})[hero.location] = ['gandalf'];
+    expect(ambushPending(s, hero, cat)).toBe(true);
+    const out = applyHeroAction(s, cat, hero.id, { kind: 'consult', character: 'gandalf', choice: 'favor' });
+    // Should be redirected into combat (engagement), not throw and not consult.
+    expect(out.pendingCombat).toBeTruthy();
+    expect(out.map.charactersAt?.[hero.location] ?? []).toContain('gandalf'); // untouched
   });
 
   it('forces combat (never Peril) when a monster guards an ACTIVE-PLOT location, even vs a strong hand', () => {

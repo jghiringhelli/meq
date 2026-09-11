@@ -83,3 +83,38 @@ describe('interactive Travel payment model', () => {
     expect(() => heroMove(s, cat, s.heroes[0].id, 'tharbad', [a])).toThrow();
   });
 });
+
+describe('Boat on a water path (fidelity): High Pass ↔ Gladden Fields', () => {
+  // This path is printed cost-3 "mountain" but is ALSO a water crossing (per
+  // the physical board, same as Gladden Fields ↔ Lothlórien) — Boat always
+  // reduces a water path to a single any-card, terrain irrelevant, regardless
+  // of whether the hero happens to also hold a matching-terrain card.
+  it('costs exactly 1 any-card with a Boat, even holding zero mountain cards', () => {
+    const s = movable([cardOf('plains'), cardOf('woods')], 'high-pass');
+    s.heroes[0].items = ['item-boat'];
+    const opts = moveOptions(cat, s.heroes[0]);
+    const gf = opts.find((o) => o.to === 'gladden-fields');
+    expect(gf).toBeTruthy();
+    expect(gf!.water).toBe(true);
+    expect(gf!.anyCardCost).toBe(1);
+    expect(gf!.terrainPayable).toBe(false); // Boat's water route is always "any card"
+  });
+
+  it('still costs the printed 3-card fallback without a Boat', () => {
+    const s = movable([cardOf('plains'), cardOf('woods'), cardOf('hill')], 'high-pass');
+    const opts = moveOptions(cat, s.heroes[0]);
+    const gf = opts.find((o) => o.to === 'gladden-fields');
+    expect(gf!.anyCardCost).toBe(3);
+  });
+
+  it('Boat takes the water route even when the hero holds a matching mountain card', () => {
+    const mountain = cardOf('mountain');
+    const s = movable([mountain], 'high-pass');
+    s.heroes[0].items = ['item-boat'];
+    const s2 = heroMove(s, cat, s.heroes[0].id, 'gladden-fields');
+    // Only 1 card spent (the Boat's any-card water cost), not the printed cost-3
+    // fallback, and the mountain card wasn't required to make the terrain match.
+    expect(s2.heroes[0].location).toBe('gladden-fields');
+    expect(s2.heroes[0].discard.length).toBe(1);
+  });
+});

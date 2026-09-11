@@ -11,6 +11,9 @@ export interface InspectPayload {
   /** longer rules / ability prose */
   text?: string;
   subtitle?: string;
+  /** Optional action buttons (e.g. "Consult: favor" / "→ ability"). Clicking
+   *  one runs its handler then closes the inspector. */
+  actions?: { label: string; onClick: () => void; disabled?: boolean }[];
 }
 
 type InspectFn = (payload: InspectPayload) => void;
@@ -43,6 +46,15 @@ export function InspectProvider({ children }: { children: ReactNode }) {
                 </ul>
               )}
               {payload.text && <p className="inspect-text">{payload.text}</p>}
+              {payload.actions && payload.actions.length > 0 && (
+                <div className="inspect-actions">
+                  {payload.actions.map((a, i) => (
+                    <button key={i} disabled={a.disabled} onClick={() => { a.onClick(); close(); }}>
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -75,9 +75,10 @@ export function NetPanel({ net, state, cat, roster, onClaim, onKick }: {
           const c = roster?.[role];
           const owned = c?.kind === 'human';
           const mine = owned && c.playerId === me;
-          const who = !c || c.kind === 'open' ? 'AI / open' : c.kind === 'ai' ? 'AI' : c.name;
+          const offline = owned && c.connected === false;
+          const who = !c || c.kind === 'open' ? 'AI / open' : c.kind === 'ai' ? 'AI' : `${c.name}${offline ? ' (disconnected)' : ''}`;
           return (
-            <div key={role} className="net-role-row">
+            <div key={role} className={`net-role-row${offline ? ' net-role-offline' : ''}`}>
               <span className="net-role-name">{roleLabel(cat, role)}</span>
               <span className="net-role-who">{who}</span>
               {mine

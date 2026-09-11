@@ -4,7 +4,7 @@ import type {
   Catalog, GameState, HeroState, HeroId, LocationId, PathEdge, Terrain, CardId, StoryMarkerColor,
 } from './types';
 import { STORY_FINALE, STAGE_SIZE } from './types';
-import { shuffle, nextInt } from './rng';
+import { shuffle } from './rng';
 import { log } from './log';
 import { recoverHero } from './heroLife';
 import { corruptionRestDefeatSteps, corruptionTravelCap } from './corruption';
@@ -24,30 +24,73 @@ function skillValue(cat: Catalog, id: CardId): number {
   return (c.attack ?? 0) + (c.defense ?? 0) + (c.effectKey ? 1 : 0);
 }
 
-/** Grant `n` training to a hero (rulebook p.26, "Training"): for each level of
- *  training, draw the top two cards of the shared Skill deck, keep the stronger
- *  one — added to the hero's real (single) deck at a random position — and
- *  discard the other faceup to the Skill discard. Skill cards become permanent
- *  members of the hero's deck (raising max health). Sauron sees the COUNT rise
- *  (public) but not each card's identity until the hero first plays it. */
+/** Grant `n` levels of training to a hero (rulebook p.26, "Training"): for each
+ *  level, draw the top two cards of the shared Skill deck and pause for the
+ *  hero to choose which to keep — the kept card goes straight into his HAND
+ *  (not shuffled into his deck; it becomes a permanent member of his deck only
+ *  once it later cycles through hand → rest pool → life pool like any other
+ *  Hero card), and the other is discarded faceup. If the Skill deck is
+ *  (nearly) empty there is no real choice to make and the draw is applied
+ *  immediately. Sauron sees the trained COUNT rise (public) but not each
+ *  card's identity until the hero first plays it. */
 export function grantTraining(state: GameState, cat: Catalog, hero: HeroState, n: number): void {
+  if (n <= 0) return;
   state.skillDeck ||= [];
   state.skillDiscard ||= [];
-  for (let i = 0; i < n; i++) {
-    if (state.skillDeck.length === 0) break;
-    const a = state.skillDeck.shift() as CardId;
-    const b = state.skillDeck.length ? (state.skillDeck.shift() as CardId) : undefined;
-    let keep = a; let toss = b;
-    if (b !== undefined) {
-      const va = skillValue(cat, a); const vb = skillValue(cat, b);
-      if (vb > va || (vb === va && b < a)) { keep = b; toss = a; }
-    }
-    const pos = nextInt(state, hero.deck.length + 1);
-    hero.deck.splice(pos, 0, keep);
-    if (toss !== undefined) state.skillDiscard.push(toss);
-    hero.trainedCount += 1;
+  queueTrainingDraw(state, cat, hero.id, n);
+}
+
+/** Draw the next pending training level's two Skill cards and raise a
+ *  `pendingChoice` (kind 'training') for the hero to pick which to keep. */
+function queueTrainingDraw(state: GameState, cat: Catalog, heroId: HeroId, remaining: number): void {
+  if (remaining <= 0 || !state.skillDeck || state.skillDeck.length === 0) return;
+  const a = state.skillDeck.shift() as CardId;
+  const b = state.skillDeck.length ? (state.skillDeck.shift() as CardId) : undefined;
+  if (b === undefined) {
+    applyTrainingPick(state, cat, heroId, a, undefined, remaining - 1);
+    return;
   }
-  hero.training += n;
+  // Order best-first (by raw combat worth) so a bot hero — which simply takes
+  // the first offered option — still makes a sound pick; a human sees both
+  // full cards and chooses freely.
+  const [first, second] = skillValue(cat, b) > skillValue(cat, a) ? [b, a] : [a, b];
+  state.pendingTraining = { heroId, remaining, a: first, b: second };
+  const seat = state.heroes.find((h) => h.id === heroId)?.seat ?? 0;
+  const label = (id: CardId) => {
+    const c = cat.combatCards[id];
+    return c ? `${c.name} (${c.type} · ⚔${c.attack}/🛡${c.defense} · ✊${c.strengthCost})` : String(id);
+  };
+  state.pendingChoice = {
+    id: 'training', seat, kind: 'training',
+    prompt: 'Training: draw two Skill cards — keep one for your hand, discard the other:',
+    options: [
+      { id: `train:${first}`, label: label(first), cardId: first },
+      { id: `train:${second}`, label: label(second), cardId: second },
+    ],
+  };
+}
+
+function applyTrainingPick(
+  state: GameState, cat: Catalog, heroId: HeroId, keep: CardId, toss: CardId | undefined, remaining: number,
+): void {
+  const hero = state.heroes.find((h) => h.id === heroId)!;
+  hero.hand.push(keep);
+  if (toss !== undefined) (state.skillDiscard ||= []).push(toss);
+  hero.trainedCount += 1;
+  hero.training += 1;
+  log(state, 'hero-training', heroId,
+    `training: keeps ${cat.combatCards[keep]?.name ?? keep}${toss !== undefined ? `, discards ${cat.combatCards[toss]?.name ?? toss}` : ''}`);
+  if (remaining > 0) queueTrainingDraw(state, cat, heroId, remaining);
+}
+
+/** Resolve a pending 'training' choice (optionId = `train:<cardId>`). */
+export function resolveTrainingChoice(state: GameState, cat: Catalog, optionId: string): void {
+  const pending = state.pendingTraining;
+  if (!pending) throw new Error('No pending training choice');
+  const cid = optionId.slice('train:'.length) as CardId;
+  const toss = cid === pending.a ? pending.b : pending.a;
+  state.pendingTraining = null;
+  applyTrainingPick(state, cat, pending.heroId, cid, toss, pending.remaining - 1);
 }
 
 /** Raise an attribute via a level token, capped at 2 increases per attribute per

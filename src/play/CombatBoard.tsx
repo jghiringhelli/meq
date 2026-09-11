@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Catalog, GameState, CardId, Combatant } from '../engine/types';
 import { monsterArt, minionArt, heroArt, combatCardArt, battleBoardArt } from '../data/art';
+import { isTrainedCard } from '../engine/mechanics';
 import { useInspect } from './CardInspector';
 
 interface Props {
@@ -11,6 +12,86 @@ interface Props {
 // A small stat pill (attribute name + value).
 function Stat({ label, val }: { label: string; val: number | string }) {
   return <span className="cb-stat"><em>{label}</em><b>{val}</b></span>;
+}
+
+// Combat cards are scanned per PHYSICAL DECK, not per combatant: a monster's
+// hand is drawn from one of the shared "monster-behemoth/-ravager/-zealot"
+// decks (assets/monsters.json's `deck` field), never from a deck of its own —
+// e.g. Crebain, Agent, Snaga and Orc all draw from the "monster-zealot" deck.
+// Using the monster's own id as the art owner key therefore always misses the
+// dedicated monster-deck scans and falls back to the generic id art (which,
+// for shared card NAMES like "Precision"/"Hack", happens to be a HERO's scan).
+// Resolve to the actual deck owner (behemoth/ravager/zealot) for monsters;
+// heroes keep using their own id (their deck IS their own, "hero-<id>").
+function combatantOwnerKey(cat: Catalog, refId: string): string {
+  const deck = cat.monsters[refId]?.deck;
+  return deck ? deck.replace(/^monster-/, '') : refId;
+}
+
+/** A monster/minion's physical combat deck never changes between games (it's
+ *  the same fixed set of printed cards every time), so — unlike a hero's
+ *  personal deck, which grows with training and stays hidden until a card is
+ *  actually revealed — its full composition can just be read straight off the
+ *  catalog. This gives the player a "what could the foe still play" cheat
+ *  sheet: each unique card in its deck, and how many of that card have
+ *  already been played (and so can't come up again this fight). */
+interface DeckCardCount { id: CardId; name: string; total: number; used: number; }
+export function foeDeckBreakdown(cat: Catalog, deckId: string | undefined, played: CardId[]): DeckCardCount[] {
+  if (!deckId) return [];
+  const full = cat.decks[deckId] ?? [];
+  const usedCounts = new Map<CardId, number>();
+  for (const id of played) usedCounts.set(id, (usedCounts.get(id) ?? 0) + 1);
+  const totals = new Map<CardId, number>();
+  for (const id of full) totals.set(id, (totals.get(id) ?? 0) + 1);
+  return [...totals.entries()]
+    .map(([id, total]) => ({ id, name: cat.combatCards[id]?.name ?? id, total, used: usedCounts.get(id) ?? 0 }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** What Sauron legitimately knows about the HERO he's fighting (relevant when a
+ *  human plays Sauron: the monster/minion he brought into this fight is one of
+ *  the shared decks above, but the opponent across the table is a hero, whose
+ *  personal deck can include hidden Training upgrades). Per the real rules:
+ *  - The hero's PRINTED starting deck is always public (same for every game).
+ *  - Training COUNT is public the moment it happens (`trainedCount`), but WHICH
+ *    Skill card was kept (of the two drawn) stays secret until that specific
+ *    card is actually revealed — played in combat, discarded to pay a Move
+ *    cost, or any other discard effect. Once it's sat in a discard pile (this
+ *    fight's live discard counts immediately, same as a past one), Sauron
+ *    knows exactly which card it is, permanently (a later reshuffle empties
+ *    the discard pile again, but never un-teaches Sauron what he already saw —
+ *    see `s.sauron.heroIntel` in ai.ts, the same memory the Lidless Eye uses).
+ *  - Which specific cards sit in the hero's damage pool is NEVER knowable
+ *    (only the count is public) — so a card isn't marked "used" just because
+ *    the hero took damage; only an actual discard removes it from the unknown
+ *    pool below. */
+export function heroKnownDeckBreakdown(
+  cat: Catalog, heroRefId: string, combatant: Combatant, historicalRevealedTrained: CardId[], trainedCount: number,
+): { rows: DeckCardCount[]; unknownTrained: number } {
+  const baseDeckId = cat.heroes[heroRefId]?.deck;
+  const baseIds = baseDeckId ? cat.decks[baseDeckId] ?? [] : [];
+  const totals = new Map<CardId, number>();
+  for (const id of baseIds) totals.set(id, (totals.get(id) ?? 0) + 1);
+
+  // Trained cards revealed so far: the persistent (cross-reshuffle) memory,
+  // union this fight's own live discard (catches a reveal the moment it
+  // happens, even before combat ends and syncs back to the hero's real deck).
+  const revealed = [...historicalRevealedTrained, ...combatant.discard.filter((id) => isTrainedCard(cat, id))];
+  for (const id of revealed) {
+    if (!cat.combatCards[id]) continue;
+    totals.set(id, Math.max(totals.get(id) ?? 0, 1)); // a revealed trained card is now a known owned card
+  }
+
+  const discardCounts = new Map<CardId, number>();
+  for (const id of combatant.discard) discardCounts.set(id, (discardCounts.get(id) ?? 0) + 1);
+
+  const rows = [...totals.entries()]
+    .map(([id, total]) => ({ id, name: cat.combatCards[id]?.name ?? id, total, used: discardCounts.get(id) ?? 0 }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  // Trained slots whose specific card has never been discarded/played anywhere,
+  // ever — genuinely unknown, shown only as a count, never an identity.
+  const unknownTrained = Math.max(0, trainedCount - revealed.length);
+  return { rows, unknownTrained };
 }
 
 // One revealed combat card (art + name + attack/defense/type), or an empty slot.
@@ -35,6 +116,8 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
   const ch = state.pendingChoice;
   const inspect = useInspect();
   const [min, setMin] = useState(false);
+  const [showFoeDeck, setShowFoeDeck] = useState(false);
+  const [showHeroDeck, setShowHeroDeck] = useState(false);
 
   const hero = pc.attacker;
   const foe = pc.defender;
@@ -44,6 +127,16 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
   const heroImg = heroArt(hero.refId).portrait || heroArt(hero.refId).figure;
   const bg = battleBoardArt();
   const foeMaxLife: number | undefined = cat.minions[foe.refId]?.health;
+  // Its physical combat deck id — monsters use `deck`, minions `combatDeck`.
+  const foeDeckId = cat.monsters[foe.refId]?.deck ?? cat.minions[foe.refId]?.combatDeck;
+  const foeDeckBreak = foeDeckBreakdown(cat, foeDeckId, pc.stack?.defender ?? []);
+  // Only relevant to a human playing Sauron: what he legitimately knows about
+  // the hero's own deck, given training identities stay secret until revealed.
+  const heroLiveState = state.heroes.find((h) => h.id === hero.refId);
+  const heroIntel = state.sauron.heroIntel?.[hero.refId]?.revealedTrained ?? [];
+  const heroDeckBreak = state.humanSide === 'Sauron'
+    ? heroKnownDeckBreakdown(cat, String(hero.refId), hero, heroIntel, heroLiveState?.trainedCount ?? 0)
+    : undefined;
 
   // Latest resolved bout drives the "what happened" line + damage pop.
   const last = pc.report.length ? pc.report[pc.report.length - 1] : undefined;
@@ -127,7 +220,7 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
           <div className="cb-stack-row">
             {stackIds.map((id, i) => {
               const cc = cat.combatCards[id];
-              const img = cc ? combatCardArt(cc, c.refId) : '';
+              const img = cc ? combatCardArt(cc, combatantOwnerKey(cat, c.refId)) : '';
               return img
                 ? <img key={i} className="cb-stack-card" src={img} alt="" title={cc?.name} />
                 : <span key={i} className="cb-stack-chip" title={cc?.name}>{cc?.name?.[0] ?? '?'}</span>;
@@ -143,20 +236,88 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
       <div className="cb-board" style={bg ? { backgroundImage: `url(${bg})` } : undefined}>
         <div className="cb-head">
           <h2>⚔ Combat — round {pc.round} <span className="cb-loc">at {cat.locations[pc.locationId]?.name ?? pc.locationId}</span></h2>
-          <button className="cb-min-btn" onClick={() => setMin(true)} title="Minimize to peek at the map">▁ Minimize</button>
+          <div className="cb-head-btns">
+            {heroDeckBreak && (
+              <button className="cb-min-btn" onClick={() => setShowHeroDeck((v) => !v)}
+                title="What Sauron legitimately knows about the hero's deck — training identities stay secret until revealed">
+                🕵 {hero.name}'s deck (known) {showHeroDeck ? '▴' : '▾'}
+              </button>
+            )}
+            {foeDeckBreak.length > 0 && (
+              <button className="cb-min-btn" onClick={() => setShowFoeDeck((v) => !v)}
+                title="See every card in the foe's combat deck and how many have already been played">
+                🃏 {foe.name}'s deck {showFoeDeck ? '▴' : '▾'}
+              </button>
+            )}
+            <button className="cb-min-btn" onClick={() => setMin(true)} title="Minimize to peek at the map">▁ Minimize</button>
+          </div>
         </div>
+        {showHeroDeck && heroDeckBreak && (
+          <div className="cb-foedeck">
+            <p className="cb-foedeck-note">
+              {hero.name}'s printed starting deck is always public, and training COUNT is public the moment
+              it happens — but WHICH Skill card was kept stays secret until it is actually played or
+              discarded somewhere. Cards below with a "?" name are trained cards Sauron knows exist but has
+              never seen revealed.
+            </p>
+            <div className="cb-foedeck-grid">
+              {heroDeckBreak.rows.map((d) => {
+                const card = cat.combatCards[d.id];
+                const img = card ? combatCardArt(card, String(hero.refId)) : '';
+                const left = d.total - d.used;
+                return (
+                  <div key={d.id} className={`cb-foedeck-card ${left <= 0 ? 'spent' : ''}`}
+                    title={card?.ability ?? ''}>
+                    {img && <img src={img} alt="" />}
+                    <span className="cb-foedeck-name">{d.name}</span>
+                    <span className="cb-foedeck-count">{left}/{d.total} left</span>
+                  </div>
+                );
+              })}
+              {heroDeckBreak.unknownTrained > 0 && (
+                <div className="cb-foedeck-card unknown" title="A trained Skill card whose identity has never been revealed">
+                  <span className="cb-foedeck-name">? Unknown trained card ×{heroDeckBreak.unknownTrained}</span>
+                  <span className="cb-foedeck-count">hidden until revealed</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {showFoeDeck && (
+          <div className="cb-foedeck">
+            <p className="cb-foedeck-note">
+              {foe.name}'s physical combat deck — fixed every game, so this is the full set of cards it can
+              still draw or play. Grayed-out cards have all their copies already played this fight.
+            </p>
+            <div className="cb-foedeck-grid">
+              {foeDeckBreak.map((d) => {
+                const card = cat.combatCards[d.id];
+                const img = card ? combatCardArt(card, combatantOwnerKey(cat, foe.refId)) : '';
+                const left = d.total - d.used;
+                return (
+                  <div key={d.id} className={`cb-foedeck-card ${left <= 0 ? 'spent' : ''}`}
+                    title={card?.ability ?? ''}>
+                    {img && <img src={img} alt="" />}
+                    <span className="cb-foedeck-name">{d.name}</span>
+                    <span className="cb-foedeck-count">{left}/{d.total} left</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="cb-arena">
           <Side c={hero} isHero />
 
           <div className="cb-center">
             <div className="cb-reveal">
-              <CardFace cat={cat} card={revA} ownerRef={hero.refId} kind="atk" />
+              <CardFace cat={cat} card={revA} ownerRef={combatantOwnerKey(cat, hero.refId)} kind="atk" />
               <div className="cb-vs">
                 <span className="cb-round-badge">r{pc.round}</span>
                 <span className="cb-vs-x">VS</span>
               </div>
-              <CardFace cat={cat} card={revD} ownerRef={foe.refId} kind="def" />
+              <CardFace cat={cat} card={revD} ownerRef={combatantOwnerKey(cat, foe.refId)} kind="def" />
             </div>
 
             {last && (

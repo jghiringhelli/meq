@@ -1,7 +1,7 @@
 // Build the initial GameState from the catalog. Deterministic given seed.
 import type { Catalog, GameState, HeroState, HeroId, MapState } from './types';
 import { placeCharacterUnique } from './characters';
-import { shuffle } from './rng';
+import { shuffle, nextInt } from './rng';
 import { drawInto, gameStage } from './mechanics';
 import { log } from './log';
 import { locByName, registerQuestCombat, questTargetLocation } from './quests';
@@ -124,11 +124,9 @@ function assignStartingQuest(state: GameState, cat: Catalog, hero: HeroState): v
   hero.quests ||= { startingDone: false, advancedDone: false };
   hero.quests.advancedQuestId = advanced?.id;
   if (!starting.length) return;
-  // Deterministic 1-of-N pick derived from the current rng cursor and the hero
-  // id — WITHOUT advancing the shared rng stream, so gameplay stays reproducible.
-  let hash = 0;
-  for (let i = 0; i < hero.id.length; i++) hash = (hash * 31 + hero.id.charCodeAt(i)) | 0;
-  const chosen = starting[Math.abs(state.rngCursor ^ hash) % starting.length];
+  // Deterministic 1-of-N pick drawn from the shared seeded rng stream, same as
+  // every other random choice in setup (skill/corruption shuffles, missions).
+  const chosen = starting[nextInt(state, starting.length)];
   hero.quests.startingQuestId = chosen.id;
   // Follow the quest's "Setup" instruction — a "Place <Character> in <Location>."
   // directive that seeds a Character token onto the board.

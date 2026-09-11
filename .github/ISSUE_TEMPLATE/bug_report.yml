@@ -1,0 +1,40 @@
+name: Bug report
+description: Something broke, looked wrong, or didn't match the rulebook.
+labels: [bug, player-report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing! If you used the in-app **"Report a problem"** button,
+        most of this is already filled in — you just need to attach the JSON file
+        it downloaded (drag it into the box below).
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What were you doing, what did you expect, what happened instead?
+      placeholder: e.g. Explored Ruins of Angmar with Beravor, expected a peril draw but nothing happened…
+    validations:
+      required: true
+  - type: textarea
+    id: report-file
+    attributes:
+      label: Attached report (drag the downloaded .json file here)
+      description: >
+        From the game: header button "Report a problem" → describe the issue →
+        it downloads `meq-report-seed....json`. Drag that file into this box.
+        It only contains the game state/log + your browser's user-agent string —
+        nothing about you personally.
+  - type: input
+    id: seed
+    attributes:
+      label: Game seed (shown in the downloaded filename, or top of the in-app log)
+  - type: dropdown
+    id: mode
+    attributes:
+      label: How were you playing?
+      options:
+        - Solo (vs AI)
+        - Online multiplayer (as host)
+        - Online multiplayer (as client)
+        - Hotseat / same device

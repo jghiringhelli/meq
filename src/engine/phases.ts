@@ -9,7 +9,7 @@ import { drawFromLifePool, restHero, healHero, prepareHeroForFinale } from './he
 import { log } from './log';
 import { shuffle } from './rng';
 import { applyOps } from './noncombat';
-import { planEncounter, applyAtoms, autoResolveTree, stepResolveTree, treeActorIsHuman, statValue, type PlanResult } from './encounter';
+import { planEncounter, applyAtoms, autoResolveTree, stepResolveTree, treeActorIsHuman, statValue, revealMonsters, type PlanResult } from './encounter';
 import { eyePlaceInfluenceOnce, eyeSpawnMonsterOnce } from './ai';
 import { evalMission, minionsInPlay } from './missions';
 import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, raiseShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield } from './sauronmech';
@@ -347,6 +347,7 @@ function runEncounterStep(s: GameState, cat: Catalog, heroId: HeroId): boolean {
       here.push(sub);
       log(s, 'encounter-draw', heroId, `quest: ${cat.monsters[sub]?.name ?? sub} appears at ${hero.location} (combat instead of Encounter)`);
     }
+    revealMonsters(s, [hero.location]); // the quest names the foe, so show its face (not a facedown token)
     return true; // a foe is present — the turn continues into combat, not a whiff
   }
   const group = encounterGroupFor(cat, hero.location);
@@ -460,6 +461,14 @@ export function dismissReveal(state: GameState): GameState {
   return s;
 }
 
+/** Dismiss the post-combat summary modal (App.tsx). Purely cosmetic — the
+ *  combat's effects were already applied when it resolved. */
+export function dismissCombatSummary(state: GameState): GameState {
+  const s = clone(state);
+  s.lastCombatSummary = null;
+  return s;
+}
+
 /** Resolve the pending encounter: walk its effect tree with the decisions made
  *  so far. If a choice is still needed the state is returned unchanged (the UI
  *  drives further via chooseEncounter); once fully decided the ops are applied,
@@ -491,7 +500,9 @@ function relocateHero(s: GameState, heroId: HeroId, to: LocationId): void {
  *  action; it only fails the turn if the hero loses. */
 export function spendActionForCombat(state: GameState, heroId: HeroId): GameState {
   const s = clone(state);
-  requireHeroTurn(s, heroId);
+  if (s.phase !== 'HeroActions') throw new Error(`Not HeroActions phase (${s.phase})`);
+  const hero = activeHero(s);
+  if (hero.id !== heroId) throw new Error(`Not ${heroId}'s turn`);
   return s;
 }
 

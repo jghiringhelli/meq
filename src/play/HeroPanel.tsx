@@ -1,6 +1,11 @@
 import type { Catalog, GameState, MonsterId } from '../engine/types';
 import { heroArt, combatCardArt } from '../data/art';
 import { useInspect } from './CardInspector';
+import { questHowTo } from '../engine/quests';
+
+const ATTR_LABELS: [key: 'fortitude' | 'strength' | 'agility' | 'wisdom', short: string][] = [
+  ['fortitude', 'Fortitude'], ['strength', 'Strength'], ['agility', 'Agility'], ['wisdom', 'Wisdom'],
+];
 
 export interface EconActions {
   favorHere: number;
@@ -44,14 +49,38 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
       <div className="hero-head">
         {fig && <img className="hero-fig" src={fig} alt="" />}
         <strong>{def.name}</strong>
-        <span title="life pool (draw deck) · hand · damage">🂠 {hero.deck.length} · ✋ {hero.hand.length} · 🩸 {hero.damagePool.length}</span>
-        <span title="favor">✦ {hero.favor}</span>
-        <span title={hero.corruptionCards?.length
-          ? `corruption cards: ${hero.corruptionCards.map((id) => cat.corruption[id]?.name ?? id).join(', ')}`
-          : 'corruption'}>☠ {hero.corruption}</span>
-        <span title="hand cards — the Travel step repeats until the hand is spent">🂠 hand {hero.hand.length}</span>
-        <span title="Rest step: available once per turn, only before the hero moves">{hero.restedThisTurn ? 'rested' : canRestNow ? 'can rest' : 'rest unavailable'}</span>
-        <span>{cat.locations[hero.location]?.name}</span>
+        <span className="hero-loc">📍 {cat.locations[hero.location]?.name}</span>
+      </div>
+      <div className="hero-resources">
+        <span className="res-chip" title="Life pool: cards left in your draw deck">🂠 Deck <b>{hero.deck.length}</b></span>
+        <span className="res-chip" title="Cards currently in your hand — spend these to move/fight; the Travel step repeats until your hand is spent">✋ Hand <b>{hero.hand.length}</b></span>
+        <span className="res-chip" title="Damage taken — cards here don't return until you Rest at a Haven">🩸 Damage <b>{hero.damagePool.length}</b></span>
+        <span className="res-chip" title="Favor — spend it to counter plots, retrieve items, etc.">✦ Favor <b>{hero.favor}</b></span>
+        <span className="res-chip" title={hero.corruptionCards?.length
+          ? `Corruption cards: ${hero.corruptionCards.map((id) => cat.corruption[id]?.name ?? id).join(', ')}`
+          : 'Corruption — too high and you risk becoming a Fallen Hero'}>☠ Corruption <b>{hero.corruption}</b></span>
+        <span className="res-chip" title="Rest step: available once per turn, only before you move">{hero.restedThisTurn ? '✔ Rested' : canRestNow ? '○ Can rest' : '✕ Rest unavailable'}</span>
+      </div>
+      <div className="hero-stats-legend">Attributes:</div>
+      <div className="hero-stats"
+        onClick={() => inspect({
+          title: def.name, img: heroArt(hero.id).portrait || heroArt(hero.id).figure,
+          subtitle: `${def.abilityName}`,
+          lines: ATTR_LABELS.map(([key, short]) => {
+            const base = def[key]; const bonus = hero.statBonus?.[key] ?? 0;
+            return bonus ? `${short}: ${base} + ${bonus} (levels) = ${base + bonus}` : `${short}: ${base}`;
+          }),
+          text: def.abilityText,
+        })}
+        title="Click for full stats and ability text. Level tokens (from quest/encounter rewards) add a permanent bonus, capped at +2 per attribute.">
+        {ATTR_LABELS.map(([key, short]) => {
+          const base = def[key]; const bonus = hero.statBonus?.[key] ?? 0;
+          return (
+            <span key={key} className={`stat-chip${bonus ? ' stat-boosted' : ''}`}>
+              {short} {base + bonus}{bonus ? <sup>+{bonus}</sup> : null}
+            </span>
+          );
+        })}
       </div>
       {(hero.allies?.length || hero.items.length || (hero.levels && Object.keys(hero.levels).length)) ? (
         <div className="hero-holdings">
@@ -69,13 +98,30 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
           <div className="hero-quests">
             {start && (
               <div className={`quest-chip${q.startingDone ? ' quest-done' : ''}`}
-                title={`Setup: ${start.setup || '—'}\nTask: ${start.task}\nReward: ${start.reward}`}>
+                title={`Setup: ${start.setup || '—'}\nTask: ${start.task}\nHow: ${questHowTo(cat, start)}\nReward: ${start.reward}`}
+                onClick={() => inspect({
+                  title: start.name, subtitle: `Starting Quest${q.startingDone ? ' · done' : ''}`,
+                  lines: [
+                    start.setup ? `Setup: ${start.setup}` : undefined,
+                    `Task: ${start.task}`,
+                    `How: ${questHowTo(cat, start)}`,
+                    `Reward: ${start.reward}`,
+                  ].filter(Boolean) as string[],
+                })}>
                 {q.startingDone ? '✔' : '◷'} Quest: <strong>{start.name}</strong> — {start.task}
               </div>
             )}
             {adv && (
               <div className={`quest-chip quest-advanced${q.advancedUnlocked ? '' : ' quest-locked'}`}
-                title={`Advanced quest.\nTask: ${adv.task}\nReward: ${adv.reward}`}>
+                title={`Task: ${adv.task}\nHow: ${questHowTo(cat, adv)}\nReward: ${adv.reward}`}
+                onClick={() => inspect({
+                  title: adv.name, subtitle: `Advanced Quest${q.advancedUnlocked ? '' : ' · locked'}${q.advancedDone ? ' · done' : ''}`,
+                  lines: [
+                    `Task: ${adv.task}`,
+                    `How: ${questHowTo(cat, adv)}`,
+                    `Reward: ${adv.reward}`,
+                  ],
+                })}>
                 {q.advancedUnlocked ? '◷' : '🔒'} Advanced: <strong>{adv.name}</strong>
               </div>
             )}

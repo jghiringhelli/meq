@@ -2,13 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Catalog, GameState } from '../engine/types';
 import { STORY_FINALE } from '../engine/types';
 import { reserveMinions } from '../engine/sauronPlay';
-import { characterArt, minionArt, heroArt, token, plotArt, monsterArt } from '../data/art';
+import { characterArt, minionArt, heroArt, token, plotArt, monsterArt, shadowPoolArt } from '../data/art';
 import { useInspect, type InspectPayload } from './CardInspector';
 
 interface Props {
   state: GameState; cat: Catalog;
   moveTargets: string[];
   onMove?: (to: string) => void;
+  /** Characters at the active hero's location who can be consulted this turn
+   *  (matches econ.characters in App.tsx) — clicking their board token opens a
+   *  favor/ability choice instead of just showing info. */
+  consultable?: string[];
+  consultDisabled?: boolean;
+  onConsult?: (character: string, choice: 'favor' | 'ability') => void;
 }
 
 const TERRAIN_COLOR: Record<string, string> = {
@@ -61,7 +67,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -93,13 +99,18 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
     const heroes = state.map.heroesAt[lid] ?? [];
     if (heroes.length) {
       const h0 = cat.heroes[heroes[0]!];
+      const h0State = state.heroes.find((h) => h.id === heroes[0]);
+      const bonusTxt = (key: 'fortitude' | 'strength' | 'agility' | 'wisdom') => {
+        const b = h0State?.statBonus?.[key] ?? 0;
+        return b ? `+${b}` : '';
+      };
       figs.push({
         key: 'hero', art: heroArt(heroes[0]!).figure, border: heroColor(heroes[0]!),
         count: heroes.length, label: heroes.map((id) => cat.heroes[id].name).join(', '),
         fill: '#22406e', init: heroes.map((id) => cat.heroes[id].name[0]).join(''), fit: 'meet',
-        tip: h0 ? `${h0.name}\nFortitude ${h0.fortitude} · Strength ${h0.strength} · Agility ${h0.agility} · Wisdom ${h0.wisdom}\n${h0.abilityName}: ${h0.abilityText}` : undefined,
+        tip: h0 ? `${h0.name}\nFortitude ${h0.fortitude}${bonusTxt('fortitude')} · Strength ${h0.strength}${bonusTxt('strength')} · Agility ${h0.agility}${bonusTxt('agility')} · Wisdom ${h0.wisdom}${bonusTxt('wisdom')}\n${h0.abilityName}: ${h0.abilityText}` : undefined,
         inspect: h0 ? { title: h0.name, img: heroArt(h0.id).portrait || heroArt(h0.id).figure,
-          subtitle: `Hero · Fort ${h0.fortitude} · Str ${h0.strength} · Agi ${h0.agility} · Wis ${h0.wisdom}`,
+          subtitle: `Hero · Fort ${h0.fortitude}${bonusTxt('fortitude')} · Str ${h0.strength}${bonusTxt('strength')} · Agi ${h0.agility}${bonusTxt('agility')} · Wis ${h0.wisdom}${bonusTxt('wisdom')}`,
           lines: [`${h0.abilityName}`], text: h0.abilityText } : undefined,
       });
     }
@@ -144,8 +155,22 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
           : 'Facedown monster token — hidden until combat or a reveal effect (Argalad’s Survivalist).' });
     }
     for (const cid of state.map.charactersAt?.[lid] ?? []) {
-      figs.push({ key: 'chr' + cid, art: characterArt(cid), border: ALLY_BORDER, count: 1,
-        label: pretty(cid), fill: '#4a7ea0', init: pretty(cid)[0], fit: 'meet' });
+      const canConsult = !!onConsult && (consultable ?? []).includes(cid) && !consultDisabled;
+      figs.push({
+        key: 'chr' + cid, art: characterArt(cid), border: ALLY_BORDER, count: 1,
+        label: pretty(cid), fill: '#4a7ea0', init: pretty(cid)[0], fit: 'meet',
+        tip: canConsult ? `${pretty(cid)} — click to consult (favor or recruit as ally)` : pretty(cid),
+        inspect: {
+          title: pretty(cid), img: characterArt(cid), subtitle: 'Character',
+          text: canConsult
+            ? 'Consult this character: gain 2 favor, or recruit them as an ally (their ability).'
+            : undefined,
+          actions: canConsult ? [
+            { label: '✦✦ Gain 2 favor', onClick: () => onConsult!(cid, 'favor') },
+            { label: '→ Recruit ability', onClick: () => onConsult!(cid, 'ability') },
+          ] : undefined,
+        },
+      });
     }
     return figs;
   };
@@ -676,6 +701,58 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
           );
         })()}
 
+        {/* Sauron's Actions & Shadow Pool — live overlays at the tower's base
+            (same spots as the clickable 'actions'/'shadow' hotspots above),
+            drawn in the same always-visible style as the Plot track: no click
+            needed to see the current state, though the hotspots remain for a
+            full breakdown. Eye tokens (👁 covered / plain number = open) mirror
+            CounterBar's EyeTracksViz; the Shadow Pool box shows the same
+            board-photo art (0..12 tokens) used in the top HUD. */}
+        {(() => {
+          const eye = state.sauron.eye ?? { influence: 0, draw: 0, command: 0 };
+          const tracks: { key: 'influence' | 'draw' | 'command'; label: string; slots: number[] }[] = [
+            { key: 'influence', label: 'Infl', slots: [6, 5, 4] },
+            { key: 'draw', label: 'Draw', slots: [2, 2, 1] },
+            { key: 'command', label: 'Cmd', slots: [3, 2, 1] },
+          ];
+          const ax = 5130, ay = 2960, aw = 940; // 'actions' hotspot geometry
+          const openShadowRef = () => window.dispatchEvent(new CustomEvent('meq-open-ref', { detail: 'shadow' }));
+          const rowH = 90, rowGap = 18, top = ay + 70;
+          const sx = 5190, sy = 3715, sw = 870, sh = 470; // 'shadow' (Shadow Pool) hotspot geometry
+          return (
+            <g pointerEvents="none">
+              <text x={ax + aw / 2} y={ay + 30} textAnchor="middle" fontSize={26} fontWeight={700}
+                fill="#f0d0c0">Eye Actions ({state.sauronActionsLeft ?? 0} left)</text>
+              {tracks.map((tr, ti) => {
+                const ry = top + ti * (rowH + rowGap);
+                const covered = eye[tr.key];
+                return (
+                  <g key={'eyetrack' + tr.key}>
+                    <text x={ax + 10} y={ry + rowH / 2 + 8} fontSize={22} fill="#d8c0a8">{tr.label}</text>
+                    {tr.slots.map((v, i) => {
+                      const cx = ax + 160 + i * 90, cy = ry + rowH / 2, on = i < covered;
+                      return (
+                        <g key={i}>
+                          <circle cx={cx} cy={cy} r={34} fill={on ? '#c0392b' : 'transparent'}
+                            stroke="#c0392b" strokeWidth={3} opacity={on ? 0.9 : 0.5} />
+                          <text x={cx} y={cy + 9} textAnchor="middle" fontSize={26} fill={on ? '#fff' : '#d8c0a8'}>
+                            {on ? '👁' : v}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </g>
+                );
+              })}
+              <g pointerEvents="auto" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); openShadowRef(); }}>
+                <image href={shadowPoolArt(state.sauron.influence)} x={sx} y={sy} width={sw} height={sh}
+                  preserveAspectRatio="xMidYMid slice" style={{ clipPath: `inset(0 round 12px)` }} />
+                <title>{`Shadow Pool — ${Math.min(12, state.sauron.influence)} influence placed (chest: ${state.sauron.influence})`}</title>
+              </g>
+            </g>
+          );
+        })()}
+
         {/* Story-track markers on the physical track along the board's top edge:
             the Hero (green) marker and Sauron's three story markers — Ring
             (yellow), War/Military (red), Corruption (black). Space 0 = START
@@ -686,16 +763,18 @@ export default function Board({ state, cat, moveTargets, onMove }: Props) {
           const xS = 2867, xF = 5865, ty = 150, R = STORY_FINALE;
           const st = state.story.sauron ?? { yellow: 0, red: 0, black: 0 };
           // Linear map: space 0 sits centred in the START cell (xS), space R on
-          // FINALE (xF). The four markers are kept legible by their 2×2 fan.
+          // FINALE (xF). The four markers are kept legible by their 2×2 fan —
+          // sized/offset generously (board art is ~6100px wide) so they read
+          // clearly even zoomed far out, and never crowd across a cell boundary.
           const at = (v: number) => xS + (xF - xS) * (Math.max(0, Math.min(R, v)) / R);
           const heroImg = token('heroStoryMarker');
           const markers = [
-            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -16, dy: -16, init: 'H', name: 'Hero', img: heroImg },
-            { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 16, dy: -16, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
-            { k: 'war', v: st.red, fill: '#b23b3b', dx: -16, dy: 16, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
-            { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 16, dy: 16, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
+            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -34, dy: -32, init: 'H', name: 'Hero', img: heroImg },
+            { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 34, dy: -32, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
+            { k: 'war', v: st.red, fill: '#b23b3b', dx: -34, dy: 32, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
+            { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 34, dy: 32, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
           ];
-          const r = 16;
+          const r = 28;
           return (
             <g pointerEvents="none">
               {markers.map((m) => {

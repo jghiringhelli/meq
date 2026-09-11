@@ -4,12 +4,13 @@ import { beginCombat, resolveCombatChoice, resolvePreparation } from './combat';
 import { spendActionForCombat } from './phases';
 import { resolveQuestRewardChoice } from './quests';
 import { resolveSurveyChoice } from './economy';
-import { clone } from './mechanics';
+import { clone, resolveTrainingChoice } from './mechanics';
 
 export { newGame } from './setup';
 export {
   heroMove, heroRest, endHeroActions, advance, engageableMonsters, checkWin,
   heroExplore, resolveEncounter, canExplore, chooseEncounter, encounterPlan, revealEncounter, dismissReveal,
+  dismissCombatSummary,
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep, resolveCombatOrPeril,
 } from './phases';
 export {
@@ -58,6 +59,11 @@ export function resolveChoice(state: GameState, cat: Catalog, optionId: string):
     case 'survey': {
       const s = clone(cleared);
       resolveSurveyChoice(s, cat, optionId);
+      return s;
+    }
+    case 'training': {
+      const s = clone(cleared);
+      resolveTrainingChoice(s, cat, optionId);
       return s;
     }
     default:

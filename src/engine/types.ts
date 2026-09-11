@@ -41,6 +41,12 @@ export interface CombatCard {
 
 export interface Monster {
   id: MonsterId; name: string;
+  /** Combat life pool (damage tokens needed to defeat it). Distinct from
+   *  fortitude — see `fortitude` below. */
+  health: number;
+  /** Cards drawn into its combat hand at the start of a fight — NOT its life
+   *  total (per the physical MEQ Monster Reference sheet, Fortitude only
+   *  governs hand size). */
   fortitude: number; strength: number; wisdom: number;
   deck: string; ratioRanged: number; ratioMelee: number;
   ability: string; effectKey: EffectKey; image: string;
@@ -204,7 +210,7 @@ export type Atom =
   | { op: 'gainItem'; item: string }
   | { op: 'discardItem'; n: number }
   | { op: 'gainStat'; stat: 'fortitude' | 'strength' | 'agility' | 'wisdom' | 'choice'; n: number }
-  | { op: 'moveAdjacent' }
+  | { op: 'moveAdjacent'; to?: LocationId }
   | { op: 'moveToEncounter'; location: string }
   | { op: 'placeCharacter'; who: string; location: string; ifInPlay?: boolean }
   | { op: 'explore'; location: string }
@@ -623,9 +629,23 @@ export interface CombatState {
 }
 
 // ---- Choices & log ----
-export interface ChoiceOption { id: string; label: string; }
+/** `cardId` is set when an option represents a specific combat/skill card
+ *  (e.g. a training pick) so the UI can render its art/stats/ability instead
+ *  of just the text label. */
+export interface ChoiceOption { id: string; label: string; cardId?: CardId; }
 export interface Choice {
   id: string; seat: number | 'sauron'; kind: string; prompt: string; options: ChoiceOption[];
+}
+/** Human-readable recap of a just-finished combat, for the post-combat summary
+ *  modal (see App.tsx / CombatSummaryModal.tsx). */
+export interface CombatSummary {
+  result: 'attacker' | 'defender' | 'escape' | 'standoff';
+  heroId: HeroId; heroName: string;
+  foeName: string; foeKind: 'monster' | 'minion';
+  rounds: number; damageTaken: number;
+  /** log lines emitted while resolving the outcome (quest reward, defeat
+   *  consequences, etc.) — joined for display. */
+  notes: string[];
 }
 export interface LogEvent {
   seq: number;              // monotonic, per-game
@@ -644,6 +664,11 @@ export interface GameState {
   map: MapState; story: StoryTrack;
   pendingCombat: CombatState | null;
   pendingChoice: Choice | null;
+  /** A dismissible "what just happened" summary shown after combat resolves
+   *  (independent of pendingCombat, which still nulls immediately so bots/tests
+   *  are unaffected). The human UI shows this until the player hits Continue;
+   *  a fresh combat simply overwrites it. */
+  lastCombatSummary?: CombatSummary | null;
   /** an encounter drawn at a location, awaiting the player to resolve it.
    *  `decisions` records choices made so far (replay-driven resolution).
    *  `drawn` are the (up to 3) Encounter cards revealed this draw; `applicable`
@@ -709,6 +734,11 @@ export interface GameState {
    *  heroes train; never reshuffled. */
   skillDeck?: CardId[];
   skillDiscard?: CardId[];
+  /** A pending "Training: keep one of two drawn Skill cards" decision
+   *  (rulebook p.26). `remaining` = additional training levels still owed to
+   *  this hero after this pick resolves (usually 0). Resolved via the generic
+   *  `resolveChoice` (kind 'training'). */
+  pendingTraining?: { heroId: HeroId; remaining: number; a: CardId; b?: CardId } | null;
   /** Shared Corruption deck (rulebook p.26): shuffled at setup. Heroes gain a
    *  card when corrupted; each imposes an ongoing penalty (see corruption.ts)
    *  and lists a favor cost to discard it at Rest. Removed cards return here. */

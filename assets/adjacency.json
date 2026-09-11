@@ -303,7 +303,8 @@
       "a": "high-pass",
       "b": "gladden-fields",
       "terrain": "mountain",
-      "cost": 3
+      "cost": 3,
+      "water": true
     },
     {
       "a": "the-redhorn-gate",

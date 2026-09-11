@@ -97,17 +97,38 @@ describe('multiplayer — host-authoritative flow (1 Sauron host + 3 hero client
     expect(JSON.stringify(t.game)).toBe(before); // unchanged
   });
 
-  it('never lets a non-host client drive phase flow (advance/endHeroActions)', () => {
+  it('never lets a non-host client drive shared phase flow (advance)', () => {
     const t = new Table();
     t.connect('p1');
     t.advanceToHeroActions();
     const before = JSON.stringify(t.game);
     t.submit('p1', { t: 'advance' });
-    t.submit('p1', { t: 'endHeroActions' });
-    expect(JSON.stringify(t.game)).toBe(before); // flow is host-only
+    expect(JSON.stringify(t.game)).toBe(before); // advance is host-only game flow
     // the host, as referee, CAN advance
     t.hostAct({ t: 'endHeroActions' });
     expect(JSON.stringify(t.game)).not.toBe(before);
+  });
+
+  it('lets a hero-role client end their own turn without the host\'s help', () => {
+    const t = new Table();
+    t.connect('p1');
+    t.advanceToHeroActions();
+    const owner = t.game.heroes[t.game.activeHeroIndex];
+    t.claim('p1', 'Ann', owner.id);
+    const before = JSON.stringify(t.game);
+    t.submit('p1', { t: 'endHeroActions' });
+    expect(JSON.stringify(t.game)).not.toBe(before); // their own turn — allowed
+  });
+
+  it('still rejects endHeroActions from someone who does not own the active hero', () => {
+    const t = new Table();
+    t.connect('p1'); t.connect('p2');
+    t.advanceToHeroActions();
+    const owner = t.game.heroes[t.game.activeHeroIndex];
+    t.claim('p1', 'Ann', owner.id); // p1 owns the active hero, p2 owns nothing
+    const before = JSON.stringify(t.game);
+    t.submit('p2', { t: 'endHeroActions' });
+    expect(JSON.stringify(t.game)).toBe(before); // unchanged — not p2's hero
   });
 
   it('frees a kicked/departed player\'s roles back to open (AI takeover)', () => {
