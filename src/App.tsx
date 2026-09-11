@@ -267,7 +267,6 @@ export default function App() {
           the VASSAL module's images below, kept in your browser only.
         </p>
         <main className="app-main">
-          <p>{Object.keys(catalog.heroes).length} heroes · {Object.keys(catalog.locations).length} locations · {Object.keys(catalog.combatCards).length} combat cards loaded.</p>
           <div className="start-actions">
             <button className="primary" onClick={requestNewGame}>New game</button>
             <button className="secondary" onClick={() => { setPendingHost(true); setSetup(true); }}>Host online game</button>
