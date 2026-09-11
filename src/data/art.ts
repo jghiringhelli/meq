@@ -50,15 +50,23 @@ function withUserArt(url: string): string {
  *  used by the BYO-art loader to report how many expected files were matched. */
 export function expectedArtNames(): string[] {
   const set = new Set<string>();
-  const walk = (v: unknown) => {
+  const walk = (v: unknown, key?: string) => {
+    // `_meta` is generator metadata (schema/urlBase), not an art reference —
+    // its `urlBase` value ("/dev-assets/art/") would otherwise match the
+    // `/dev-assets/art/` check below with an empty basename. `*_byTitle` maps
+    // are dead debug output from the manifest generator (VASSAL slot titles
+    // keyed by normalized name, used only to help BUILD the real id-keyed
+    // maps above them) — no runtime resolver in this file reads them, so
+    // they should never count as "expected" art either.
+    if (key === '_meta' || (key && key.endsWith('_byTitle'))) return;
     if (typeof v === 'string') {
       if (v.includes('/dev-assets/art/')) {
         let file = v.slice(v.lastIndexOf('/') + 1);
         try { file = decodeURIComponent(file); } catch { /* keep raw */ }
-        set.add(file);
+        if (file) set.add(file);
       }
     } else if (v && typeof v === 'object') {
-      for (const val of Object.values(v as Record<string, unknown>)) walk(val);
+      for (const [k, val] of Object.entries(v as Record<string, unknown>)) walk(val, k);
     }
   };
   walk(art);

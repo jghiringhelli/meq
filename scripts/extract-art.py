@@ -51,7 +51,14 @@ def extract_images(z):
 
 def parse_slots(bf):
     """Return list of (entryName, image, label) for every CardSlot/PieceSlot."""
-    imgre = re.compile(r"([^;\t]+\.(?:jpg|jpeg|png|gif|PNG|JPG|JPEG))")
+    # Excludes commas: some board pieces (e.g. the Shadow Pool track marker,
+    # which has 13 layered states) embed a comma-separated list of ALL their
+    # state images in one VASSAL trait field. Without excluding commas here,
+    # the whole list gets swallowed as a single bogus "filename" ending in
+    # .jpg, which then falsely matches the shadow-card title-map prefix
+    # ("shadow...") and pollutes the manifest with an unmatchable multi-name
+    # entry. We only want the piece's own single (first) image here.
+    imgre = re.compile(r"([^;\t,]+\.(?:jpg|jpeg|png|gif|PNG|JPG|JPEG))")
     out = []
     for m in re.finditer(
         r'<VASSAL\.build\.widget\.(?:Card|Piece)Slot entryName="([^"]*)"[^>]*>(.*?)'
