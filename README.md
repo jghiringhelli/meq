@@ -3,7 +3,7 @@
 A free, fan-made digital adaptation of *Middle-earth Quest* (Fantasy Flight
 Games, 2009). Built for playtesting with friends online or solo against an AI.
 
-**▶ Play here:** https://jghiringhelli.github.io/meq/
+**▶ Play here:** https://middle-earth-quest-board-game.netlify.app
 
 > **This is an unofficial, non-commercial fan project.** Middle-earth Quest,
 > its setting, art, and all associated trademarks belong to Fantasy Flight
