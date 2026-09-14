@@ -56,6 +56,12 @@ export default function App() {
   const [resumable, setResumable] = useState(() => loadSavedGame());
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [travelTo, setTravelTo] = useState<string | null>(null);
+  const [focusMap, setFocusMap] = useState(() => {
+    try { return localStorage.getItem('meq-focus-map') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('meq-focus-map', focusMap ? '1' : '0'); } catch { /* ignore */ }
+  }, [focusMap]);
   const heroRng = useRef(mulberry32(0));
 
   // ---- Multiplayer session (host-authoritative). Off by default (solo play). ----
@@ -392,6 +398,29 @@ export default function App() {
   const engageable = inHeroActions ? engageableMonsters(state, activeHero.id) : [];
   const ambush = inHeroActions && engageable.length > 0;
   const exploreHere = inHeroActions && !ambush && canExplore(state, cat, activeHero.id);
+  // A card effect (e.g. "A Path Through the Mountains") sometimes asks the hero
+  // to choose an adjacent location as a free bonus move. Rather than a separate
+  // text-button-only UI, resolve it via the SAME map-click interaction used for
+  // regular travel: match each option's label back to a location id and, when
+  // it's this human's decision, let the map highlight/click drive the choice
+  // too (the text buttons below remain as an always-available fallback).
+  const pendingMoveTree = state.pendingTree
+    && state.pendingTree.actor === 'hero' && iControlHero(state.pendingTree.heroId)
+    && /move to (an? )?adjacent location/i.test(state.pendingTree.prompt)
+    ? state.pendingTree
+    : null;
+  const pendingMoveTargets: { loc: string; idx: number }[] = pendingMoveTree
+    ? pendingMoveTree.options
+        .map((o, idx) => {
+          const loc = Object.keys(cat.locations).find((id) => cat.locations[id]?.name === o.label);
+          return loc ? { loc, idx } : null;
+        })
+        .filter((x): x is { loc: string; idx: number } => !!x)
+    : [];
+  const doPendingMove = (to: string) => {
+    const hit = pendingMoveTargets.find((x) => x.loc === to);
+    if (hit) doTreeDecision(hit.idx);
+  };
 
   // The "obvious next thing" for the active hero's turn, in the natural order a
   // player would work through their Explore actions: fight an ambush, retrieve
@@ -473,38 +502,40 @@ export default function App() {
           && !(iControlSauron && state.activeSide === 'Sauron') && (
           <button className="primary" onClick={doAdvance}>Advance phase ▶</button>
         )}
+        <button className="ghost" title={focusMap ? 'Show the reference bars and side panels again' : 'Hide the reference bars and side panels for a bigger map'}
+          onClick={() => setFocusMap((v) => !v)}>{focusMap ? '☰ Show panels' : '🗺 Focus map'}</button>
         <button className="ghost" title="Describe a bug and file a GitHub issue with a full technical snapshot"
           onClick={() => setReportOpen(true)}>Report a problem</button>
         <button className="ghost" title="Delete the current game and return to the menu"
           onClick={deleteGame}>Delete game</button>
       </header>
 
-      <CounterBar state={state} cat={cat} revealHeroMission={seesHeroMission} />
-      <DeckBar state={state} cat={cat} />
-      <RefTabs state={state} cat={cat} />
-      <PlotRow state={state} cat={cat} />
+      {!focusMap && <CounterBar state={state} cat={cat} revealHeroMission={seesHeroMission} />}
+      {!focusMap && <DeckBar state={state} cat={cat} />}
+      {!focusMap && <RefTabs state={state} cat={cat} />}
+      {!focusMap && <PlotRow state={state} cat={cat} />}
 
       <main className="app-main play-layout">
         <Board
           state={state} cat={cat}
-          moveTargets={ambush ? [] : moves.map((m) => m.to)}
-          onMove={inHeroActions && !ambush ? doMove : undefined}
+          moveTargets={pendingMoveTree ? pendingMoveTargets.map((x) => x.loc) : (ambush ? [] : moves.map((m) => m.to))}
+          onMove={pendingMoveTree ? doPendingMove : (inHeroActions && !ambush ? doMove : undefined)}
           consultable={econ.characters} consultDisabled={!inHeroActions || activeHero.actionsRemaining <= 0 || ambush}
           onConsult={doConsult}
         />
-        <aside className="side">
-          {seesHeroMission && <MissionPanel state={state} cat={cat} />}
-          {seesHeroMission && <SauronSummary state={state} />}
-          <NetPanel net={net} state={state} cat={cat} roster={roster} onClaim={handleClaim} onKick={net.kick} />
-          <TurnCycle state={state} cat={cat} />
+        <aside className={`side${focusMap ? ' side-compact' : ''}`}>
+          {!focusMap && seesHeroMission && <MissionPanel state={state} cat={cat} />}
+          {!focusMap && seesHeroMission && <SauronSummary state={state} />}
+          {!focusMap && <NetPanel net={net} state={state} cat={cat} roster={roster} onClaim={handleClaim} onKick={net.kick} />}
+          {!focusMap && <TurnCycle state={state} cat={cat} />}
           <HeroPanel
             state={state} cat={cat} active={inHeroActions}
             engageable={engageable} canExplore={exploreHere} ambush={ambush}
             onRest={doRest} onRestTrain={doRestTrain} onEngage={doEngage} onEndTurn={doEndTurn} onExplore={doExplore}
             econ={econ}
           />
-          <LogPane state={state} revealSide={viewerSide} />
-          <NotesPanel seed={seed} />
+          {!focusMap && <LogPane state={state} revealSide={viewerSide} />}
+          {!focusMap && <NotesPanel seed={seed} />}
         </aside>
       </main>
 
@@ -564,6 +595,7 @@ export default function App() {
         <div className="banner tree-decision">
           <span>
             <b>{state.pendingTree.source}</b> — {state.pendingTree.prompt}
+            {pendingMoveTree && pendingMoveTargets.length > 0 ? ' (or click the highlighted location on the map)' : ''}
           </span>
           {state.pendingTree.options.map((o, i) => (
             <button key={i} disabled={!o.enabled} onClick={() => doTreeDecision(i)}>

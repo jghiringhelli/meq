@@ -256,6 +256,7 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .board { width: 100%; height: auto; display: block; }
 .node.target circle { filter: drop-shadow(0 0 6px var(--accent)); }
 .side { width: 360px; display: flex; flex-direction: column; gap: 0.8rem; }
+.side-compact { width: 220px; }
 
 .hero-panel { background: var(--panel); border: 1px solid #3a2f22; border-radius: 6px; padding: 0.7rem; }
 .hero-head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; margin-bottom: 0.4rem; }
