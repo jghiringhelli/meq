@@ -39,3 +39,33 @@ export function buildBugReportUrl(opts: {
   const params = new URLSearchParams({ title, body, labels: 'bug,player-report' });
   return `https://github.com/${GITHUB_REPO}/issues/new?${params.toString()}`;
 }
+
+/**
+ * Plain-text version of the same report, for players who don't have (or don't
+ * want) a GitHub account. This is meant to be copied to the clipboard and
+ * pasted into whatever channel is easiest for the player (a chat message,
+ * email, Discord DM…) alongside the downloaded JSON file — no GitHub issue,
+ * no account, no technical steps beyond "paste and attach".
+ */
+export function buildBugReportSummaryText(opts: {
+  description: string;
+  seed: number;
+  phase?: string | null;
+  round?: number | null;
+  reportFilename: string;
+  crashMessage?: string;
+}): string {
+  const { description, seed, phase, round, reportFilename, crashMessage } = opts;
+  const lines = [
+    'Middle-earth Quest — bug report',
+    description.trim() || '(describe what you were doing / what happened)',
+    '',
+    `Seed: ${seed}`,
+    phase ? `Phase: ${phase}` : null,
+    round != null ? `Round: ${round}` : null,
+    crashMessage ? `Error: ${crashMessage}` : null,
+    '',
+    `(attach the file "${reportFilename}" that was just downloaded to this message)`,
+  ].filter((l): l is string => l !== null);
+  return lines.join('\n');
+}

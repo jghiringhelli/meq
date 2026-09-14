@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { recordCrash, loadLastCrash, clearLastCrash, exportProblemReport } from '../src/play/persistence';
-import { buildBugReportUrl, GITHUB_REPO } from '../src/play/bugReport';
+import { buildBugReportUrl, buildBugReportSummaryText, GITHUB_REPO } from '../src/play/bugReport';
 
 // Vitest here runs in a bare Node environment (no jsdom), so there's no
 // global `localStorage` at all — persistence.ts already degrades gracefully
@@ -68,5 +68,21 @@ describe('bug report / crash persistence helpers', () => {
     const title = decodeURIComponent(url.split('title=')[1].split('&')[0].replace(/\+/g, ' '));
     expect(title).toContain('Crash:');
     expect(title).toContain('Cannot read properties of undefined');
+  });
+
+  it('builds a plain-text summary (no GitHub, no URL-encoding) for players without a GitHub account', () => {
+    const text = buildBugReportSummaryText({
+      description: 'hero could not move',
+      seed: 7,
+      phase: 'HeroActions',
+      round: 3,
+      reportFilename: 'meq-report-seed7-round3.json',
+    });
+    expect(text).toContain('hero could not move');
+    expect(text).toContain('Seed: 7');
+    expect(text).toContain('Phase: HeroActions');
+    expect(text).toContain('Round: 3');
+    expect(text).toContain('meq-report-seed7-round3.json');
+    expect(text).not.toContain('github.com');
   });
 });
