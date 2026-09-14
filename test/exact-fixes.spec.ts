@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { cat, freshGame, events, shadowCards, plots } from './helpers';
 import { applyAtom, evalMetric } from '../src/engine/encounter';
+import { sauronResolveEvents } from '../src/engine/game';
 
 const activeId = (s: ReturnType<typeof freshGame>) =>
   (s.heroes.find((h) => h.status === 'active') ?? s.heroes[0]).id;
@@ -64,6 +65,27 @@ describe('exact modeling of previously-abstracted cards', () => {
       const plot = plots.find((p) => p.eventDeckPlot && norm(p.name) === norm(e.name));
       expect(plot, `${id} must have a matching eventDeckPlot`).toBeTruthy();
     }
+  });
+
+  it('a newly resolved eventDeckPlot replaces (not stacks with) one already on the Current Event Card space (manual p.15)', () => {
+    let s = freshGame();
+    s.phase = 'SauronEvents';
+    s.story.sauron = { yellow: 7, red: 0, black: 0 }; // gameStage() -> 2, so drawEventCards keeps our forced deck
+    s.sauron.eventStage = 2; // matches t2 events; skip the deck rebuild
+    s.sauron.eventDeck = ['event-t2-the-glades-of-orthanc-darken', 'event-t2-of-serpents-and-sand'];
+    s.sauron.eventDiscard = [];
+
+    s = sauronResolveEvents(s, cat);
+    expect(s.sauron.activeEventPlots?.map((p) => p.eventId)).toEqual(['glades-of-orthanc-darken']);
+    expect(s.map.charactersAt?.['isengard']).toContain('saruman');
+
+    s.phase = 'SauronEvents'; // simulate the next Sauron turn's Event Step
+    s = sauronResolveEvents(s, cat);
+    // Replaced, not stacked: exactly one active event-deck plot remains.
+    expect(s.sauron.activeEventPlots?.map((p) => p.eventId)).toEqual(['of-serpents-and-sand']);
+    // The bumped card's Character is removed and the card returns to discard.
+    expect(s.map.charactersAt?.['isengard'] ?? []).not.toContain('saruman');
+    expect(s.sauron.eventDiscard).toContain('event-t2-the-glades-of-orthanc-darken');
   });
 
   it('refined event/shadow trees use the exact atoms', () => {    const atomsIn = (tree: unknown): string[] => {

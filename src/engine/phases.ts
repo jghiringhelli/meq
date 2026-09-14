@@ -787,7 +787,11 @@ function eventDeckPlotFor(cat: Catalog, e: { name?: string }): Plot | null {
 }
 
 /** Bring an event-deck plot onto the board: a lasting token at its location that
- *  advances its coloured story marker each Story Step until Explored away. */
+ *  advances its coloured story marker each Story Step until Explored away.
+ *  Manual p.15 ("Event Marker Icon"): there is a single Current Event Card space
+ *  on the board — an already-active event-deck plot remains in play only "until
+ *  their requirements are met OR the card is replaced by another Event card", so
+ *  a newly resolved eventDeckPlot bumps out (discards) whichever one is active. */
 function registerEventPlot(s: GameState, cat: Catalog, e: { name?: string; questLocation?: string }): void {
   const plot = eventDeckPlotFor(cat, e);
   if (!plot) return;
@@ -795,6 +799,11 @@ function registerEventPlot(s: GameState, cat: Catalog, e: { name?: string; quest
   if (!loc) return;
   const list = (s.sauron.activeEventPlots ||= []);
   if (list.some((m) => m.eventId === plot.id)) return; // already in play
+  for (const prev of [...list]) {
+    const prevPlot = cat.plots.find((p) => p.id === prev.eventId);
+    discardEventPlot(s, cat, prev.eventId);
+    log(s, 'event-place', 'Sauron', `${prevPlot?.name ?? prev.eventId} is replaced by ${plot.name} on the Current Event Card space`);
+  }
   list.push({ eventId: plot.id, step: 0, location: loc });
   log(s, 'event-place', 'Sauron', `${plot.name} enters play at ${cat.locations[loc]?.name ?? loc} — Explore to discard`, { cardId: plot.id });
 }
@@ -1289,9 +1298,7 @@ function maybeBeginFinale(s: GameState, cat: Catalog): GameState {
   if (s.map.minionHealth) delete s.map.minionHealth[wraithId];
   if (s.map.minionReturnPending) s.map.minionReturnPending = s.map.minionReturnPending.filter((m) => m !== wraithId);
   (s.map.minionsAt[champion.location] ||= []).push(wraithId);
-  const sauronMissions = Object.keys(cat.sauronMissions);
-  const drawn = [sauronMissions[s.story.turn % sauronMissions.length], sauronMissions[(s.story.turn + 1) % sauronMissions.length]];
-  log(s, 'finale', 'Sauron', `Finale contested (${trigger} reached the end, ${dom ?? 'neither'} dominant): ${wraith.name} (health ${s.sauron.finaleWraithHealth}, fortitude ${s.sauron.finaleWraithFortitude}, mod ${mod >= 0 ? '+' : ''}${mod}) vs champion ${cat.heroes[champion.id].name} at ${champion.location}; Sauron reveals ${drawn.join(', ')}. The final battle begins.`);
+  log(s, 'finale', 'Sauron', `Finale contested (${trigger} reached the end, ${dom ?? 'neither'} dominant): ${wraith.name} (health ${s.sauron.finaleWraithHealth}, fortitude ${s.sauron.finaleWraithFortitude}, mod ${mod >= 0 ? '+' : ''}${mod}) vs champion ${cat.heroes[champion.id].name} at ${champion.location}; Sauron reveals his secret mission — ${sauronMission?.name ?? 'unknown'}. The final battle begins.`);
   // Finale step 6 — Combat: open the SINGLE, decisive battle immediately (manual
   // p.33: "players no longer take normal turns"). endCombat adjudicates the game
   // from its outcome — Ringwraiths destroyed → heroes win, else Sauron wins.
