@@ -437,9 +437,10 @@ export default function App() {
   // Smart next-step button: only when the human runs the heroes (a human Sauron
   // is guided by the SauronPanel instead). It ends the hero turn or advances the
   // dark side's AI step, glowing when nothing is left and warning otherwise.
+  const travelModalOpen = !!(travelTo && inHeroActions && !ambush);
   const anyPending = !!(state.pendingCombat || state.pendingChoice || state.pendingEncounter
     || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction
-    || state.lastCombatSummary);
+    || state.lastCombatSummary || travelModalOpen);
   const smartMode: 'endTurn' | 'advance' | null =
     state.winner || anyPending || iControlSauron ? null
       : inHeroActions ? 'endTurn'

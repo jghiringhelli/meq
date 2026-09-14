@@ -48,23 +48,23 @@ export default function SauronSummary({ state }: { state: GameState }) {
         <span>🛡 Sauron</span>
         {setup.length > 0 && (
           <button className="ss-toggle" onClick={() => setShowSetup((v) => !v)}>
-            {showSetup ? 'Ocultar setup' : 'Ver setup'}
+            {showSetup ? 'Hide setup' : 'Show setup'}
           </button>
         )}
       </div>
       {showSetup && setup.length > 0 && (
         <div className="ss-block ss-setup">
-          <div className="ss-sub">Preparación inicial</div>
+          <div className="ss-sub">Initial setup</div>
           {setup.map((e, i) => <Line key={`s${i}`} e={e} />)}
         </div>
       )}
       {lastTurn.length > 0 ? (
         <div className="ss-block">
-          <div className="ss-sub">Último turno de Sauron{round ? ` · ronda ${round}` : ''}</div>
+          <div className="ss-sub">Sauron's last turn{round ? ` · round ${round}` : ''}</div>
           {lastTurn.map((e, i) => <Line key={`t${i}`} e={e} />)}
         </div>
       ) : (
-        <div className="ss-block ss-empty">Sauron aún no ha jugado un turno.</div>
+        <div className="ss-block ss-empty">Sauron has not taken a turn yet.</div>
       )}
     </div>
   );
