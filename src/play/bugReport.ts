@@ -69,3 +69,75 @@ export function buildBugReportSummaryText(opts: {
   ].filter((l): l is string => l !== null);
   return lines.join('\n');
 }
+
+/**
+ * Fully automatic path: a Netlify Function (`netlify/functions/report-issue.ts`)
+ * holds a GitHub token server-side (never shipped to the client) and files the
+ * issue itself, so the player doesn't have to do anything after clicking a
+ * button. This builder is shared by the client (for the `submitAuto` request
+ * body, so we only send what we actually use) and by the function itself (to
+ * turn that body into the actual issue title/body/labels) — it has no
+ * browser/Node-specific APIs so it's safe to import from either side.
+ */
+export interface AutoReportPayload {
+  description: string;
+  userAgent: string;
+  timestamp: string;
+  seed: number;
+  phase?: string | null;
+  round?: number | null;
+  crashMessage?: string;
+  /** Already-formatted, most-recent-last log lines (only the tail is kept). */
+  logTail: string[];
+  /** `JSON.stringify(state)` — capped to fit GitHub's issue body size limit. */
+  stateJson?: string;
+}
+
+export interface GithubIssueContent {
+  title: string;
+  body: string;
+  labels: string[];
+}
+
+// GitHub caps issue bodies well under 65536 chars; leave headroom for the
+// rest of the body (log tail, headers) around the embedded state JSON.
+const MAX_STATE_JSON_CHARS = 50000;
+const MAX_LOG_LINES = 30;
+
+export function buildAutoIssueContent(payload: AutoReportPayload): GithubIssueContent {
+  const { description, userAgent, timestamp, seed, phase, round, crashMessage, logTail, stateJson } = payload;
+  const firstLine = (crashMessage || description || 'Bug report').split('\n')[0].trim().slice(0, 90);
+  // Tagged distinctly: the issue is authored by the bot/token account, not by
+  // the maintainer, so this prefix avoids anyone mistaking it for a self-filed
+  // issue (a real point of confusion the first time this pattern was used).
+  const title = `[player report] ${firstLine || 'Untitled report'}`;
+
+  const context = [
+    `Seed: ${seed}`,
+    phase ? `Phase: ${phase}` : null,
+    round != null ? `Round: ${round}` : null,
+    crashMessage ? `Error: ${crashMessage}` : null,
+    `Time: ${timestamp}`,
+    `User agent: ${userAgent}`,
+  ].filter((l): l is string => l !== null);
+
+  const sections = [
+    '_Filed automatically by a player via the in-game "Report a problem" tool — this was not written or reviewed by the maintainer._',
+    `### What happened\n${description.trim() || '_(no description provided)_'}`,
+    `### Context\n${context.map((c) => `- ${c}`).join('\n')}`,
+  ];
+
+  if (logTail.length) {
+    sections.push(`### Recent log\n\`\`\`\n${logTail.slice(-MAX_LOG_LINES).join('\n')}\n\`\`\``);
+  }
+
+  if (stateJson) {
+    const truncated = stateJson.length > MAX_STATE_JSON_CHARS;
+    const clipped = truncated ? stateJson.slice(0, MAX_STATE_JSON_CHARS) : stateJson;
+    sections.push(
+      `### Game state snapshot${truncated ? ' (truncated to fit)' : ''}\n\`\`\`json\n${clipped}\n\`\`\``,
+    );
+  }
+
+  return { title, labels: ['bug', 'from-game'], body: sections.join('\n\n') };
+}

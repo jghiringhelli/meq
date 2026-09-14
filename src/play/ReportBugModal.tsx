@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { exportProblemReport, loadLastCrash, clearLastCrash } from './persistence';
 import { buildBugReportUrl, buildBugReportSummaryText } from './bugReport';
+import type { AutoReportPayload } from './bugReport';
 import type { GameState } from '../engine/types';
 import type { CrashInfo } from './persistence';
 
@@ -12,25 +13,30 @@ interface Props {
 }
 
 /**
- * "Report a problem" flow: the player describes what happened, we download a
- * full JSON snapshot (state + log + browser info) to their device, then either:
- *  - open a prefilled GitHub issue so they only need to drag the file in and
- *    submit (best if they already have/don't mind making a GitHub account), or
- *  - for players without a GitHub account, just copy a short plain-text
- *    summary to the clipboard so they can paste it into WhatsApp/Discord/email
- *    together with the downloaded file — no account or technical step needed.
- * Nothing is uploaded automatically — the player stays in control of what
- * leaves their machine, and no GitHub credentials are ever exposed client-side.
+ * "Report a problem" flow: the player describes what happened, then picks one of:
+ *  - "Send report automatically" (default/primary): posts to a Netlify Function
+ *    (netlify/functions/report-issue.ts) that files the GitHub issue itself,
+ *    using a token that lives server-side only — nothing for the player to do
+ *    afterwards. Falls back with a clear error if the function isn't
+ *    configured/reachable, so the manual options below always still work.
+ *  - "Download report & open GitHub issue myself": downloads a full JSON
+ *    snapshot and opens a prefilled GitHub issue the player attaches it to.
+ *  - "Don't have GitHub — copy summary instead": downloads the same JSON and
+ *    copies a short plain-text summary to paste into WhatsApp/Discord/email.
+ * No GitHub credentials are ever exposed client-side in any of these paths.
  */
 export default function ReportBugModal({ seed, state, crash, onClose }: Props) {
   const [description, setDescription] = useState('');
-  const [step, setStep] = useState<'form' | 'done-github' | 'done-copy'>('form');
+  const [step, setStep] = useState<'form' | 'done-github' | 'done-copy' | 'done-auto'>('form');
   // If the caller didn't hand us a crash directly (e.g. the player clicked
   // "Report a problem" themselves, not from the crash screen), check whether
   // a background error slipped by unnoticed (an event-handler throw or an
   // unhandled promise rejection) so it still gets attached automatically.
   const effectiveCrash = crash ?? loadLastCrash() ?? undefined;
   const [lastSummary, setLastSummary] = useState('');
+  const [autoBusy, setAutoBusy] = useState(false);
+  const [autoError, setAutoError] = useState('');
+  const [autoIssueUrl, setAutoIssueUrl] = useState('');
 
   const submitGithub = () => {
     const filename = exportProblemReport(seed, state, description, effectiveCrash);
@@ -45,6 +51,49 @@ export default function ReportBugModal({ seed, state, crash, onClose }: Props) {
     window.open(url, '_blank', 'noopener');
     clearLastCrash();
     setStep('done-github');
+  };
+
+  // Fully automatic path: send everything to a Netlify Function that files
+  // the GitHub issue itself (token lives server-side only — see
+  // netlify/functions/report-issue.ts). Falls back gracefully — on any error
+  // (function not deployed/configured yet, offline, etc.) we show the message
+  // and let the player use one of the manual options below instead.
+  const submitAuto = async () => {
+    setAutoBusy(true);
+    setAutoError('');
+    try {
+      const logTail = (state?.log ?? [])
+        .slice(-30)
+        .map((e) => `R${e.round} ${e.phase} — ${e.actor}: ${e.detail}`);
+      const payload: AutoReportPayload = {
+        description,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        timestamp: new Date().toISOString(),
+        seed,
+        phase: state?.phase ?? null,
+        round: state?.round ?? null,
+        crashMessage: effectiveCrash?.message,
+        logTail,
+        stateJson: state ? JSON.stringify(state) : undefined,
+      };
+      const res = await fetch('/.netlify/functions/report-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.ok !== true) {
+        setAutoError((data && data.error) || `Couldn't submit automatically (${res.status}).`);
+        return;
+      }
+      clearLastCrash();
+      setAutoIssueUrl(data.url || '');
+      setStep('done-auto');
+    } catch (err) {
+      setAutoError(err instanceof Error ? err.message : 'Network error — couldn\'t reach the server.');
+    } finally {
+      setAutoBusy(false);
+    }
   };
 
   // No-GitHub-account path: same downloaded file, but instead of opening a
@@ -95,8 +144,16 @@ export default function ReportBugModal({ seed, state, crash, onClose }: Props) {
               <button className="ghost" onClick={onClose}>Cancel</button>
               <button className="ghost" title="No GitHub account? Downloads the same report file and copies a short summary you can paste into a chat/email instead."
                 onClick={submitCopy}>Don't have GitHub — copy summary instead</button>
-              <button className="primary" onClick={submitGithub}>Download report &amp; open GitHub issue</button>
+              <button className="ghost" onClick={submitGithub}>Download report &amp; open GitHub issue myself</button>
+              <button className="primary" disabled={autoBusy} onClick={submitAuto}>
+                {autoBusy ? 'Sending…' : 'Send report automatically'}
+              </button>
             </div>
+            {autoError && (
+              <p className="report-crash-note">
+                {autoError} You can still use one of the other options above.
+              </p>
+            )}
           </>
         ) : step === 'done-github' ? (
           <>
@@ -105,6 +162,19 @@ export default function ReportBugModal({ seed, state, crash, onClose }: Props) {
               A JSON file with the full game state was just downloaded, and a GitHub issue tab
               should have opened with your description pre-filled. Drag the downloaded file into
               that issue's text box, then submit it — that's all we need.
+            </p>
+            <div className="report-bug-actions">
+              <button className="primary" onClick={onClose}>Close</button>
+            </div>
+          </>
+        ) : step === 'done-auto' ? (
+          <>
+            <h3>Thanks — report sent!</h3>
+            <p className="travel-req">
+              We filed it for you automatically, no extra steps needed.
+              {autoIssueUrl && (
+                <> You can follow it here: <a href={autoIssueUrl} target="_blank" rel="noreferrer">{autoIssueUrl}</a></>
+              )}
             </p>
             <div className="report-bug-actions">
               <button className="primary" onClick={onClose}>Close</button>

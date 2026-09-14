@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { recordCrash, loadLastCrash, clearLastCrash, exportProblemReport } from '../src/play/persistence';
-import { buildBugReportUrl, buildBugReportSummaryText, GITHUB_REPO } from '../src/play/bugReport';
+import { buildBugReportUrl, buildBugReportSummaryText, buildAutoIssueContent, GITHUB_REPO } from '../src/play/bugReport';
 
 // Vitest here runs in a bare Node environment (no jsdom), so there's no
 // global `localStorage` at all — persistence.ts already degrades gracefully
@@ -84,5 +84,40 @@ describe('bug report / crash persistence helpers', () => {
     expect(text).toContain('Round: 3');
     expect(text).toContain('meq-report-seed7-round3.json');
     expect(text).not.toContain('github.com');
+  });
+
+  it('builds automatic-issue content tagged as a player report, with a size-capped state snapshot', () => {
+    const bigState = JSON.stringify({ big: 'x'.repeat(200000) });
+    const content = buildAutoIssueContent({
+      description: 'combat resolved with wrong result',
+      userAgent: 'test-agent',
+      timestamp: '2024-01-01T00:00:00.000Z',
+      seed: 9,
+      phase: 'Combat',
+      round: 4,
+      logTail: ['R4 Combat — Hero: rolled 3', 'R4 Combat — Sauron: rolled 5'],
+      stateJson: bigState,
+    });
+    expect(content.title).toContain('[player report]');
+    expect(content.title).toContain('combat resolved with wrong result');
+    expect(content.labels).toEqual(['bug', 'from-game']);
+    expect(content.body).toContain('Seed: 9');
+    expect(content.body).toContain('Phase: Combat');
+    expect(content.body).toContain('Round: 4');
+    expect(content.body).toContain('rolled 3');
+    expect(content.body).toContain('truncated to fit');
+    expect(content.body.length).toBeLessThan(bigState.length);
+    expect(content.body).toContain('automatically by a player');
+  });
+
+  it('omits the state section entirely when no state snapshot is given', () => {
+    const content = buildAutoIssueContent({
+      description: 'small issue',
+      userAgent: 'ua',
+      timestamp: '2024-01-01T00:00:00.000Z',
+      seed: 1,
+      logTail: [],
+    });
+    expect(content.body).not.toContain('Game state snapshot');
   });
 });
