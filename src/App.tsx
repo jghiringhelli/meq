@@ -30,6 +30,7 @@ import { JoinScreen, NetPanel } from './play/NetPanel';
 import ArtLoader from './play/ArtLoader';
 import AboutTutorial from './play/AboutTutorial';
 import SmartNext from './play/SmartNext';
+import Collapsible from './play/Collapsible';
 import TravelModal from './play/TravelModal';
 import { useInspect } from './play/CardInspector';
 import ReportBugModal from './play/ReportBugModal';
@@ -62,6 +63,15 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem('meq-focus-map', focusMap ? '1' : '0'); } catch { /* ignore */ }
   }, [focusMap]);
+  // Per-section open/closed override for the reference/log rail (Collapsible):
+  // when a section has no explicit entry here, it falls back to `!focusMap`
+  // (collapsed by default in focus mode, expanded otherwise), so the global
+  // toggle acts as a bulk collapse/expand while each chip stays individually
+  // clickable to peek at just that one thing.
+  const [panelOpen, setPanelOpen] = useState<Record<string, boolean>>({});
+  const isPanelOpen = (key: string) => panelOpen[key] ?? !focusMap;
+  const togglePanel = (key: string) => setPanelOpen((m) => ({ ...m, [key]: !isPanelOpen(key) }));
+  const toggleFocusMap = () => { setFocusMap((v) => !v); setPanelOpen({}); };
   const heroRng = useRef(mulberry32(0));
 
   // ---- Multiplayer session (host-authoritative). Off by default (solo play). ----
@@ -422,6 +432,32 @@ export default function App() {
     if (hit) doTreeDecision(hit.idx);
   };
 
+  // One-line live summaries shown on each collapsed rail chip's hover tooltip
+  // (Collapsible), so the player can glance at the essentials without opening
+  // the full panel.
+  const trackSummary = `turn ${state.story.turn}/${state.story.length} · red ${state.story.sauron?.red ?? 0}/18 · infl ${state.sauron.influence}`;
+  const decksSummary = `Shadow ${state.sauron.shadowDiscard?.length ?? 0} · Events ${state.sauron.eventDiscard?.length ?? 0}`;
+  const plotsSummary = (state.sauron.activePlots ?? []).length
+    ? (state.sauron.activePlots ?? []).map((pm) => cat.plots.find((p) => p.id === pm.eventId)?.name ?? pm.eventId).join(', ')
+    : 'none active';
+  const missionSummary = seesHeroMission && state.secretHeroMission
+    ? cat.heroMissions[state.secretHeroMission]?.name ?? '???' : '???';
+  const sauronLastSummary = (() => {
+    for (let i = state.log.length - 1; i >= 0; i--) {
+      const e = state.log[i];
+      if (e.side === 'Sauron' && e.type !== 'setup') return e.detail?.slice(0, 60) ?? '';
+    }
+    return 'no turn yet';
+  })();
+  const netSummary = (() => {
+    const roles = Object.values(roster ?? {});
+    const humans = roles.filter((r) => r.kind === 'human').length;
+    return `${humans}/${roles.length} seats claimed`;
+  })();
+  const turnCycleSummary = state.activeSide === 'Sauron' ? "Sauron's turn"
+    : `${cat.heroes[activeHero.id]?.name ?? activeHero.id}'s turn`;
+  const logSummary = state.log.length ? (state.log[state.log.length - 1].detail?.slice(0, 60) ?? '') : 'empty';
+
   // The "obvious next thing" for the active hero's turn, in the natural order a
   // player would work through their Explore actions: fight an ambush, retrieve
   // free favor, consult a waiting character (opens a favor/ability choice),
@@ -502,18 +538,26 @@ export default function App() {
           && !(iControlSauron && state.activeSide === 'Sauron') && (
           <button className="primary" onClick={doAdvance}>Advance phase ▶</button>
         )}
-        <button className="ghost" title={focusMap ? 'Show the reference bars and side panels again' : 'Hide the reference bars and side panels for a bigger map'}
-          onClick={() => setFocusMap((v) => !v)}>{focusMap ? '☰ Show panels' : '🗺 Focus map'}</button>
+        <button className="ghost" title={focusMap ? 'Show the reference bars and side panels again' : 'Collapse the reference bars and side panels into a slim rail for a bigger map (each can still be opened individually)'}
+          onClick={toggleFocusMap}>{focusMap ? '☰ Show panels' : '🗺 Focus map'}</button>
         <button className="ghost" title="Describe a bug and file a GitHub issue with a full technical snapshot"
           onClick={() => setReportOpen(true)}>Report a problem</button>
         <button className="ghost" title="Delete the current game and return to the menu"
           onClick={deleteGame}>Delete game</button>
       </header>
 
-      {!focusMap && <CounterBar state={state} cat={cat} revealHeroMission={seesHeroMission} />}
-      {!focusMap && <DeckBar state={state} cat={cat} />}
-      {!focusMap && <RefTabs state={state} cat={cat} />}
-      {!focusMap && <PlotRow state={state} cat={cat} />}
+      <div className="top-rail">
+        <Collapsible id="track" icon="📊" label="Track" summary={trackSummary} open={isPanelOpen('track')} onToggle={togglePanel}>
+          <CounterBar state={state} cat={cat} revealHeroMission={seesHeroMission} />
+        </Collapsible>
+        <Collapsible id="decks" icon="🂠" label="Discards" summary={decksSummary} open={isPanelOpen('decks')} onToggle={togglePanel}>
+          <DeckBar state={state} cat={cat} />
+        </Collapsible>
+        <Collapsible id="plots" icon="🚩" label="Plots" summary={plotsSummary} open={isPanelOpen('plots')} onToggle={togglePanel}>
+          <PlotRow state={state} cat={cat} />
+        </Collapsible>
+      </div>
+      <RefTabs state={state} cat={cat} />
 
       <main className="app-main play-layout">
         <Board
@@ -523,19 +567,37 @@ export default function App() {
           consultable={econ.characters} consultDisabled={!inHeroActions || activeHero.actionsRemaining <= 0 || ambush}
           onConsult={doConsult}
         />
-        <aside className={`side${focusMap ? ' side-compact' : ''}`}>
-          {!focusMap && seesHeroMission && <MissionPanel state={state} cat={cat} />}
-          {!focusMap && seesHeroMission && <SauronSummary state={state} />}
-          {!focusMap && <NetPanel net={net} state={state} cat={cat} roster={roster} onClaim={handleClaim} onKick={net.kick} />}
-          {!focusMap && <TurnCycle state={state} cat={cat} />}
+        <aside className={`side${focusMap ? ' side-narrow' : ''}`}>
+          <div className="side-rail">
+            {seesHeroMission && (
+              <Collapsible id="mission" icon="🎯" label="Mission" summary={missionSummary} open={isPanelOpen('mission')} onToggle={togglePanel}>
+                <MissionPanel state={state} cat={cat} />
+              </Collapsible>
+            )}
+            {seesHeroMission && (
+              <Collapsible id="sauronSummary" icon="👁" label="Sauron recap" summary={sauronLastSummary} open={isPanelOpen('sauronSummary')} onToggle={togglePanel}>
+                <SauronSummary state={state} />
+              </Collapsible>
+            )}
+            {net.role !== 'off' && (
+              <Collapsible id="net" icon="🌐" label="Online" summary={netSummary} open={isPanelOpen('net')} onToggle={togglePanel} dir="col">
+                <NetPanel net={net} state={state} cat={cat} roster={roster} onClaim={handleClaim} onKick={net.kick} />
+              </Collapsible>
+            )}
+            <Collapsible id="turncycle" icon="🔄" label="Turn order" summary={turnCycleSummary} open={isPanelOpen('turncycle')} onToggle={togglePanel} dir="col">
+              <TurnCycle state={state} cat={cat} />
+            </Collapsible>
+          </div>
           <HeroPanel
             state={state} cat={cat} active={inHeroActions}
             engageable={engageable} canExplore={exploreHere} ambush={ambush}
             onRest={doRest} onRestTrain={doRestTrain} onEngage={doEngage} onEndTurn={doEndTurn} onExplore={doExplore}
             econ={econ}
           />
-          {!focusMap && <LogPane state={state} revealSide={viewerSide} />}
-          {!focusMap && <NotesPanel seed={seed} />}
+          <Collapsible id="log" icon="📜" label="Log" summary={logSummary} open={isPanelOpen('log')} onToggle={togglePanel}>
+            <LogPane state={state} revealSide={viewerSide} />
+          </Collapsible>
+          <NotesPanel seed={seed} />
         </aside>
       </main>
 
