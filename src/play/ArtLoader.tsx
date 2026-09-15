@@ -57,9 +57,13 @@ export default function ArtLoader({ onLoaded }: Props) {
     dirRef.current?.setAttribute('directory', '');
   }, []);
 
-  // Release object URLs when this control unmounts.
-  useEffect(() => () => { for (const u of urlsRef.current) URL.revokeObjectURL(u); }, []);
-
+  // NOTE: we deliberately do NOT revoke object URLs when this component
+  // unmounts. Starting a game unmounts the start screen (and this control
+  // with it), but the hero-select/in-game screens keep using these same
+  // blob URLs for art — revoking them here would silently break every
+  // loaded image the instant the player leaves the start screen. They're
+  // only released explicitly when the user loads a new file/folder or hits
+  // "Clear art" (dropOldUrls), or naturally on a full page reload.
   const dropOldUrls = () => {
     for (const u of urlsRef.current) URL.revokeObjectURL(u);
     urlsRef.current = [];

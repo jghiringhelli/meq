@@ -2,6 +2,15 @@ import { useState } from 'react';
 import type { Catalog, HeroId } from '../engine/types';
 import { heroArt } from '../data/art';
 
+/** A hero's card art image, falling back to a plain icon tile if no art is
+ *  loaded (or the image fails to load) instead of a browser broken-image
+ *  glyph — much clearer for a first-time player. */
+function HeroCardArt({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) return <div className="hero-card-art-fallback">🧙</div>;
+  return <img src={src} alt="" className="hero-card-art" onError={() => setFailed(true)} />;
+}
+
 type Side = 'Hero' | 'Sauron';
 
 interface Props {
@@ -61,6 +70,7 @@ export default function NewGameSetup({ cat, onStart, onCancel }: Props) {
 
         <section className="setup-block">
           <h2>Choose the heroes {side === 'Sauron' ? '(your AI opponents)' : ''} <span className="count">({selected.length}/{MAX_HEROES})</span></h2>
+          <p className="setup-hint">Click a card to add/remove that hero (up to 3). ♥ = health, STR = melee strength, AGI = ranged/evasion agility.</p>
           <div className="hero-pick">
             {roster.map((id) => {
               const h = cat.heroes[id];
@@ -71,10 +81,12 @@ export default function NewGameSetup({ cat, onStart, onCancel }: Props) {
                 <button key={id}
                   className={`hero-card${on ? ' on' : ''}`}
                   onClick={() => toggle(id)}>
-                  {img && <img src={img} alt="" className="hero-card-art" />}
+                  <div className="hero-card-art-wrap"><HeroCardArt src={img} /></div>
                   <span className="hero-card-name">{h.name}</span>
                   <span className="hero-card-stats">
-                    ♥ {h.fortitude} · STR {h.strength} · AGI {h.agility}
+                    <span title="Health / Fortitude">♥ {h.fortitude}</span>
+                    <span title="Strength (melee combat)">STR {h.strength}</span>
+                    <span title="Agility (ranged combat & evasion)">AGI {h.agility}</span>
                   </span>
                   {on && <span className="hero-card-check">✓</span>}
                 </button>
