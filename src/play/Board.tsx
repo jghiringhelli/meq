@@ -533,7 +533,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
               w: 500, h: Math.round(bandH), label: `${region} encounters`,
             })),
             { key: 'plots', x: 5470, y: 640, w: 300, h: 1640, label: 'Plot deck' },
-            { key: 'shadow', x: 5190, y: 3715, w: 870, h: 470, label: 'Shadow Pool' },
+            { key: 'shadow', x: 5175, y: 3638, w: 810, h: 517, label: 'Shadow Pool' },
           ];
           return (
             <g>
@@ -718,7 +718,15 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const ax = 5130, ay = 2960, aw = 940; // 'actions' hotspot geometry
           const openShadowRef = () => window.dispatchEvent(new CustomEvent('meq-open-ref', { detail: 'shadow' }));
           const rowH = 90, rowGap = 18, top = ay + 70;
-          const sx = 5190, sy = 3715, sw = 870, sh = 470; // 'shadow' (Shadow Pool) hotspot geometry
+          // 'shadow' (Shadow Pool) box geometry — measured directly off the
+          // printed board art (the metal-framed box around the "SHADOW POOL"
+          // title + 12 influence pips): x5175,y3638,810×517 (ratio ~1.57). The
+          // live overlay photo is ~1.49 ratio, so `slice` still crops a hair,
+          // but the box itself is now aligned with the print instead of
+          // sitting ~90px low/right of it (which produced a visible double
+          // "SHADOW POOL" title — the printed one peeking out from under the
+          // misaligned photo).
+          const sx = 5175, sy = 3638, sw = 810, sh = 517;
           return (
             <g pointerEvents="none">
               <text x={ax + aw / 2} y={ay + 30} textAnchor="middle" fontSize={26} fontWeight={700}
@@ -756,11 +764,14 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
         {/* Story-track markers on the physical track along the board's top edge:
             the Hero (green) marker and Sauron's three story markers — Ring
             (yellow), War/Military (red), Corruption (black). Space 0 = START
-            (~x2867, centred in the START cell) … space 18 = FINALE (~x5865);
+            (x2774, measured as the true centre of the printed START cell —
+            NOT ~2867, which sat ~90px into cell 1 and made the marker cluster
+            straddle the START/cell-1 boundary) … space 18 = FINALE (~x5865);
             cells are evenly spaced so each marker interpolates linearly.
-            Markers are fanned in a 2×2 so a shared space stays legible. */}
+            Markers are fanned in a tight 2×2 so a shared space stays legible
+            without spilling into the neighbouring cell. */}
         {(() => {
-          const xS = 2867, xF = 5865, ty = 150, R = STORY_FINALE;
+          const xS = 2774, xF = 5865, ty = 150, R = STORY_FINALE;
           const st = state.story.sauron ?? { yellow: 0, red: 0, black: 0 };
           // Linear map: space 0 sits centred in the START cell (xS), space R on
           // FINALE (xF). The four markers are kept legible by their 2×2 fan —
@@ -769,12 +780,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const at = (v: number) => xS + (xF - xS) * (Math.max(0, Math.min(R, v)) / R);
           const heroImg = token('heroStoryMarker');
           const markers = [
-            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -34, dy: -32, init: 'H', name: 'Hero', img: heroImg },
-            { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 34, dy: -32, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
-            { k: 'war', v: st.red, fill: '#b23b3b', dx: -34, dy: 32, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
-            { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 34, dy: 32, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
+            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -26, dy: -26, init: 'H', name: 'Hero', img: heroImg },
+            { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 26, dy: -26, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
+            { k: 'war', v: st.red, fill: '#b23b3b', dx: -26, dy: 26, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
+            { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 26, dy: 26, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
           ];
-          const r = 28;
+          const r = 22;
           return (
             <g pointerEvents="none">
               {markers.map((m) => {
