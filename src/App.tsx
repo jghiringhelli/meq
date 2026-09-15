@@ -273,36 +273,63 @@ export default function App() {
   }
   if (!state) {
     return (
-      <div className="app">
-        <header className="app-header"><h1>Middle-earth Quest</h1>
-          <span className="subtitle">unofficial fan port</span></header>
+      <div className="app start-screen">
+        <div className="start-hero">
+          <svg className="start-hero__art" viewBox="0 0 600 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#2a2013" />
+                <stop offset="100%" stopColor="#1a1710" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="600" height="140" fill="url(#skyGrad)" />
+            <path d="M0,140 L0,95 L60,50 L110,95 L150,60 L210,100 L260,40 L320,100 L370,70 L420,105 L470,55 L520,100 L560,80 L600,100 L600,140 Z" fill="#241d13" />
+            <path d="M280,100 L300,15 L306,15 L310,30 L316,15 L320,15 L340,100 Z" fill="#181209" />
+            <rect x="303" y="34" width="4" height="10" fill="#3a2f1e" />
+            <circle cx="303" cy="26" r="10" fill="none" stroke="#c9a24b" strokeWidth="1.2" opacity="0.55" />
+          </svg>
+          <div className="start-hero__content">
+            <h1>Middle-earth Quest</h1>
+            <span className="subtitle">unofficial fan port — solo, hotseat &amp; online</span>
+          </div>
+        </div>
         <p className="fan-disclaimer">
           Unofficial, non-commercial fan project — not affiliated with, endorsed by, or
           sponsored by Fantasy Flight Games, Asmodee, or the Tolkien Estate / Middle-earth
           Enterprises. Ships no official artwork; you may optionally load your own copy of
           the VASSAL module's images below, kept in your browser only.
         </p>
-        <main className="app-main">
-          <div className="start-actions">
-            <button className="primary" onClick={requestNewGame}>New game</button>
-            <button className="secondary" onClick={() => { setPendingHost(true); setSetup(true); }}>Host online game</button>
-            <button className="secondary" onClick={() => setJoining(true)}>Join online game</button>
-            {resumable && (
-              <>
-                <button className="secondary" onClick={resume}>
-                  Resume game (round {resumable.state.round})
-                </button>
-                <button className="ghost" onClick={deleteGame}>
-                  Delete saved game
-                </button>
-              </>
-            )}
-          </div>
-          <ArtLoader />
-          <AboutTutorial />
+        <main className="app-main start-main">
+          <section className="start-card start-card--play">
+            <h2 className="start-card__title">1. Start playing</h2>
+            <div className="start-actions">
+              <button className="primary start-cta" onClick={requestNewGame}>🎲 New game</button>
+              <button className="secondary start-cta" onClick={() => { setPendingHost(true); setSetup(true); }}>🌐 Host online game</button>
+              <button className="secondary start-cta" onClick={() => setJoining(true)}>🔗 Join online game</button>
+              {resumable && (
+                <>
+                  <button className="secondary start-cta" onClick={resume}>
+                    ▶ Resume game (round {resumable.state.round})
+                  </button>
+                  <button className="ghost" onClick={deleteGame}>🗑 Delete saved game</button>
+                </>
+              )}
+            </div>
+          </section>
+
+          <section className="start-card start-card--art">
+            <h2 className="start-card__title">2. Load the art <span className="start-card__badge">optional</span></h2>
+            <p className="start-card__hint">
+              The game plays fine with plain text/placeholder cards. If you own the community
+              VASSAL module for this game, load it below to see the real scans instead — nothing
+              is ever uploaded, and the images stay only in this browser tab.
+            </p>
+            <ArtLoader />
+          </section>
+
           {history.length > 0 && (
-            <section className="history">
-              <h2>Recent games</h2>
+            <section className="start-card history">
+              <h2 className="start-card__title">Recent games</h2>
               <ul>
                 {history.slice(0, 8).map((h, i) => (
                   <li key={i}>
@@ -315,6 +342,11 @@ export default function App() {
               </ul>
             </section>
           )}
+
+          <section className="start-card start-card--learn">
+            <h2 className="start-card__title">Learn to play</h2>
+            <AboutTutorial />
+          </section>
         </main>
       </div>
     );

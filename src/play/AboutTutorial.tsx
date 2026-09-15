@@ -13,7 +13,7 @@ export default function AboutTutorial() {
   return (
     <section className="about">
       <button className="about-toggle" onClick={() => setOpenHow((v) => !v)} aria-expanded={openHow}>
-        {openHow ? '▾' : '▸'} How to play (the basics)
+        {openHow ? '▾' : '▸'} 📖 How to play (the basics)
       </button>
       {openHow && (
         <div className="about-body">
@@ -97,7 +97,7 @@ export default function AboutTutorial() {
         </div>
       )}
       <button className="about-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        {open ? '▾' : '▸'} About this project & how to load the art
+        {open ? '▾' : '▸'} ℹ️ About this project & how to load the art
       </button>
       {open && (
         <div className="about-body">

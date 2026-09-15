@@ -8,7 +8,7 @@
 // built-in placeholders.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildArtIndex, matchExpected } from '../data/artMatch';
-import { setUserArt, expectedArtNames } from '../data/art';
+import { setUserArt, getUserArt, expectedArtNames } from '../data/art';
 
 interface Props {
   /** Called after a load or clear with (matched, totalExpected). */
@@ -24,11 +24,31 @@ export default function ArtLoader({ onLoaded }: Props) {
   const vmodRef = useRef<HTMLInputElement>(null);
   const dirRef = useRef<HTMLInputElement>(null);
   const urlsRef = useRef<string[]>([]);
-  const [summary, setSummary] = useState<{ loaded: number; matched: number; total: number } | null>(null);
+  // `fromEarlier: true` means we're just reporting art that was already
+  // installed (module-level state in data/art.ts survives this component
+  // unmounting/remounting, e.g. going start screen → game → start screen) —
+  // as opposed to a summary produced by a load/clear action just now in this
+  // component instance. Distinguishing the two avoids the confusing "is it
+  // loaded or not?" question a player would otherwise have no way to answer
+  // without re-picking the file.
+  const [summary, setSummary] = useState<{ loaded: number; matched: number; total: number; fromEarlier: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const expectedTotal = useMemo(() => expectedArtNames().length, []);
+
+  // On mount, check whether art is already installed from earlier in this
+  // browser tab (it's cleared only on a full page reload) and reflect that
+  // immediately instead of showing the "not loaded" hint by default.
+  useEffect(() => {
+    const existing = getUserArt();
+    if (existing) {
+      const expected = expectedArtNames();
+      const matched = expected.filter((f) => matchExpected(f, existing)).length;
+      setSummary({ loaded: existing.size, matched, total: expected.length, fromEarlier: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // `webkitdirectory` isn't in the React input types; set it imperatively so a
   // whole folder (including subfolders) can be picked in one go.
@@ -51,7 +71,7 @@ export default function ArtLoader({ onLoaded }: Props) {
     setUserArt(index);
     const expected = expectedArtNames();
     const matched = expected.filter((f) => matchExpected(f, index)).length;
-    setSummary({ loaded: files.length, matched, total: expected.length });
+    setSummary({ loaded: files.length, matched, total: expected.length, fromEarlier: false });
     onLoaded?.(matched, expected.length);
   };
 
@@ -114,15 +134,20 @@ export default function ArtLoader({ onLoaded }: Props) {
 
   return (
     <div className="art-loader">
+      <p className={`art-status ${summary ? 'art-status--on' : 'art-status--off'}`}>
+        {summary
+          ? <>✅ Art loaded{summary.fromEarlier ? ' (from earlier this session)' : ''} — {summary.matched} / {summary.total} images matched</>
+          : <>⬜ Not loaded — the game will show text/placeholder cards</>}
+      </p>
       <div className="art-loader__actions">
-        <button type="button" onClick={() => vmodRef.current?.click()} disabled={busy}>
-          {busy ? 'Loading module…' : 'Load VASSAL module (.vmod)…'}
+        <button type="button" className="secondary" onClick={() => vmodRef.current?.click()} disabled={busy}>
+          {busy ? 'Loading module…' : '📦 Load VASSAL module (.vmod)…'}
         </button>
-        {summary && <button type="button" onClick={clear} disabled={busy}>Clear art</button>}
+        {summary && <button type="button" className="ghost" onClick={clear} disabled={busy}>Clear art</button>}
       </div>
       <div className="art-loader__actions art-loader__actions--secondary">
         <span className="muted">or, from extracted files:</span>
-        <button type="button" onClick={() => dirRef.current?.click()} disabled={busy}>Load art folder…</button>
+        <button type="button" className="ghost" onClick={() => dirRef.current?.click()} disabled={busy}>Load art folder…</button>
       </div>
 
       <input ref={vmodRef} type="file" accept=".vmod,.zip" hidden onChange={(e) => ingestVmod(e.target.files?.[0] ?? null)} />
@@ -130,16 +155,12 @@ export default function ArtLoader({ onLoaded }: Props) {
 
       {error && <p className="art-loader__summary art-loader__summary--error">{error}</p>}
 
-      {summary ? (
-        <p className="art-loader__summary">
-          Loaded {summary.loaded} images, matched {summary.matched} / {summary.total} expected files.
-        </p>
-      ) : (
+      {!summary && (
         <p className="art-loader__summary art-loader__summary--hint">
           Bring your own art: pick the Middle-earth Quest VASSAL module{' '}
           (<a href={VMOD_URL} target="_blank" rel="noreferrer"><code>.vmod</code> download</a>) —
           no need to unzip it; the app reads the images inside and matches them to the cards.
-          Selections last for this browser session only.
+          Selections last for this browser tab only (cleared on a full page reload).
         </p>
       )}
     </div>

@@ -24,6 +24,52 @@ body {
 .subtitle { color: #8a7c60; font-size: 0.85rem; }
 .fan-disclaimer { margin: 0.5rem 1.25rem 0; padding: 0.6rem 0.9rem; background: #241c12; border: 1px solid #4a3d28; border-radius: 6px; color: #b0a48a; font-size: 0.82rem; line-height: 1.4; }
 .app-main { padding: 1.25rem; }
+
+/* Start screen: hero banner + a vertical stack of clearly separated cards
+   (play now / optional art / history / how-to), instead of one flat column
+   of buttons and text — makes it obvious what's required vs. optional. */
+.start-screen { min-height: 100vh; }
+.start-hero { position: relative; overflow: hidden; }
+.start-hero__art { display: block; width: 100%; height: 120px; }
+.start-hero__content {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.3rem; text-align: center;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+}
+.start-hero__content h1 { margin: 0; font-size: 2rem; color: var(--accent); letter-spacing: 0.02em; }
+.start-hero__content .subtitle { color: #d8c9a0; }
+.start-main.start-main { max-width: 760px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+.start-card {
+  background: var(--panel); border: 1px solid #3a2f22; border-radius: 10px;
+  padding: 1rem 1.1rem; margin: 0 0 1rem;
+}
+.start-card__title {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin: 0 0 0.6rem; font-size: 1rem; color: var(--accent);
+}
+.start-card__badge {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: #9c8f6b; background: #1a201a; border: 1px solid #3a4a3a;
+  padding: 0.1rem 0.45rem; border-radius: 999px; font-weight: 400;
+}
+.start-card__hint { margin: 0 0 0.75rem; color: #9c8f6b; font-size: 0.85rem; line-height: 1.5; }
+.start-card--play { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(201,162,75,0.25); }
+.start-cta { padding: 0.55rem 0.95rem; font-size: 0.92rem; }
+
+/* BYO-art loader (start screen, step 2) */
+.art-status {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  margin: 0 0 0.7rem; padding: 0.35rem 0.7rem; border-radius: 6px;
+  font-size: 0.85rem; font-weight: 600;
+}
+.art-status--on { background: #1f3320; border: 1px solid #3f6b40; color: #bdf0bd; }
+.art-status--off { background: #241c12; border: 1px solid #4a3d28; color: #b0a48a; font-weight: 400; }
+.art-loader__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.4rem; }
+.art-loader__actions--secondary { margin-top: 0.2rem; }
+.art-loader__summary { font-size: 0.82rem; color: #9c8f6b; line-height: 1.5; margin: 0.4rem 0 0; }
+.art-loader__summary--error { color: var(--danger); }
+.art-loader__summary--hint a { color: var(--accent); }
+
 .catalog-summary ul { line-height: 1.7; }
 .error { color: var(--danger); }
 .hint { color: #8a7c60; font-style: italic; font-size: 0.8rem; }
@@ -36,7 +82,7 @@ button.danger { background: var(--danger); color: #fff; border-color: var(--dang
 button.secondary { background: #2f3a44; border-color: #4a6b8a; }
 button.ghost { background: transparent; border-color: #6b5a3a; opacity: 0.8; font-size: 0.85rem; margin-left: 0.5rem; }
 button.ghost:hover { opacity: 1; background: #3a2f22; }
-.start-actions { display: flex; gap: 0.75rem; margin: 0.75rem 0; }
+.start-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0.75rem 0; }
 .setup { max-width: 760px; }
 .setup-block { margin: 1rem 0 1.5rem; }
 .setup-block h2 { font-size: 1.05rem; color: var(--accent); margin: 0 0 0.6rem; }
@@ -611,10 +657,11 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 
 /* ---- About / tutorial panel ---- */
-.about { margin: 1rem 0; max-width: 720px; }
-.about-toggle { background: none; border: 1px solid #3a4a3a; color: #c8b890; padding: 0.5rem 0.8rem; cursor: pointer; width: 100%; text-align: left; font-size: 0.9rem; margin-top: 0.4rem; }
+.about { margin: 0; max-width: none; }
+.about-toggle { background: #201a10; border: 1px solid #3a4a3a; border-radius: 6px; color: #c8b890; padding: 0.55rem 0.9rem; cursor: pointer; width: 100%; text-align: left; font-size: 0.92rem; margin-top: 0.5rem; font-weight: 600; }
+.about-toggle:hover { background: #2a2318; border-color: var(--accent); }
 .about > .about-toggle:first-child { margin-top: 0; }
-.about-body { border: 1px solid #2a241a; border-top: none; padding: 0.6rem 1rem 1rem; background: #12100b; }
+.about-body { border: 1px solid #2a241a; border-top: none; border-radius: 0 0 6px 6px; padding: 0.6rem 1rem 1rem; background: #12100b; }
 .about-body h3 { margin: 0.9rem 0 0.3rem; color: #e8dcc0; font-size: 0.95rem; }
 .about-body p, .about-body li { color: #bcae8c; font-size: 0.86rem; line-height: 1.5; }
 .about-body ol, .about-body ul { margin: 0.3rem 0; padding-left: 1.3rem; }
