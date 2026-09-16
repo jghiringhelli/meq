@@ -34,6 +34,7 @@ import Collapsible from './play/Collapsible';
 import TravelModal from './play/TravelModal';
 import { useInspect } from './play/CardInspector';
 import ReportBugModal from './play/ReportBugModal';
+import { getUserArt, heroArt } from './data/art';
 import { pendingHeroTasks } from './engine/turnTasks';
 import { advanceHeroSide, missionAware, mulberry32 } from './engine/heroAI';
 import { useGameSession } from './net/session';
@@ -56,6 +57,7 @@ export default function App() {
   const [joining, setJoining] = useState(false);
   const [resumable, setResumable] = useState(() => loadSavedGame());
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [artMatched, setArtMatched] = useState(() => (getUserArt() ? 1 : 0));
   const [travelTo, setTravelTo] = useState<string | null>(null);
   const [focusMap, setFocusMap] = useState(() => {
     try { return localStorage.getItem('meq-focus-map') === '1'; } catch { return false; }
@@ -324,7 +326,19 @@ export default function App() {
               VASSAL module for this game, load it below to see the real scans instead — nothing
               is ever uploaded, and the images stay only in this browser tab.
             </p>
-            <ArtLoader />
+            <ArtLoader onLoaded={(matched) => setArtMatched(matched)} />
+            {artMatched > 0 && catalog && (
+              <div className="art-preview">
+                <p className="art-preview__label">Preview — your loaded art:</p>
+                <div className="art-preview__strip">
+                  {Object.keys(catalog.heroes).slice(0, 6).map((id) => {
+                    const src = heroArt(id).sheet || heroArt(id).figure || heroArt(id).portrait;
+                    if (!src) return null;
+                    return <img key={id} src={src} alt={catalog.heroes[id].name} className="art-preview__thumb" />;
+                  })}
+                </div>
+              </div>
+            )}
           </section>
 
           {history.length > 0 && (

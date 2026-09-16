@@ -70,6 +70,14 @@ body {
 .art-loader__summary--error { color: var(--danger); }
 .art-loader__summary--hint a { color: var(--accent); }
 
+.art-preview { margin-top: 0.6rem; }
+.art-preview__label { font-size: 0.82rem; color: #9c8f6b; margin: 0 0 0.4rem; }
+.art-preview__strip { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.art-preview__thumb {
+  width: 72px; height: 96px; object-fit: cover; border-radius: 6px;
+  border: 1px solid var(--border, #4a4030); box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
 .catalog-summary ul { line-height: 1.7; }
 .error { color: var(--danger); }
 .hint { color: #8a7c60; font-style: italic; font-size: 0.8rem; }
@@ -95,16 +103,20 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .setup-note { font-size: 0.85rem; color: #d9a066; margin-top: 0.6rem; }
 .setup-hint { font-size: 0.85rem; color: #9c8f6b; margin: -0.2rem 0 0.7rem; }
 .hero-pick { display: flex; flex-wrap: wrap; gap: 0.9rem; }
-.hero-card { position: relative; width: 190px; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.7rem; border: 2px solid #3a4a3a; background: #1a201a; cursor: pointer; border-radius: 6px; }
+.hero-card-wrap { position: relative; width: 190px; display: flex; flex-direction: column; }
+.hero-card { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.7rem; border: 2px solid #3a4a3a; background: #1a201a; cursor: pointer; border-radius: 6px 6px 0 0; }
 .hero-card:disabled { opacity: 0.4; cursor: not-allowed; }
 .hero-card.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; background: #22271a; }
 .hero-card-art-wrap { position: relative; width: 100%; height: 150px; background: #10140f; border: 1px solid #2a3428; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .hero-card-art { width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .hero-card-art-fallback { font-size: 2.2rem; opacity: 0.6; }
 .hero-card-name { font-weight: 700; font-size: 1rem; margin-top: 0.15rem; }
+.hero-card-power { font-size: 0.78rem; color: #8fb0d8; cursor: help; text-align: center; }
 .hero-card-stats { font-size: 0.78rem; color: #c9b47a; display: flex; gap: 0.55rem; }
 .hero-card-stats span { white-space: nowrap; cursor: help; }
 .hero-card-check { position: absolute; top: 0.4rem; right: 0.5rem; color: #201a10; font-weight: 700; background: var(--accent); width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+.hero-card-info { width: 100%; border: 2px solid #3a4a3a; border-top: none; border-radius: 0 0 6px 6px; background: #12160f; color: #9c8f6b; font-size: 0.75rem; padding: 0.25rem 0; cursor: pointer; }
+.hero-card-info:hover { color: var(--accent); background: #1a201a; }
 .setup-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
 .sauron-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); z-index: 50; }
 .sauron-panel { width: 560px; max-height: 88vh; overflow-y: auto; background: #17110f; border: 1px solid #6b2b2b; padding: 1rem 1.2rem; box-shadow: 0 0 30px rgba(120,20,20,0.4); }
