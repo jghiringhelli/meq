@@ -532,7 +532,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
               key: `encounters:${region}`, x: 70, y: Math.round(encTop + bandH * i),
               w: 500, h: Math.round(bandH), label: `${region} encounters`,
             })),
-            { key: 'plots', x: 5470, y: 640, w: 300, h: 1640, label: 'Plot deck' },
+            // The Plot *deck* (the face-down draw pile) has no numbered slot of
+            // its own on the printed board — physically it sits loose above the
+            // tower's 3 numbered active-plot slots. Its hotspot is kept to that
+            // small area only, so it doesn't overlap/shadow the 3 slots below
+            // (each of which handles its own click — see the plot-track block).
+            { key: 'plots', x: 5430, y: 330, w: 220, h: 260, label: 'Plot deck' },
             { key: 'shadow', x: 5175, y: 3638, w: 810, h: 517, label: 'Shadow Pool' },
           ];
           return (
@@ -544,6 +549,22 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                   <title>{`${p.label} — click to open the ${p.key} reference`}</title>
                 </rect>
               ))}
+              {/* A small always-visible card-back + count badge marks the Plot
+                  deck's dedicated spot (above the 3 numbered slots), so it
+                  reads as "the deck lives here" rather than an invisible
+                  hotspot a player has to discover by accident. */}
+              {(() => {
+                const n = state.sauron.plotDeck?.length ?? 0;
+                const bx = 5430 + 220 / 2, by = 330 + 260 / 2;
+                return (
+                  <g pointerEvents="none">
+                    <rect x={bx - 60} y={by - 40} width={120} height={80} rx={8}
+                      fill="#1a0d0d" stroke="#c0392b" strokeWidth={3} opacity={0.85} />
+                    <text x={bx} y={by - 6} textAnchor="middle" fontSize={20} fontWeight={700} fill="#f0d0c0">🂠 Deck</text>
+                    <text x={bx} y={by + 22} textAnchor="middle" fontSize={20} fontWeight={700} fill="#e8c078">{n} left</text>
+                  </g>
+                );
+              })()}
             </g>
           );
         })()}
@@ -658,12 +679,16 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
         {/* Sauron's Plot track — the three plot slots sit on the Dark Tower
             along the board's right edge (each slot bears Sauron's emblem in
             the board art, numbered 1–3 top→bottom). An active plot's card art
-            overlays its slot; empty slots let the tower emblem show through. */}
+            overlays its slot; empty slots let the tower emblem show through.
+            Clicking an empty slot just confirms it's empty — it does NOT open
+            the full Plot deck browser (that's the dedicated 'plots' pile
+            hotspot above slot 1, matching where the physical draw pile sits),
+            so players don't mistake "no active plot here" for "browse the
+            whole deck". */}
         {(() => {
           const active = state.sauron.activePlots ?? [];
-          const openPlots = () => window.dispatchEvent(new CustomEvent('meq-open-ref', { detail: 'plots' }));
-          const cx = 5577, w = 215, h = 380;          // tower plot-slot geometry (board px)
-          const ys = [850, 1450, 2050];               // slot centres, top → bottom
+          const cx = 5540, w = 220, h = 400;           // tower plot-slot geometry (board px, measured off the art)
+          const ys = [800, 1400, 2000];                // slot centres, top → bottom
           return (
             <g pointerEvents="none">
               {ys.map((cy, i) => {
@@ -676,8 +701,9 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                     <rect key={'plotslot' + i} x={x} y={y} width={w} height={h} rx={10}
                       fill="transparent" stroke="#6b4a3a" strokeWidth={2} strokeDasharray="10 8" opacity={0.4}
                       pointerEvents="auto" style={{ cursor: 'pointer' }}
-                      onClick={(e) => { e.stopPropagation(); openPlots(); }}>
-                      <title>Empty plot slot — click to browse the Plot deck</title>
+                      onClick={(e) => { e.stopPropagation(); inspect({ title: `Plot slot ${i + 1}`, subtitle: 'Empty',
+                        text: 'No plot is currently active in this slot. Sauron reveals plots from his Plot deck during the Action Step.' }); }}>
+                      <title>{`Plot slot ${i + 1} — empty`}</title>
                     </rect>
                   );
                 }
