@@ -47,6 +47,17 @@ export function NetPanel({ net, state, cat, roster, onClaim, onKick }: {
   if (net.role === 'off') return null;
   const roles = allRoles(state);
   const me = net.playerId;
+  const isOpenHeroRole = (role: string) => {
+    if (role === SAURON_ROLE) return false;
+    const c = roster?.[role];
+    return !c || c.kind === 'open';
+  };
+  const claimRandom = () => {
+    const open = roles.filter(isOpenHeroRole);
+    if (open.length === 0) return;
+    const pick = open[Math.floor(Math.random() * open.length)];
+    onClaim(pick, false);
+  };
   return (
     <section className="panel net-panel">
       <h3>
@@ -71,6 +82,16 @@ export function NetPanel({ net, state, cat, roster, onClaim, onKick }: {
       )}
 
       <div className="net-roles">
+        {(() => {
+          const iHaveRole = roles.some((r) => roster?.[r]?.kind === 'human' && roster[r].playerId === me);
+          const anyOpen = roles.some(isOpenHeroRole);
+          if (iHaveRole || !anyOpen) return null;
+          return (
+            <button type="button" className="ghost tiny net-random-claim" onClick={claimRandom}>
+              🎲 Claim a random hero
+            </button>
+          );
+        })()}
         {roles.map((role) => {
           const c = roster?.[role];
           const owned = c?.kind === 'human';

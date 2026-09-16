@@ -22,6 +22,31 @@ interface Props {
 
 const MAX_HEROES = 3;
 
+/** First sentence (or ~90 chars) of an ability's rules text, for an
+ *  always-visible one-liner on the card — the full text is still in the
+ *  "ⓘ details" modal and the hover title. Without this, a new player only
+ *  ever sees the power's NAME on the card ("Iron Will"), never what it does. */
+function abilityBlurb(text: string): string {
+  const t = (text || '').trim();
+  if (!t) return '';
+  const firstSentence = t.match(/^[^.!?]*[.!?]/)?.[0] ?? t;
+  const s = firstSentence.trim();
+  return s.length > 92 ? `${s.slice(0, 89).trimEnd()}…` : s;
+}
+
+/** Fisher–Yates partial shuffle: n distinct random picks from arr. */
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const pool = arr.slice();
+  const out: T[] = [];
+  const k = Math.min(n, pool.length);
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(Math.random() * (pool.length - i));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+    out.push(pool[i]);
+  }
+  return out;
+}
+
 /** Aggregate a hero's combat deck (from the catalog's expanded card-id list)
  *  into "2× Rush — melee A1/D2 · Mountain" style lines, so a new player can
  *  see roughly what they're getting into before picking a hero — without
@@ -43,7 +68,10 @@ export default function NewGameSetup({ cat, onStart, onCancel }: Props) {
   const roster = Object.keys(cat.heroes) as HeroId[];
   const [side, setSide] = useState<Side>('Hero');
   const [selected, setSelected] = useState<HeroId[]>(() => roster.slice(0, 2));
+  const [randomCount, setRandomCount] = useState(2);
   const inspect = useInspect();
+
+  const randomize = () => setSelected(pickRandom(roster, randomCount));
 
   const showDetails = (id: HeroId) => {
     const h = cat.heroes[id];
@@ -112,6 +140,17 @@ export default function NewGameSetup({ cat, onStart, onCancel }: Props) {
         <section className="setup-block">
           <h2>Choose the heroes {side === 'Sauron' ? '(your AI opponents)' : ''} <span className="count">({selected.length}/{MAX_HEROES})</span></h2>
           <p className="setup-hint">Click a card to add/remove that hero (up to 3). ♥ Fortitude (health) · STR Strength (melee) · AGI Agility (ranged/evasion) · WIS Wisdom (encounters/quests). Click "ⓘ details" for the hero's power and combat deck.</p>
+          <div className="hero-randomize">
+            <label>
+              🎲 Randomize
+              <select value={randomCount} onChange={(e) => setRandomCount(Number(e.target.value))}>
+                {Array.from({ length: MAX_HEROES }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n} hero{n > 1 ? 'es' : ''}</option>
+                ))}
+              </select>
+            </label>
+            <button type="button" className="ghost" onClick={randomize}>🎲 Assign randomly</button>
+          </div>
           <div className="hero-pick">
             {roster.map((id) => {
               const h = cat.heroes[id];
@@ -126,6 +165,7 @@ export default function NewGameSetup({ cat, onStart, onCancel }: Props) {
                     <div className="hero-card-art-wrap"><HeroCardArt src={img} /></div>
                     <span className="hero-card-name">{h.name}</span>
                     <span className="hero-card-power" title={h.abilityText}>✦ {h.abilityName}</span>
+                    <span className="hero-card-ability">{abilityBlurb(h.abilityText)}</span>
                     <span className="hero-card-stats">
                       <span title="Fortitude (health)">♥ {h.fortitude}</span>
                       <span title="Strength (melee combat)">STR {h.strength}</span>
