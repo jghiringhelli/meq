@@ -368,7 +368,8 @@ export default function App() {
 
   const cat = catalog;
   const activeHero = state.heroes[state.activeHeroIndex];
-  const inHeroActions = state.phase === 'HeroActions' && !state.pendingCombat && !state.pendingChoice && !state.pendingReveal;
+  const inHeroActions = state.phase === 'HeroActions' && !state.pendingCombat &&
+    !state.pendingChoice && !state.pendingReveal && !state.pendingTree;
 
   const seesHeroMission = viewerSide === 'Hero' || viewerSide === 'both';
   // Do I actually control Sauron on THIS browser? Solo/off falls back to the
@@ -700,17 +701,40 @@ export default function App() {
       {state.pendingTree
         && ((state.pendingTree.actor === 'sauron' && iControlSauron)
           || (state.pendingTree.actor === 'hero' && iControlHero(state.pendingTree.heroId))) && (
-        <div className="banner tree-decision">
-          <span>
-            <b>{state.pendingTree.source}</b> — {state.pendingTree.prompt}
-            {pendingMoveTree && pendingMoveTargets.length > 0 ? ' (or click the highlighted location on the map)' : ''}
-          </span>
-          {state.pendingTree.options.map((o, i) => (
-            <button key={i} disabled={!o.enabled} onClick={() => doTreeDecision(i)}>
-              {o.label}
-            </button>
-          ))}
-        </div>
+        pendingMoveTree && pendingMoveTargets.length > 0 ? (
+          // A "choose an adjacent location" decision is resolved by clicking the
+          // highlighted location on the map itself — a full blocking overlay
+          // would cover the map and defeat that interaction, so this stays a
+          // prominent, fixed (not buried at the bottom of the page) non-blocking
+          // banner instead.
+          <div className="tree-decision-float">
+            <b>{state.pendingTree.source}</b> — {state.pendingTree.prompt} (or click the highlighted location on the map)
+            {state.pendingTree.options.map((o, i) => (
+              <button key={i} disabled={!o.enabled} onClick={() => doTreeDecision(i)}>
+                {o.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          // Every other card/encounter effect-tree decision (e.g. Ill-met
+          // Company's "lose 2 favor OR Sauron draws 2 Corruption") blocks the
+          // whole screen until resolved — this used to be an easy-to-miss
+          // banner at the very bottom of the page, letting play continue with
+          // the choice never actually applied.
+          <div className="tree-decision-overlay" role="dialog" aria-modal="true">
+            <div className="tree-decision-panel">
+              <h3>{state.pendingTree.source}</h3>
+              <p>{state.pendingTree.prompt}</p>
+              <div className="tree-decision-actions">
+                {state.pendingTree.options.map((o, i) => (
+                  <button key={i} disabled={!o.enabled} onClick={() => doTreeDecision(i)}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
       )}
 
       {travelTo && inHeroActions && !ambush && (

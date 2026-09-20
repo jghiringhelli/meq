@@ -575,6 +575,25 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 
 .banner, .app .banner { text-align: center; padding: 0.6rem; background: var(--accent); color: #201a10; font-weight: bold; }
 
+/* A card/encounter effect-tree decision (e.g. Ill-met Company's "lose 2 favor
+ * OR Sauron draws 2 Corruption") blocks the whole screen until resolved —
+ * mirrors .sauron-overlay/.sauron-panel so it reads as unmistakably modal. */
+.tree-decision-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); z-index: 60; }
+.tree-decision-panel { width: 480px; max-width: 92vw; max-height: 88vh; overflow-y: auto; background: #241d12; border: 2px solid var(--accent); border-radius: 8px; padding: 1.1rem 1.3rem; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+.tree-decision-panel h3 { margin: 0 0 0.5rem; color: var(--accent); }
+.tree-decision-panel p { margin: 0 0 0.9rem; line-height: 1.4; }
+.tree-decision-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+.tree-decision-actions button { padding: 0.6rem 0.8rem; font-size: 0.95rem; }
+/* The "choose an adjacent location" decision is resolved by clicking the map
+ * itself, so it stays a non-blocking but clearly visible fixed banner near
+ * the top of the viewport (not buried at the very bottom of the page). */
+.tree-decision-float {
+  position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 55;
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; max-width: 90vw;
+  padding: 0.6rem 1rem; background: var(--accent); color: #201a10; font-weight: bold;
+  border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
 /* Smart next-step button: prominent fixed CTA, bottom-centre of the play area. */
 .smart-next {
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);

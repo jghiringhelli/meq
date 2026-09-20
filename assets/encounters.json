@@ -803,12 +803,14 @@
               "n": 2
             },
             "eff": {
-              "k": "op",
-              "atom": {
-                "op": "gainStat",
-                "stat": "choice",
-                "n": 1
-              }
+              "k": "choice",
+              "prompt": "Choose which attribute to raise",
+              "options": [
+                { "label": "Fortitude", "eff": { "k": "op", "atom": { "op": "gainStat", "stat": "fortitude", "n": 1 } } },
+                { "label": "Strength", "eff": { "k": "op", "atom": { "op": "gainStat", "stat": "strength", "n": 1 } } },
+                { "label": "Agility", "eff": { "k": "op", "atom": { "op": "gainStat", "stat": "agility", "n": 1 } } },
+                { "label": "Wisdom", "eff": { "k": "op", "atom": { "op": "gainStat", "stat": "wisdom", "n": 1 } } }
+              ]
             }
           }
         ]

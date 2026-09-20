@@ -13,6 +13,7 @@ import { sauronPlayShadow } from '../src/engine/sauronPlay';
 import { sauronResolveEvents } from '../src/engine/game';
 import { resolveShadowReaction, resolveTreeDecision, autoResolvePendingTree } from '../src/engine/game';
 import { beginCombat } from '../src/engine/combat';
+import { applyAction } from '../src/engine/actions';
 import type { GameState } from '../src/engine/types';
 
 const NEW_POWER = 'shadow-a-new-power-is-rising'; // action, choice, pool 4
@@ -144,6 +145,26 @@ describe('Peril "Choose one" is the hero\'s decision', () => {
     expect(s.pendingTree).toBeTruthy();
     const s2 = autoResolvePendingTree(s, cat);
     expect(s2.pendingTree).toBeFalsy();
+  });
+
+  it('blocks every other action via applyAction while the decision is pending, and does not silently drop the effect', () => {
+    const { s, heroId, loc } = perilSetup('Hero');
+    maybeDrawPeril(s, cat, heroId, loc);
+    expect(s.pendingTree).toBeTruthy();
+    s.phase = 'HeroActions';
+    s.activeHeroIndex = s.heroes.findIndex((h) => h.id === heroId);
+    s.heroes[s.activeHeroIndex].actionsRemaining = 1;
+    s.heroes[s.activeHeroIndex].location = loc;
+    // Previously a hero could keep exploring/ending the turn with the choice
+    // never applied (neither the favor loss nor the corruption draw happened),
+    // leaving the game in an inconsistent state. Every non-treeDecision action
+    // must now be rejected outright.
+    expect(() => applyAction(s, cat, { t: 'explore', heroId })).toThrow(/pending decision/i);
+    expect(() => applyAction(s, cat, { t: 'endHeroActions' })).toThrow(/pending decision/i);
+    expect(() => applyAction(s, cat, { t: 'advance' })).toThrow(/pending decision/i);
+    // Resolving it is still allowed and clears the pause.
+    const resolved = applyAction(s, cat, { t: 'treeDecision', optionIndex: 0 });
+    expect(resolved.pendingTree).toBeFalsy();
   });
 });
 

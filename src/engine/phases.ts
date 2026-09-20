@@ -359,10 +359,22 @@ function runEncounterStep(s: GameState, cat: Catalog, heroId: HeroId): boolean {
     log(s, 'encounter-draw', heroId, `Encounter at ${hero.location}: drew ${drawn.length}, none apply`);
     return false;
   }
+  // Lowest priority number wins when more than one drawn card applies (manual: resolve
+  // the applicable Encounter card with the lowest priority number printed on it).
   const chosen = affecting.reduce((a, b) => (encPriority(cat, b) < encPriority(cat, a) ? b : a));
   s.pendingEncounter = { locationId: hero.location, cardId: chosen, decisions: [], drawn, applicable: affecting, revealed: false };
   const enc = cat.encounters[chosen];
-  log(s, 'encounter-draw', heroId, `${enc?.name ?? chosen} at ${hero.location} (drew ${drawn.length}, ${affecting.length} apply)`, { cardId: chosen });
+  const chosenName = enc?.name ?? chosen;
+  let detail = `${chosenName} at ${hero.location} (drew ${drawn.length}, ${affecting.length} apply)`;
+  if (affecting.length > 1) {
+    // Spell out the priority numbers so the player can see why this card won.
+    const bested = affecting
+      .filter((c) => c !== chosen)
+      .map((c) => `${cat.encounters[c]?.name ?? c} (priority ${encPriority(cat, c)})`)
+      .join(', ');
+    detail = `${chosenName} (priority ${encPriority(cat, chosen)}) at ${hero.location} beats ${bested} — drew ${drawn.length}, ${affecting.length} applied`;
+  }
+  log(s, 'encounter-draw', heroId, detail, { cardId: chosen });
   return true;
 }
 

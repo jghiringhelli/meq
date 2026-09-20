@@ -45,6 +45,18 @@ export type ActionType = Action['t'];
 
 /** Apply a serializable action to the state, returning the next state. Pure. */
 export function applyAction(state: GameState, cat: Catalog, action: Action): GameState {
+  // A card/encounter effect-tree decision (e.g. Ill-met Company's "lose 2 favor
+  // OR Sauron draws 2 Corruption") pauses the whole game on `state.pendingTree`
+  // until the deciding human resolves it via `treeDecision`. Every other action
+  // must be rejected here (not just hidden in the UI) — otherwise a missed or
+  // dismissed prompt lets play continue (explore, complete a quest, end the
+  // turn...) with the decision's cost/effect never applied, leaving the state
+  // inconsistent (reported: hero kept playing past an unresolved Ill-met
+  // Company choice, and neither the favor loss nor the corruption draw ever
+  // happened).
+  if (state.pendingTree && action.t !== 'treeDecision') {
+    throw new Error(`A pending decision ("${state.pendingTree.prompt}") must be resolved first`);
+  }
   switch (action.t) {
     case 'advance': return advance(state, cat);
     case 'endHeroActions': return endHeroActions(state, cat);
