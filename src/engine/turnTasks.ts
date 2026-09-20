@@ -7,7 +7,7 @@
 // This module never changes rules — it only surfaces actions that the existing
 // economy/phase predicates already report as legal right now.
 import type { Catalog, GameState } from './types';
-import { ambushPending } from './mechanics';
+import { ambushPending, legalMoves } from './mechanics';
 import {
   favorHere, charactersHere, canDiscardPlot, plotCounterCost, canCleanse,
   canCompleteQuest,
@@ -38,12 +38,19 @@ export function pendingHeroTasks(state: GameState, cat: Catalog): string[] {
     }
     if (canCompleteQuest(state, cat, hero.id)) tasks.push('Complete a quest here');
     if (canCleanse(state, cat, hero.id)) tasks.push('Cleanse corruption');
-  }
 
-  // Exposure: ending the turn holding cards outside a haven leaves them open to
-  // Sauron. Faithful play ends in a haven or spends the hand travelling.
-  if (hero.hand.length > 0 && cat.locations[hero.location]?.kind !== 'haven') {
-    tasks.push(`${hero.hand.length} card(s) in hand and not in a haven — you could travel to safety`);
+    // Exposure: ending the turn holding cards outside a haven leaves them open
+    // to Sauron. Faithful play ends in a haven or spends the hand travelling —
+    // but travelling costs an action AND a legal path (enough/matching cards,
+    // and any Hopeless/restrictMovement travel cap not yet exhausted), so this
+    // only applies when a move is actually still possible; otherwise the hint
+    // would falsely tell a stuck hero they "could" travel to safety.
+    if (
+      hero.hand.length > 0 && cat.locations[hero.location]?.kind !== 'haven'
+      && legalMoves(cat, hero).length > 0
+    ) {
+      tasks.push(`${hero.hand.length} card(s) in hand and not in a haven — you could travel to safety`);
+    }
   }
 
   return tasks;

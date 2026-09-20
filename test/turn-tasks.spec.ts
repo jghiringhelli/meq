@@ -76,4 +76,27 @@ describe('pendingHeroTasks — smart next-step advisor', () => {
     s.heroes[0].hand = ['x1'];
     expect(pendingHeroTasks(s, cat).some((t) => /haven/.test(t))).toBe(false);
   });
+
+  it('does not suggest travelling to a haven when no legal move exists (e.g. Hopeless travel cap exhausted)', () => {
+    const s = baseGame();
+    const nonHaven = Object.values(cat.locations).find((l) => l.kind !== 'haven')!;
+    s.heroes[0].location = nonHaven.id;
+    s.heroes[0].hand = ['x1', 'x2'];
+    // Simulate a turn-travel cap already spent this turn (Hopeless corruption /
+    // a restrictMovement encounter effect) — legalMoves() then returns [].
+    s.heroes[0].turnTravelCap = 0;
+    s.heroes[0].travelStepsThisTurn = 0;
+    const tasks = pendingHeroTasks(s, cat);
+    expect(tasks.some((t) => /travel to safety/.test(t))).toBe(false);
+  });
+
+  it('does not suggest travelling to a haven when the hero is out of actions', () => {
+    const s = baseGame();
+    const nonHaven = Object.values(cat.locations).find((l) => l.kind !== 'haven')!;
+    s.heroes[0].location = nonHaven.id;
+    s.heroes[0].hand = ['x1', 'x2'];
+    s.heroes[0].actionsRemaining = 0;
+    const tasks = pendingHeroTasks(s, cat);
+    expect(tasks.some((t) => /travel to safety/.test(t))).toBe(false);
+  });
 });
