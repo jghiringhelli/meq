@@ -191,25 +191,35 @@ export function advancePlots(s: GameState, cat: Catalog, _late: boolean, log?: L
   // the Ringwraiths' health/fortitude). The rulebook never conditions the Plot
   // Step on the heroes' progress, so the Eye advances a plot every turn it can.
   const active = (s.sauron.activePlots ??= []);
-  if (active.length >= 3) return false; // plot slots full
+  if (active.length >= 3) { log?.('Plot Step: all 3 plot slots are full, nothing to play'); return false; } // plot slots full
 
   // Faithful: the Eye may only play a Plot card FROM HIS HAND (not the whole
   // pool). Rank the affordable ones in hand by the bot's Plot Step priority.
   const played = new Set(active.map((e) => e.eventId));
   const hand = (s.sauron.plotHand ??= []);
-  const ranked = hand
+  const candidates = hand
     .map((id) => cat.plots.find((p) => p.id === id))
-    .filter((p): p is Plot => !!p && !p.starting && !played.has(p.id))
-    // Faithful: a plot may be played only when both its Shadow-Pool cost AND its
-    // printed board requirement (concentrated influence / a monster or minion in
-    // a region / a location's contents) are currently satisfied. The requirement
-    // must be PREPARED over turns, so the strong marker-plots cannot be stacked
-    // instantly — see plotReqs.plotPlacement.
-    .map((p) => ({ p, cost: num(p.influenceCost), place: plotPlacement(s, cat, p) }))
+    .filter((p): p is Plot => !!p && !p.starting && !played.has(p.id));
+  if (!candidates.length) { log?.('Plot Step: no plot card in hand to play'); return false; }
+  // Faithful: a plot may be played only when both its Shadow-Pool cost AND its
+  // printed board requirement (concentrated influence / a monster or minion in
+  // a region / a location's contents) are currently satisfied. The requirement
+  // must be PREPARED over turns, so the strong marker-plots cannot be stacked
+  // instantly — see plotReqs.plotPlacement.
+  const evaluated = candidates.map((p) => ({ p, cost: num(p.influenceCost), place: plotPlacement(s, cat, p) }));
+  const ranked = evaluated
     .filter((r) => s.sauron.influence >= r.cost && r.place.ok)
     .sort((a, b) => plotPriority(s, b.p) - plotPriority(s, a.p));
   const pick = ranked[0];
-  if (!pick) return false;
+  if (!pick) {
+    // No hidden-intent leak (never names WHICH plot or its target location) —
+    // just the mechanical reason nothing happened, so a hero isn't left
+    // wondering whether the Plot Step silently did nothing wrong.
+    const unready = evaluated.filter((r) => !r.place.ok).length;
+    const unaffordable = evaluated.filter((r) => r.place.ok && s.sauron.influence < r.cost).length;
+    log?.(`Plot Step: ${candidates.length} plot card(s) in hand, none playable yet (${unready} board requirement not met, ${unaffordable} too costly for the current Shadow Pool)`);
+    return false;
+  }
 
   const p = pick.p;
   s.sauron.plotHand = hand.filter((id) => id !== p.id); // leaves the hand into a slot
