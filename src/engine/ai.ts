@@ -296,7 +296,9 @@ function eyePreparePlotInfluence(s: GameState, cat: Catalog, log?: (msg: string)
     const loc = bestPlacementToward(s, cat, c.target);
     if (!loc) continue;
     if (placeInfluenceAction(s, cat, loc, 1) <= 0) continue;
-    log?.(`places influence at ${cat.locations[loc]?.name ?? loc} (preparing plot ${c.p.name}, now ${influenceAt(s, loc)})`);
+    // Hero-visible log must not reveal Sauron's strategic intent (which plot
+    // this is building toward) — only the mechanical fact of the placement.
+    log?.(`places influence at ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
     return true;
   }
   return false;
@@ -362,7 +364,7 @@ export function eyePlaceInfluenceOnce(s: GameState, cat: Catalog, log?: (msg: st
   if (pick) {
     const placed = placeInfluenceAction(s, cat, pick.loc, 1);
     if (placed > 0) {
-      log?.(`places influence at ${cat.locations[pick.loc]?.name ?? pick.loc} (perilous road, now ${influenceAt(s, pick.loc)})`);
+      log?.(`places influence at ${cat.locations[pick.loc]?.name ?? pick.loc} (now ${influenceAt(s, pick.loc)})`);
       return true;
     }
   }
@@ -374,7 +376,7 @@ export function eyePlaceInfluenceOnce(s: GameState, cat: Catalog, log?: (msg: st
     if (!loc) continue;
     const placed = placeInfluenceAction(s, cat, loc, 1);
     if (placed <= 0) continue;
-    log?.(`places influence at ${cat.locations[loc]?.name ?? loc} (toward ${hero.id}'s path, now ${influenceAt(s, loc)})`);
+    log?.(`places influence at ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
     return true;
   }
   return false;
@@ -434,11 +436,11 @@ export function eyeSpawnMonsterOnce(s: GameState, cat: Catalog, log?: (msg: stri
     if (token !== null) {
       if (token === 'blank') {
         (s.map.rumorsAt ||= {})[guard.seat] = (s.map.rumorsAt[guard.seat] ?? 0) + 1;
-        log?.(`plants a face-down token at ${guard.seat} to guard a plot — a false rumor (blank)`);
+        log?.(`plants a face-down token at ${guard.seat} — a false rumor (blank)`);
         return true;
       }
       (s.map.monstersAt[guard.seat] ||= []).push(token);
-      log?.(`fields ${cat.monsters[token].name} at ${guard.seat} (guards a plot)`);
+      log?.(`fields ${cat.monsters[token].name} at ${guard.seat}`);
       return true;
     }
   }
