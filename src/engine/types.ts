@@ -522,6 +522,11 @@ export interface MapState {
    *  return to Minas Morgul at the start of your Action step"). Redeployed and
    *  cleared at the start of the Sauron turn. */
   minionReturnPending?: MinionId[];
+  /** Elite minions defeated PERMANENTLY (everyone except the Ringwraiths, who
+   *  alone come back via minionReturnPending). Once a minion id lands here it
+   *  is removed from Sauron's deployable reserve for the rest of the game —
+   *  it must never redeploy (rulebook: only "The Nine" return after defeat). */
+  minionDefeated?: MinionId[];
   /** M10 hero economy: favor tokens sitting on the board (retrievable), and
    *  Characters placed by events (consultable for favor / an ally). */
   favorAt?: Record<LocationId, number>;

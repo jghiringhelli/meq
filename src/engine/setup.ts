@@ -283,9 +283,10 @@ function applyStartingPlotInfluence(state: GameState, cat: Catalog, effect: stri
  *  seats them as the champion foe). Returns the activated minion id or null. */
 export function deployMinion(state: GameState, cat: Catalog): string | null {
   const onBoard = new Set(Object.values(state.map.minionsAt ?? {}).flat());
+  const defeated = new Set(state.map.minionDefeated ?? []);
   const stage = gameStage(state);
   const reserve = Object.values(cat.minions)
-    .filter((m) => !onBoard.has(m.id) && (m.stage ?? 1) <= stage && !(m.finale && state.story.finale))
+    .filter((m) => !onBoard.has(m.id) && !defeated.has(m.id) && (m.stage ?? 1) <= stage && !(m.finale && state.story.finale))
     .sort((a, b) => (a.stage ?? 1) - (b.stage ?? 1));
   if (!reserve.length) return null;
   const m = reserve[0];

@@ -456,6 +456,13 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
     if (cat.minions[pc.defender.refId]?.effectKey === 'minion-return-morgul' && !s.story.finale) {
       (s.map.minionReturnPending ||= []).push(pc.defender.refId as MonsterId);
       log(s, 'combat', 'Sauron', `${pc.defender.name} will return to Minas Morgul`);
+    } else if (cat.minions[pc.defender.refId]) {
+      // Every OTHER elite minion (Mouth of Sauron, Black Serpent, Gothmog,
+      // the Witch-king) is permanently destroyed once defeated — only The
+      // Nine (Ringwraiths, as a group) come back. Bar it from Sauron's
+      // deployable reserve for the rest of the game.
+      const defeated = (s.map.minionDefeated ||= []);
+      if (!defeated.includes(pc.defender.refId)) defeated.push(pc.defender.refId);
     }
     // A defeated monster's token is removed from the board and set aside faceup
     // (rulebook p.28). It yields the hero NO favor or reward on its own — only a

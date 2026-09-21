@@ -73,8 +73,10 @@ export function isSauronDecision(s: GameState): boolean {
 /** A stage-appropriate reserve minion exists to deploy. */
 function canDeploy(s: GameState, cat: Catalog): boolean {
   const onBoard = new Set(Object.values(s.map.minionsAt ?? {}).flat());
+  const defeated = new Set(s.map.minionDefeated ?? []);
   const stage = gameStage(s);
-  return Object.values(cat.minions).some((m) => !onBoard.has(m.id) && (m.stage ?? 1) <= stage && !(m.finale && s.story.finale));
+  return Object.values(cat.minions).some((m) =>
+    !onBoard.has(m.id) && !defeated.has(m.id) && (m.stage ?? 1) <= stage && !(m.finale && s.story.finale));
 }
 
 /** A hero stands on (or the Eye can reach) an influenced, hero-free location so
