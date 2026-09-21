@@ -910,7 +910,9 @@ function eyeTakeBestAction(s: GameState, cat: Catalog, frac: number, logMsg: (m:
         const toPool = Math.max(0, Math.min(2, yld, 4 * stage - s.sauron.influence));
         s.sauron.influence += toPool;
         let placed = 0;
-        for (let i = 0; i < yld - toPool; i++) if (eyePlaceInfluenceOnce(s, cat, placed === 0 ? logMsg : undefined)) placed++;
+        // Log EVERY board placement individually (not just the first) so the
+        // hero-visible log always shows exactly where each influence point went.
+        for (let i = 0; i < yld - toPool; i++) if (eyePlaceInfluenceOnce(s, cat, logMsg)) placed++;
         logMsg(`Place Influence action (space ${yld}): banked ${toPool} to pool, laid ${placed} on board`);
         return `influence×${yld}`;
       }
