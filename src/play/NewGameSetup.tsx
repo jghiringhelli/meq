@@ -48,9 +48,11 @@ function pickRandom<T>(arr: T[], n: number): T[] {
 }
 
 /** Aggregate a hero's combat deck (from the catalog's expanded card-id list)
- *  into "2× Rush — melee A1/D2 · Mountain" style lines, so a new player can
- *  see roughly what they're getting into before picking a hero — without
- *  having to start a game first and open the in-game Hero decks reference. */
+ *  into "2× Rush — melee A1/D2 · Mountain — draw an extra card" style lines
+ *  (name, stats, terrain restriction, and the card's own rules text), so a new
+ *  player can see roughly what they're getting into before picking a hero —
+ *  without having to start a game first and open the in-game Hero decks
+ *  reference. */
 function deckSummaryLines(cat: Catalog, deckIds: CardId[]): string[] {
   const counts = new Map<CardId, number>();
   for (const id of deckIds) counts.set(id, (counts.get(id) ?? 0) + 1);
@@ -59,7 +61,8 @@ function deckSummaryLines(cat: Catalog, deckIds: CardId[]): string[] {
       const c = cat.combatCards[id];
       if (!c) return `${n}× ${id}`;
       const terrain = c.terrain ? ` · ${c.terrain}` : '';
-      return `${n}× ${c.name} — ${c.type} A${c.attack}/D${c.defense}${terrain}`;
+      const ability = c.ability ? ` — ${c.ability}` : '';
+      return `${n}× ${c.name} — ${c.type} A${c.attack}/D${c.defense}${terrain}${ability}`;
     })
     .sort();
 }

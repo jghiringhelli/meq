@@ -18,13 +18,17 @@ function Stat({ label, val }: { label: string; val: number | string }) {
 // hand is drawn from one of the shared "monster-behemoth/-ravager/-zealot"
 // decks (assets/monsters.json's `deck` field), never from a deck of its own —
 // e.g. Crebain, Agent, Snaga and Orc all draw from the "monster-zealot" deck.
-// Using the monster's own id as the art owner key therefore always misses the
-// dedicated monster-deck scans and falls back to the generic id art (which,
-// for shared card NAMES like "Precision"/"Hack", happens to be a HERO's scan).
-// Resolve to the actual deck owner (behemoth/ravager/zealot) for monsters;
-// heroes keep using their own id (their deck IS their own, "hero-<id>").
-function combatantOwnerKey(cat: Catalog, refId: string): string {
-  const deck = cat.monsters[refId]?.deck;
+// Named elite minions (assets/minions.json's `combatDeck` field, e.g. the
+// Mouth of Sauron → "monster-zealot") work the same way — they have NO combat
+// deck of their own either. Using the combatant's own id as the art owner key
+// therefore always misses the dedicated monster-deck scans and falls back to
+// the generic id art (which, for shared card NAMES like "Precision"/"Hack",
+// happens to be a HERO's scan — this used to make minions/monsters visibly
+// show a hero's card border in combat). Resolve to the actual deck owner
+// (behemoth/ravager/zealot) for both monsters and minions; heroes keep using
+// their own id (their deck IS their own, "hero-<id>").
+export function combatantOwnerKey(cat: Catalog, refId: string): string {
+  const deck = cat.monsters[refId]?.deck ?? cat.minions[refId]?.combatDeck;
   return deck ? deck.replace(/^monster-/, '') : refId;
 }
 
