@@ -688,7 +688,7 @@ export interface GameState {
    *  cards shown, the resolved one highlighted — to read and confirm (OK). The
    *  card's effect has already been applied; OK simply dismisses the tray. */
   pendingReveal?:
-    | { kind: 'event' | 'peril'; title: string; deck: 'events' | 'perils'; drawn: CardId[]; chosen?: CardId; note?: string }
+    | { kind: 'event' | 'peril'; title: string; deck: 'events' | 'perils'; drawn: CardId[]; chosen?: CardId; note?: string; resultNote?: string }
     | null;
   /** M3: a human-controlled Sauron's pending "Combat or Peril" decision, raised
    *  when the active hero enters a location that is both perilous and holds a

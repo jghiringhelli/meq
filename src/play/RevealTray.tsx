@@ -29,6 +29,7 @@ export default function RevealTray({ state, cat, onDismiss }: Props) {
       <div className="enc-tray">
         <h2>{pr.title}</h2>
         {pr.note && <p className="enc-tray-hint">{pr.note}</p>}
+        {pr.resultNote && <p className="enc-tray-result"><strong>Result:</strong> {pr.resultNote}</p>}
         <div className="enc-tray-cards">
           {pr.drawn.map((id, i) => {
             const info = cardInfo(cat, pr.deck, id);

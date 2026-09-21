@@ -556,6 +556,7 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .enc-tray { pointer-events: auto; margin-top: 3vh; max-width: min(1500px, 96vw); max-height: 92vh; overflow-y: auto; background: rgba(24,19,13,0.94); border: 1px solid #5a4a2e; border-radius: 10px; padding: 1rem 1.3rem 1.3rem; box-shadow: 0 10px 40px rgba(0,0,0,0.6); backdrop-filter: blur(2px); }
 .enc-tray h2 { margin: 0 0 0.3rem; color: var(--accent); font-size: 1.3rem; }
 .enc-tray-hint { margin: 0 0 0.8rem; font-size: 0.95rem; color: #cdbf98; }
+.enc-tray-result { margin: 0 0 0.8rem; font-size: 0.9rem; color: #a8d0a0; background: #16230f; border: 1px solid #3a5a2e; border-radius: 6px; padding: 0.4rem 0.7rem; }
 .enc-tray-cards { display: flex; gap: 0.9rem; justify-content: center; flex-wrap: wrap; }
 .enc-tray-card { position: relative; width: 400px; display: flex; gap: 0.8rem; text-align: left; padding: 0.8rem; background: #17130d; border: 2px solid #3a2f22; border-radius: 8px; color: inherit; cursor: default; transition: border-color 0.15s, filter 0.15s, transform 0.1s; }
 .enc-tray-card.applies { border-color: #6fbf5a; box-shadow: 0 0 12px rgba(120,220,110,0.35); }

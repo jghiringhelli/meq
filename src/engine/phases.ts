@@ -750,6 +750,7 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   // hero-scoped ops (favor/corruption/damage) fall on every active hero. A card
   // whose printed "Choose one" belongs to the hero PAUSES here for a human hero
   // (see treeActor); the AI picks the hero's best option.
+  const effectLogStart = s.log.length;
   for (const e of chosen) {
     if (eventDeckPlotFor(cat, e)) continue; // a lasting plot, no one-shot effect
     if (e.tree && (e.tree as any).k && (e.tree as any).k !== 'none') {
@@ -770,6 +771,17 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
     const heroOps = e.ops.filter((o) => o.op !== 'addInfluence' && o.op !== 'removeInfluence');
     if (globalOps.length) applyOps(s, cat, null, globalOps, `event ${e.name}`);
     if (heroOps.length) for (const h of s.heroes.filter((x) => x.status === 'active')) applyOps(s, cat, h.id, heroOps, `event ${e.name}`);
+  }
+  // Surface the event's actual mechanical outcome (e.g. "no favor to bank")
+  // in the reveal tray itself, not just the game log — a hero should see
+  // right away whether/how the card affected them, including a clear
+  // no-op explanation when it did nothing (e.g. a hero with 0 favor).
+  if (s.pendingReveal) {
+    const eventNames = new Set(chosen.map((e) => e.name));
+    const notes = s.log.slice(effectLogStart)
+      .filter((ev) => ev.type === 'effect' && [...eventNames].some((n) => ev.detail.startsWith(`event ${n}:`)))
+      .map((ev) => ev.detail);
+    s.pendingReveal.resultNote = notes.length ? notes.join(' · ') : 'No mechanical effect on any hero this time.';
   }
   return s;
 }
