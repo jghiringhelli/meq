@@ -56,9 +56,17 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
         <span className="res-chip" title="Cards currently in your hand — spend these to move/fight; the Travel step repeats until your hand is spent">✋ Hand <b>{hero.hand.length}</b></span>
         <span className="res-chip" title="Damage taken — cards here don't return until you Rest at a Haven">🩸 Damage <b>{hero.damagePool.length}</b></span>
         <span className="res-chip" title="Favor — spend it to counter plots, retrieve items, etc.">✦ Favor <b>{hero.favor}</b></span>
-        <span className="res-chip" title={hero.corruptionCards?.length
-          ? `Corruption cards: ${hero.corruptionCards.map((id) => cat.corruption[id]?.name ?? id).join(', ')}`
-          : 'Corruption — too high and you risk becoming a Fallen Hero'}>☠ Corruption <b>{hero.corruption}</b></span>
+        <span className="res-chip clickable" title={hero.corruptionCards?.length
+          ? `Corruption cards: ${hero.corruptionCards.map((id) => cat.corruption[id]?.name ?? id).join(', ')}\nClick for details`
+          : 'Corruption — too high and you risk becoming a Fallen Hero'}
+          onClick={() => hero.corruptionCards?.length && inspect({
+            title: 'Corruption cards',
+            subtitle: `${hero.corruptionCards.length} held`,
+            lines: hero.corruptionCards.map((id) => {
+              const c = cat.corruption[id];
+              return c ? `${c.name} — ${c.ability} (discard cost: ${c.cost})` : id;
+            }),
+          })}>☠ Corruption <b>{hero.corruption}</b></span>
         <span className="res-chip" title="Rest step: available once per turn, only before you move">{hero.restedThisTurn ? '✔ Rested' : canRestNow ? '○ Can rest' : '✕ Rest unavailable'}</span>
       </div>
       <div className="hero-stats-legend">Attributes:</div>

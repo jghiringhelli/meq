@@ -346,6 +346,8 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .hero-head .hero-loc { margin-left: auto; color: #b0a080; font-size: 0.85rem; }
 .hero-resources { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.4rem; }
 .res-chip { font-size: 12px; background: #211c14; border: 1px solid #4a3f2c; border-radius: 4px; padding: 2px 6px; color: #d8c8a0; white-space: nowrap; }
+.res-chip.clickable { cursor: pointer; }
+.res-chip.clickable:hover { border-color: #8a6a3a; }
 .res-chip b { color: #f0e2c0; margin-left: 3px; }
 .hero-stats-legend { font-size: 11px; color: #8a7c60; margin-bottom: 2px; }
 .hand { display: flex; flex-wrap: wrap; gap: 0.4rem; }
