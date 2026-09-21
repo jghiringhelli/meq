@@ -93,7 +93,7 @@ function boardGroups(cat: Catalog, state: GameState): RefGroup[] {
   const sm = st.sauron ?? { yellow: 0, red: 0, black: 0 };
   sections.push({
     label: 'Story markers', empty: '—', items: [
-      { id: 'sm-hero', name: 'Heroes (green)', sub: `space ${st.heroMarker ?? 0} / ${st.length}` },
+      { id: 'sm-hero', name: 'Heroes (green)', sub: `space ${st.sauronProgress ?? 0} / ${st.length}` },
       { id: 'sm-yellow', name: 'Sauron · yellow', sub: `space ${sm.yellow}` },
       { id: 'sm-red', name: 'Sauron · red', sub: `space ${sm.red}` },
       { id: 'sm-black', name: 'Sauron · black', sub: `space ${sm.black}` },

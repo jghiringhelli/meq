@@ -8,7 +8,7 @@ import { shadowPoolArt } from '../data/art';
 // climb per his active plots. This draws the real track with marker tokens at
 // their live positions instead of bare numbers.
 function StoryTrackViz({ state }: { state: GameState }) {
-  const hero = Math.min(state.story.heroMarker ?? 0, STORY_FINALE);
+  const hero = Math.min(state.story.sauronProgress ?? 0, STORY_FINALE);
   const s = state.story.sauron ?? { yellow: 0, red: 0, black: 0 };
   const spaces = STORY_FINALE + 1; // 0..18 inclusive
   return (
@@ -85,7 +85,7 @@ export default function CounterBar({ state, cat, revealHeroMission = true }: {
       </div>
       <div className="counter markers">
         <span className="label">Story Markers</span>
-        <span className="value" title="Hero marker toward the Finale">green {state.story.heroMarker ?? 0}</span>
+        <span className="value" title="Hero marker toward the Finale">green {state.story.sauronProgress ?? 0}</span>
         <span className="sub">
           <span style={{ color: '#e0c94a' }}>Y{state.story.sauron?.yellow ?? 0}</span>{' '}
           <span style={{ color: '#c0553b' }}>R{state.story.sauron?.red ?? 0}</span>{' '}

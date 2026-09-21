@@ -547,9 +547,11 @@ export interface MapState {
  *  Dominance = the side whose marker(s) are nearer their goal. */
 export interface StoryTrack {
   turn: number; length: number;
+  /** the hero (green) marker's position toward the Finale — despite the name,
+   *  this IS the live hero-clock value rendered as the green marker (there is
+   *  no separate `heroMarker` field; a legacy duplicate field used to exist
+   *  and was never updated, which silently froze the on-board hero token). */
   sauronProgress: number;
-  /** hero/green marker position toward the Finale (== length). */
-  heroMarker?: number;
   /** the three Sauron story markers, 0..STORY_FINALE. */
   sauron?: { yellow: number; red: number; black: number };
   /** whether the Finale (endgame Ringwraith combat window) has begun. */

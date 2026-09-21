@@ -45,7 +45,7 @@ export function newGame(cat: Catalog, seed: number, heroIds?: HeroId[], humanSid
     map: { heroesAt: {}, monstersAt: {}, minionsAt: {}, favorAt: {}, charactersAt: {}, questAt: {} } as MapState,
     story: {
       turn: 1, length: cat.scenario.storyTrackLength, sauronProgress: 0,
-      heroMarker: 0, sauron: { yellow: 0, red: 0, black: 0 }, finale: false,
+      sauron: { yellow: 0, red: 0, black: 0 }, finale: false,
     },
     pendingCombat: null, pendingChoice: null,
     pendingEncounter: null, explored: {},

@@ -579,12 +579,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const storyInfo = () => inspect({
             title: 'Story Track', subtitle: `Turn ${state.story.turn} · ${state.phase}`,
             lines: [
-              `Hero (green): space ${Math.min(R, state.story.heroMarker ?? 0)}/${R}`,
+              `Hero (green): space ${Math.min(R, state.story.sauronProgress ?? 0)}/${R}`,
               `Ring (yellow): space ${Math.min(R, st.yellow)}/${R}`,
               `War (red): space ${Math.min(R, st.red)}/${R}`,
               `Corruption (black): space ${Math.min(R, st.black)}/${R}`,
             ],
-            text: 'Each Story Step Sauron advances his three markers toward FINALE; the Hero marker advances as the heroes complete quests. Whoever reaches FINALE on their track wins the game.',
+            text: 'Each Story Step (after turn 1) advances the Hero marker +2 and each active plot\'s coloured Sauron marker; a hero Rest also nudges Sauron\'s least-advanced marker +1. Whoever reaches FINALE on their track wins the game.',
           });
           const actionsInfo = () => inspect({
             title: 'Sauron Actions — the Eye', subtitle: 'Action Step economy',
@@ -806,7 +806,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const at = (v: number) => xS + (xF - xS) * (Math.max(0, Math.min(R, v)) / R);
           const heroImg = token('heroStoryMarker');
           const markers = [
-            { k: 'hero', v: state.story.heroMarker ?? 0, fill: '#3a9d4a', dx: -26, dy: -26, init: 'H', name: 'Hero', img: heroImg },
+            { k: 'hero', v: state.story.sauronProgress ?? 0, fill: '#3a9d4a', dx: -26, dy: -26, init: 'H', name: 'Hero', img: heroImg },
             { k: 'ring', v: st.yellow, fill: '#d9b32b', dx: 26, dy: -26, init: 'R', name: 'Ring', img: token('sauronStoryMarkerYellow') },
             { k: 'war', v: st.red, fill: '#b23b3b', dx: -26, dy: 26, init: 'W', name: 'War', img: token('sauronStoryMarkerRed') },
             { k: 'corruption', v: st.black, fill: '#3a3a44', dx: 26, dy: 26, init: 'C', name: 'Corruption', img: token('sauronStoryMarkerBlack') },
