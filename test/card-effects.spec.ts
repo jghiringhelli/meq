@@ -230,9 +230,12 @@ describe('atom: discardRegionInfluence', () => {
   it('spreads the remainder across other influenced locations in the region', () => {
     const s = freshGame();
     const h = heroOf(s);
-    const region = cat.locations[h.location]?.regionId;
+    // "Region" here is the hero's color sub-region (a region-encounter-deck
+    // pair splits into two independently-scoped colors — see encounter.ts's
+    // heroRegion), not the wider merged deck-pair id.
+    const region = cat.locations[h.location]?.regionColor;
     const other = Object.values(cat.locations)
-      .find((l) => l.regionId === region && l.id !== h.location)?.id;
+      .find((l) => l.regionColor === region && l.id !== h.location)?.id;
     if (!other) return; // region has a single location: nothing to spread onto
     s.sauron.locationInfluence = { [h.location]: 1, [other]: 3 };
     applyAtom(s, cat, h.id, { op: 'discardRegionInfluence', n: 3 });

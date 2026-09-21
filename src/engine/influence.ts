@@ -144,6 +144,20 @@ export function regionHasInfluence(s: GameState, cat: Catalog, region: RegionId)
   return regionInfluenceTotal(s, cat, region) > 0;
 }
 
+/** Total influence within one board SUB-region (a single color half of a
+ *  region-encounter-deck pair, e.g. "Brown" within Mordor and Brown Lands).
+ *  Per the manual, each of the two colors sharing an Encounter deck is its
+ *  own distinct region for "your region"-scoped card effects — narrower than
+ *  regionInfluenceTotal, which sums the whole merged deck-pair area (used for
+ *  monster-placement gating, where the wider merged region is correct). */
+export function subRegionInfluenceTotal(s: GameState, cat: Catalog, regionColor: string): number {
+  let sum = 0;
+  for (const [loc, n] of Object.entries(s.sauron.locationInfluence ?? {})) {
+    if (cat.locations[loc]?.regionColor === regionColor) sum += n;
+  }
+  return sum;
+}
+
 /** A location made perilous by an active Plot regardless of influence
  *  (Saruman Falls to Corruption → Isengard). */
 export function plotMakesPerilous(s: GameState, loc: LocationId): boolean {

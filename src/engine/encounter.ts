@@ -19,7 +19,7 @@ import { placeCharacterUnique } from './characters';
 import { clamp, grantTraining, raiseAttribute, clone, defeatHero, gameStage } from './mechanics';
 import { dealHeroDamage, heroDefeated, healHero, healHeroBy, handIntoLife } from './heroLife';
 import { log } from './log';
-import { addCardInfluence, removeInfluenceAt, regionInfluenceTotal, influenceAt, isHaven } from './influence';
+import { addCardInfluence, removeInfluenceAt, subRegionInfluenceTotal, influenceAt, isHaven } from './influence';
 import { adjacentLocations } from './sauronPlay';
 import { drawPlots, drawShadow } from './sauronmech';
 import { placeFavorToken } from './economy';
@@ -46,9 +46,16 @@ export function revealMonsters(s: GameState, locs: LocationId[]): number {
 
 // ---- metrics & conditions ----------------------------------------------
 
+// "Your region" on an Encounter/Event card means the single color half of the
+// board (e.g. "Brown" within the merged Mordor and Brown Lands encounter-deck
+// area) the hero is currently standing in — NOT the whole two-color deck-pair
+// area. Two colors share one physical Encounter deck for component convenience,
+// but the manual treats each color as its own distinct region for any card
+// effect scoped "in your region". regionColor strings are globally unique
+// across all 10 sub-regions, so it alone is a sufficient region key here.
 function heroRegion(s: GameState, cat: Catalog, heroId: HeroId): string {
   const h = s.heroes.find((x) => x.id === heroId);
-  return h ? cat.locations[h.location]?.regionId ?? '' : '';
+  return h ? cat.locations[h.location]?.regionColor ?? '' : '';
 }
 
 export function statValue(s: GameState, cat: Catalog, heroId: HeroId, stat: 'wisdom' | 'agility' | 'fortitude' | 'strength'): number {  const base = (cat.heroes[heroId] as any)?.[stat] ?? 0;
@@ -75,8 +82,8 @@ export function evalMetric(s: GameState, cat: Catalog, heroId: HeroId, m: Metric
   switch (m.count) {
     case 'monstersInRegion':
       return Object.entries(s.map.monstersAt).reduce((n, [loc, arr]) =>
-        n + (cat.locations[loc]?.regionId === region ? arr.length : 0), 0);
-    case 'influenceInRegion': return regionInfluenceTotal(s, cat, region);
+        n + (cat.locations[loc]?.regionColor === region ? arr.length : 0), 0);
+    case 'influenceInRegion': return subRegionInfluenceTotal(s, cat, region);
     case 'shireControl': {
       // "at least 3 influence OR a minion in The Shire" collapsed into one metric:
       // a minion present forces the value past any threshold (>= 3).
@@ -364,7 +371,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       if (left > 0) {
         for (const [loc, n] of Object.entries(s.sauron.locationInfluence ?? {})) {
           if (left <= 0) break;
-          if (cat.locations[loc]?.regionId === region && n > 0) left -= removeInfluenceAt(s, loc, left);
+          if (cat.locations[loc]?.regionColor === region && n > 0) left -= removeInfluenceAt(s, loc, left);
         }
       }
       return `-${atom.n - left} region influence`;
@@ -419,7 +426,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
     case 'explore': return `explore ${atom.location}`;
     case 'discardMonsterToken': {
       for (const [loc, arr] of Object.entries(s.map.monstersAt)) {
-        if (cat.locations[loc]?.regionId === region && arr.length) { arr.splice(0, atom.n); break; }
+        if (cat.locations[loc]?.regionColor === region && arr.length) { arr.splice(0, atom.n); break; }
       }
       return `discard ${atom.n} monster token`;
     }
@@ -518,11 +525,16 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
         const placed = addCardInfluence(s, cat, loc, atom.n);
         return placed > 0 ? `+${placed} influence on ${cat.locations[loc]?.name ?? loc}` : '';
       }
-      const rgn = atom.where === 'mordor' ? findRegion(cat, 'mordor')
+      // Sauron-named regions ("mordor", "shire") reference the whole merged
+      // regionId; the generic "your region" fallback (rgnColor) is scoped to
+      // the hero's current color sub-region, per the manual.
+      const rgnId = atom.where === 'mordor' ? findRegion(cat, 'mordor')
         : atom.where === 'shire' ? findRegion(cat, 'shire')
-        : region;
-      if (!rgn) return '';
-      const eligible = Object.values(cat.locations).filter((l) => l.regionId === rgn && !isHaven(cat, l.id));
+        : null;
+      const rgnColor = rgnId ? null : region;
+      if (!rgnId && !rgnColor) return '';
+      const eligible = Object.values(cat.locations).filter((l) =>
+        (rgnId ? l.regionId === rgnId : l.regionColor === rgnColor) && !isHaven(cat, l.id));
       // "in each location of <region>": place n on every eligible location.
       if (atom.each) {
         let cnt = 0;
@@ -544,9 +556,10 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       // Single target: prefer the hero's own location, then a Shadow Stronghold,
       // then any non-haven location of that region.
       let loc: string | undefined;
-      if (cat.locations[hero.location]?.regionId === rgn && !isHaven(cat, hero.location)) loc = hero.location;
-      else loc = Object.values(cat.locations).find((l) => l.regionId === rgn && l.kind === 'stronghold')?.id
-        ?? Object.values(cat.locations).find((l) => l.regionId === rgn && l.kind !== 'haven')?.id;
+      const hereMatches = rgnId ? cat.locations[hero.location]?.regionId === rgnId : cat.locations[hero.location]?.regionColor === rgnColor;
+      if (hereMatches && !isHaven(cat, hero.location)) loc = hero.location;
+      else loc = Object.values(cat.locations).find((l) => (rgnId ? l.regionId === rgnId : l.regionColor === rgnColor) && l.kind === 'stronghold')?.id
+        ?? Object.values(cat.locations).find((l) => (rgnId ? l.regionId === rgnId : l.regionColor === rgnColor) && l.kind !== 'haven')?.id;
       if (!loc) return '';
       const placed = addCardInfluence(s, cat, loc, atom.n);
       return placed > 0 ? `+${placed} influence on ${cat.locations[loc]?.name ?? loc}` : '';
