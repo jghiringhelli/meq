@@ -112,7 +112,7 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
               </div>
             )}
             {adv && (
-              <div className={`quest-chip quest-advanced${q.advancedUnlocked ? '' : ' quest-locked'}`}
+              <div className={`quest-chip quest-advanced${q.advancedUnlocked ? '' : ' quest-locked'}${q.advancedDone ? ' quest-done' : ''}`}
                 title={`Task: ${adv.task}\nHow: ${questHowTo(cat, adv)}\nReward: ${adv.reward}`}
                 onClick={() => inspect({
                   title: adv.name, subtitle: `Advanced Quest${q.advancedUnlocked ? '' : ' · locked'}${q.advancedDone ? ' · done' : ''}`,
@@ -122,7 +122,7 @@ export default function HeroPanel({ state, cat, active, engageable, canExplore, 
                     `Reward: ${adv.reward}`,
                   ],
                 })}>
-                {q.advancedUnlocked ? '◷' : '🔒'} Advanced: <strong>{adv.name}</strong>
+                {q.advancedDone ? '✔' : q.advancedUnlocked ? '◷' : '🔒'} Advanced: <strong>{adv.name}</strong>
               </div>
             )}
           </div>
