@@ -232,6 +232,13 @@ export default function App() {
     setSetup(false);
   }, []);
 
+  // Leave the board for the main menu WITHOUT deleting anything — the game
+  // is still autosaved, so the landing screen offers a "Resume" button.
+  const backToMenu = useCallback(() => {
+    setState(null);
+    setSetup(false);
+  }, []);
+
   const resume = useCallback(() => {
     if (resumable) { setSeed(resumable.seed); setState(resumable.state); }
   }, [resumable]);
@@ -589,6 +596,8 @@ export default function App() {
           onClick={toggleFocusMap}>{focusMap ? '☰ Show panels' : '🗺 Focus map'}</button>
         <button className="ghost" title="Describe a bug and file a GitHub issue with a full technical snapshot"
           onClick={() => setReportOpen(true)}>Report a problem</button>
+        <button className="ghost" title="Leave the board for the main menu (the game stays saved — use Resume to come back)"
+          onClick={backToMenu}>☰ Main menu</button>
         <button className="ghost" title="Delete the current game and return to the menu"
           onClick={deleteGame}>Delete game</button>
       </header>

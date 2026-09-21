@@ -28,16 +28,20 @@ function buildPiles(state: GameState, cat: Catalog): Pile[] {
   });
   piles.push({ key: 'event', icon: '📜', label: 'Events', cards: evd });
 
-  // Per-region encounter discards, flattened into one browsable pile.
+  // The board game deals each region its own separate Encounter deck and
+  // discard pile — never a single shared pile — so surface one chip per
+  // region (always shown, even before its first draw) instead of flattening
+  // them together.
   const encMap = state.encounterDiscards ?? {};
-  const enc: PileCard[] = [];
-  for (const [region, ids] of Object.entries(encMap)) {
-    for (const id of ids) {
+  const regions = new Set<string>(Object.keys(encMap));
+  for (const enc of Object.values(cat.encounters)) regions.add(enc.regionGroup);
+  for (const region of Array.from(regions).sort()) {
+    const cards: PileCard[] = (encMap[region] ?? []).map((id) => {
       const c = cat.encounters[id];
-      enc.push({ id: `${region}:${id}`, name: c?.name ?? id, img: encounterArt(id), sub: region, text: (c as { text?: string })?.text });
-    }
+      return { id, name: c?.name ?? id, img: encounterArt(id), text: (c as { text?: string })?.text };
+    });
+    piles.push({ key: `encounter-${region}`, icon: '🗺', label: `Enc: ${region}`, cards });
   }
-  piles.push({ key: 'encounter', icon: '🗺', label: 'Encounters', cards: enc });
 
   // Each hero's rest pool (discard) is a public "combat train".
   for (const h of state.heroes) {
