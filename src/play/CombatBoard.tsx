@@ -212,6 +212,7 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
         ) : (
           <div className="cb-life">
             <span className="foe-hp" title="Monster / minion health">♥ HP <b>{c.life}</b>{foeMaxLife ? <i>/{foeMaxLife}</i> : null}</span>
+            <span title="Cards remaining in the foe's combat hand">✋ hand <b>{c.hand.length}</b></span>
           </div>
         )}
         {!isHero && foeDef?.ability && <div className="cb-ability">{foeDef.ability}</div>}
