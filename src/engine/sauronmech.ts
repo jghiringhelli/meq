@@ -377,9 +377,16 @@ function handDumpImpact(c: ShadowCard, target: { hand: CardId[]; corruptionCards
 
 /** Context-aware desirability of playing `c` on `target` now. Extends the base
  *  score with hand-dump TIMING: prize a strip against a hoarding hero, and HOLD
- *  a hand-dump card (negative bump) while the hero's hand is small — exactly the
- *  expert doctrine of saving Storms of Mordor for a hero building a super turn. */
-function shadowScoreFor(
+ *  a TRUE hoard-stripper (a "discard down to N" card, negative bump) while the
+ *  hero's hand is small — exactly the expert doctrine of saving Storms of
+ *  Mordor for a hero building a super turn. A fixed/conditional discard (e.g.
+ *  Betrayed's flat "discard 2", An Evil Fog's "1 per Corruption card") has no
+ *  such timing upside: its impact only ever grows as the game (and the
+ *  target's corruption) progresses, so there is nothing to gain by holding it
+ *  — the previous blanket penalty on ANY discardHand card silently starved the
+ *  Eye of its only cheap (poolRequirement 1) action-step play for the entire
+ *  early game, whenever the target hero held 0-1 Corruption cards. */
+export function shadowScoreFor(
   c: ShadowCard,
   target: { hand: CardId[]; corruptionCards: CardId[] },
   doctrine: SauronDoctrine = 'balanced',
@@ -387,13 +394,14 @@ function shadowScoreFor(
   let v = shadowValue(c);
   const txt = `${c.effect ?? ''} ${c.effectKey ?? ''}`.toLowerCase();
   if (doctrine === 'attrition' && txt.includes('corrupt')) v += 4; // grind: corruption is king
-  const isDump = /"op":"discardHand"/.test(JSON.stringify(c.tree ?? {}));
+  const treeStr = JSON.stringify(c.tree ?? {});
+  const isDump = /"op":"discardHand"/.test(treeStr);
   if (isDump) {
     const impact = handDumpImpact(c, target);
     v += impact * 2;
-    // Hold a hand-dump while the hero isn't hoarding — but an attrition Eye is
-    // less patient and will still strip a small hand to keep the pressure on.
-    if (impact <= 1) v -= doctrine === 'attrition' ? 2 : 6;
+    // Only a genuine "discard down to N" hoard-stripper benefits from timing.
+    const isHoardStripper = /"toHand"/.test(treeStr);
+    if (isHoardStripper && impact <= 1) v -= doctrine === 'attrition' ? 2 : 6;
   }
   return v;
 }

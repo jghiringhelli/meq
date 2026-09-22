@@ -50,10 +50,19 @@ describe('sauron doctrine', () => {
     // around the perilised corridor and banks turns on havens, largely RESISTING
     // the grind (that resistance is the point of the hero-AI work) — making the
     // doctrine's mechanism only observable against a non-dodging hero.
+    // NOTE (shadow-score fix): shadowScoreFor used to apply the "hold a hand-
+    // dump card while the target isn't hoarding" timing penalty to EVERY Shadow
+    // card with a discardHand op, not just true "discard down to N" hoard-
+    // strippers — this incorrectly (and more heavily for 'balanced': -6 vs
+    // attrition's -2) suppressed cheap conditional discards (An Evil Fog,
+    // Betrayed) regardless of doctrine. Fixing that shrank — but did not erase —
+    // the doctrine's Shadow-pressure gap (both doctrines now play those cards
+    // freely); a larger sample (4 seed bases instead of 2) is needed for the
+    // remaining, genuine effect size to clear noise reliably.
     const agg = (doctrine: SauronDoctrine, key: 'shadowPlays' | 'perils'): number => {
       let v = 0;
       for (const h of ['thalin', 'eleanor']) {
-        for (const base of [1000, 2000]) {
+        for (const base of [1000, 2000, 3000, 4000]) {
           for (let i = 0; i < 12; i++) {
             v += playoutGame(cat, base + 13 * i, heuristic, 20000, { heroIds: [h], doctrine })[key];
           }
