@@ -245,6 +245,18 @@ describe('C1 — travel steps repeat (no 2-action budget)', () => {
     expect(out.heroes[s.activeHeroIndex].restedThisTurn).toBe(true);
     expect(() => heroRest(out, cat, hero.id)).toThrow(/already taken/i);
   });
+
+  it('Rest is its own step — it must happen before Move, not after', () => {
+    const s = freshGame();
+    const hero = activeTurnHero(s);
+    (s.map.monstersAt as Record<string, string[]>)[hero.location] = [];
+    if (s.map.minionsAt) s.map.minionsAt[hero.location] = [];
+    const mv = legalMoves(cat, hero)[0];
+    expect(mv).toBeTruthy();
+    const moved = heroMove(s, cat, hero.id, mv.to);
+    // Once the hero has taken a Travel step this turn, Rest is no longer legal.
+    expect(() => heroRest(moved, cat, hero.id)).toThrow(/before moving/i);
+  });
 });
 
 // --- M3: Combat OR Peril choice at a perilous, occupied location (p.22) ------

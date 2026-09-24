@@ -501,7 +501,7 @@ export const randomWalk: HeroStrategy = {
     for (const m of foes) acts.push({ kind: 'engage', monsterId: m });
     if (canExplore(s, cat, heroId)) acts.push({ kind: 'explore' });
     for (const mv of legalMoves(cat, hero)) acts.push({ kind: 'move', to: mv.to });
-    if (cat.locations[hero.location].kind === 'haven' && !hero.restedThisTurn) acts.push({ kind: 'rest' });
+    if (cat.locations[hero.location].kind === 'haven' && !hero.restedThisTurn && !hero.hasMovedThisTurn) acts.push({ kind: 'rest' });
     acts.push({ kind: 'end' });
     return pick(rng, acts);
   },
@@ -530,7 +530,7 @@ export const heuristic: HeroStrategy = {
     // feed the "all three at the Falls" loss.
     const corrBar = restAdvancesThreatB(s) ? 3 : 1;
     const hurtBar = restAdvancesThreatB(s) ? 4 : 2;
-    if (!hero.restedThisTurn && cat.locations[hero.location].kind === 'haven' && (hero.corruption > corrBar || hero.damagePool.length > hurtBar)) {
+    if (!hero.restedThisTurn && !hero.hasMovedThisTurn && cat.locations[hero.location].kind === 'haven' && (hero.corruption > corrBar || hero.damagePool.length > hurtBar)) {
       return { kind: 'rest' };
     }
     // Travel as far as the hand allows BEFORE taking the terminal Encounter step
@@ -549,7 +549,7 @@ export const heuristic: HeroStrategy = {
     }
     // Out of moves: take the Encounter step (ends the turn) or end.
     if (canExplore(s, cat, heroId)) return { kind: 'explore' };
-    if (!hero.restedThisTurn && cat.locations[hero.location].kind === 'haven') return { kind: 'rest' };
+    if (!hero.restedThisTurn && !hero.hasMovedThisTurn && cat.locations[hero.location].kind === 'haven') return { kind: 'rest' };
     return { kind: 'end' };
   },
 };
@@ -564,7 +564,7 @@ export const cautious: HeroStrategy = {
     const base = heuristic.heroAction(s, cat, heroId, rng);
     if (base.kind !== 'move') return base;
     const hero = s.heroes.find((h) => h.id === heroId)!;
-    if (cat.locations[hero.location].kind === 'haven' && !restAdvancesThreatB(s) && (hero.corruption > 0 || hero.damagePool.length > 0)) {
+    if (cat.locations[hero.location].kind === 'haven' && !hero.restedThisTurn && !hero.hasMovedThisTurn && !restAdvancesThreatB(s) && (hero.corruption > 0 || hero.damagePool.length > 0)) {
       return { kind: 'rest' };
     }
     const influenced = (loc: LocationId) => (s.sauron.locationInfluence?.[loc] ?? 0) > 0;
@@ -629,7 +629,7 @@ export const missionAware: HeroStrategy = {
       // purity race: cleanse in havens, shun avoidable danger, don't pick fights.
       // Resting feeds Sauron's laggard, so near the Falls only rest when it matters.
       const restBar = restAdvancesThreatB(s) ? 1 : 0;
-      if (inHaven && (hero.corruption > restBar || hero.damagePool.length > restBar)) return { kind: 'rest' };
+      if (inHaven && !hero.hasMovedThisTurn && (hero.corruption > restBar || hero.damagePool.length > restBar)) return { kind: 'rest' };
       const foes = engageableMonsters(s, heroId);
       if (foes.length && hero.damagePool.length <= 1 && combatReady(cat, hero)) return { kind: 'engage', monsterId: foes[0] };
       // Head for a haven to cleanse, weaving around peril/monsters (peril-aware
@@ -642,7 +642,7 @@ export const missionAware: HeroStrategy = {
       const pool = (hero.corruption > 0 ? safe : moves);
       const target = pool[0] ?? moves[0];
       if (target) return { kind: 'move', to: target.to };
-      return inHaven ? { kind: 'rest' } : { kind: 'end' };
+      return inHaven && !hero.hasMovedThisTurn ? { kind: 'rest' } : { kind: 'end' };
     }
     if (kind === 'monstersAtMost' || kind === 'minionsAtMost') {
       const foes = engageableMonsters(s, heroId);

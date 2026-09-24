@@ -55,7 +55,7 @@ export function legalHeroActions(s: GameState, cat: Catalog, heroId: HeroId): He
     if (hero.favor >= (p?.favorToCounter ?? 2)) acts.push({ kind: 'counter-plot' });
   }
   if (favorHere(s, heroId) > 0) acts.push({ kind: 'retrieve-favor' });
-  if (cat.locations[hero.location]?.kind === 'haven' && !hero.restedThisTurn) acts.push({ kind: 'rest' });
+  if (cat.locations[hero.location]?.kind === 'haven' && !hero.restedThisTurn && !hero.hasMovedThisTurn) acts.push({ kind: 'rest' });
   acts.push({ kind: 'end' });
   return acts;
 }

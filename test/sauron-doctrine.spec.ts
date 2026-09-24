@@ -57,12 +57,12 @@ describe('sauron doctrine', () => {
     // attrition's -2) suppressed cheap conditional discards (An Evil Fog,
     // Betrayed) regardless of doctrine. Fixing that shrank — but did not erase —
     // the doctrine's Shadow-pressure gap (both doctrines now play those cards
-    // freely); a larger sample (4 seed bases instead of 2) is needed for the
-    // remaining, genuine effect size to clear noise reliably.
+    // freely); a larger sample (8 seed bases instead of 2) is needed for the
+    // remaining, genuine (~2-3%) effect size to clear noise reliably.
     const agg = (doctrine: SauronDoctrine, key: 'shadowPlays' | 'perils'): number => {
       let v = 0;
       for (const h of ['thalin', 'eleanor']) {
-        for (const base of [1000, 2000, 3000, 4000]) {
+        for (const base of [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) {
           for (let i = 0; i < 12; i++) {
             v += playoutGame(cat, base + 13 * i, heuristic, 20000, { heroIds: [h], doctrine })[key];
           }

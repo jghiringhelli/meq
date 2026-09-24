@@ -203,6 +203,9 @@ export function heroRest(state: GameState, cat: Catalog, heroId: HeroId, opts?: 
   // The Rest step happens once per turn (rulebook p.20). It is free (not metered
   // by an action budget); a second Rest this turn is illegal.
   if (hero.restedThisTurn) throw new Error('Rest step already taken this turn');
+  // Rest is its own step and must happen BEFORE the Move step (rulebook p.20-22):
+  // once the hero has taken any Travel step this turn, Rest is no longer legal.
+  if (hero.hasMovedThisTurn) throw new Error('Rest step must happen before moving this turn');
   // Witch-king (Lord of the Nazgûl): heroes within 1 space may not rest or heal
   // unless they are in a Haven. A blocked Rest does nothing (and the Sauron
   // marker does not advance, since the hero did not rest).
