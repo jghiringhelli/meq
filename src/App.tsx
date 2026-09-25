@@ -711,7 +711,7 @@ export default function App() {
       )}
 
       {iControlSauron && state.activeSide === 'Sauron'
-        && !state.winner && !state.pendingCombat && !state.pendingChoice && (
+        && !state.winner && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
         <SauronPanel state={state} cat={cat} dispatch={dispatch} />
       )}
 
@@ -719,11 +719,11 @@ export default function App() {
         <ChoiceModal cat={cat} choice={state.pendingChoice} onChoose={doChoice} />
       )}
 
-      {state.pendingEncounter && !state.pendingCombat && !state.pendingChoice && (
+      {state.pendingEncounter && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
         <EncounterPanel state={state} cat={cat} onResolve={doResolveEncounter} onChoose={doChooseEncounter} onReveal={doRevealEncounter} />
       )}
 
-      {state.pendingReveal && !state.pendingCombat && !state.pendingChoice && !state.pendingEncounter && (
+      {state.pendingReveal && !state.pendingCombat && !state.pendingChoice && !state.pendingEncounter && !state.lastCombatSummary && (
         <RevealTray state={state} cat={cat} onDismiss={doDismissReveal} />
       )}
 
