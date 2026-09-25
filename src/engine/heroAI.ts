@@ -129,41 +129,69 @@ function finaleLooming(s: GameState): boolean {
 
 /** Consult choice: favor (2, fungible, funds plot-breaking) vs. the Character's
  *  one-shot ability (never repeatable — the Character leaves the board either
- *  way). Rules of thumb from actual play:
+ *  way). Rather than a hard yes/no cutoff, each option gets a WEIGHT built from
+ *  the same state signals as before (a lightweight Markov-style scoring: the
+ *  weights are just this decision's function of the current state, no history),
+ *  and the strategy's own rng samples between them proportionally — so a
+ *  marginal case sometimes goes the other way, while a clearly lopsided case
+ *  (e.g. a hero stuck at 1 wisdom, or an urgent plot needing the favor NOW)
+ *  still resolves the sensible way almost all the time. Rules of thumb baked
+ *  into the weights, from actual play:
  *   - Wisdom (Gandalf) is scarce and powerful, especially with few heroes or a
- *     hero stuck at 1 — take it almost on sight.
+ *     hero stuck at 1 — heavily favored.
  *   - Agility (Aragorn) is nearly as good as Strength but more versatile
- *     (evasion + Preparation-step card draws), so it's worth taking more freely
- *     than Strength — unless an important plot needs this favor right now.
- *   - Strength (Boromir) only pays off in an actual fight, so it's only worth
- *     it heading into the Finale window, and only absent an urgent plot.
+ *     (evasion + Preparation-step card draws), so it leans toward taking it —
+ *     unless an important plot needs this favor right now.
+ *   - Strength (Boromir) only pays off in an actual fight, so it only leans
+ *     toward the ability heading into the Finale window, and less so with an
+ *     urgent plot in play.
  *   - Training (Dain II) pays off right before the last stand, not mid-race.
  *   - Draining the Shadow Pool (Thranduil) only matters if it actually delays
  *     something big, and only while the pool isn't already flush (diminishing
  *     returns once Sauron is sitting on a large war chest).
  *   - Randomly discarding Sauron's Shadow hand (Saruman) rarely lands on
  *     anything that matters: he draws plenty, and his genuinely dangerous cards
- *     already cost him Shadow Pool influence to play — favor is the safer pick.
- *   - Unmodeled/utility characters (Théoden's Horse, etc.): default to favor. */
-function pickConsultChoice(s: GameState, cat: Catalog, hero: HeroState, character: string): 'favor' | 'ability' {
+ *     already cost him Shadow Pool influence to play — favor keeps most of the
+ *     weight, with just a small chance of the flashier play.
+ *   - Unmodeled/utility characters (Théoden's Horse, etc.): favor keeps most of
+ *     the weight. */
+function pickConsultChoice(s: GameState, cat: Catalog, hero: HeroState, character: string, rng: Rng): 'favor' | 'ability' {
   const name = character.trim().toLowerCase();
   const activeHeroCount = s.heroes.filter((h) => h.status === 'active').length;
   const urgentPlot = importantActivePlot(s, cat);
+  const FAVOR_BASE = 50; // "2 fungible favor" is always a solid, safe pick
+  let abilityWeight: number;
   switch (name) {
-    case 'gandalf':
-      return activeHeroCount <= 2 || heroStat(cat, hero, 'wisdom') <= 1 ? 'ability' : 'favor';
-    case 'aragorn':
-      return heroStat(cat, hero, 'agility') < 5 && !urgentPlot ? 'ability' : 'favor';
-    case 'boromir':
-      return heroStat(cat, hero, 'strength') < 5 && finaleLooming(s) && !urgentPlot ? 'ability' : 'favor';
+    case 'gandalf': {
+      const wis = heroStat(cat, hero, 'wisdom');
+      abilityWeight = 45 + (activeHeroCount <= 2 ? 40 : 0) + Math.max(0, 3 - wis) * 20;
+      break;
+    }
+    case 'aragorn': {
+      const agi = heroStat(cat, hero, 'agility');
+      abilityWeight = 45 + Math.max(0, 5 - agi) * 8 - (urgentPlot ? 35 : 0);
+      break;
+    }
+    case 'boromir': {
+      const str = heroStat(cat, hero, 'strength');
+      abilityWeight = 20 + (finaleLooming(s) ? 35 : 0) + Math.max(0, 5 - str) * 6 - (urgentPlot ? 30 : 0);
+      break;
+    }
     case 'dain ii':
     case 'dain':
-      return finaleLooming(s) ? 'ability' : 'favor';
-    case 'thranduil':
-      return s.sauron.influence > 0 && s.sauron.influence <= 6 && urgentPlot ? 'ability' : 'favor';
+      abilityWeight = 15 + (finaleLooming(s) ? 55 : 0);
+      break;
+    case 'thranduil': {
+      const flush = s.sauron.influence > 6;
+      abilityWeight = s.sauron.influence <= 0 ? 0 : 12 + (urgentPlot ? 48 : 0) - (flush ? 25 : 0);
+      break;
+    }
     default:
-      return 'favor';
+      abilityWeight = 6; // e.g. Saruman: rarely worth it, but not impossible
   }
+  abilityWeight = Math.max(0, abilityWeight);
+  const p = abilityWeight / (abilityWeight + FAVOR_BASE);
+  return rng() < p ? 'ability' : 'favor';
 }
 
 /** Whether a hero should pick a fight VOLUNTARILY. Heroes gain nothing from
@@ -507,7 +535,7 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
  *  bottleneck (the hero cannot yet afford the cheapest active plot's counter).
  *  Skips a Character whose consult would self-corrupt (an active corruption plot
  *  taints them) and Isolated heroes (who may not consult). */
-function planConsult(s: GameState, cat: Catalog, hero: HeroState): HeroAction | null {
+function planConsult(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): HeroAction | null {
   const active = s.sauron.activePlots ?? [];
   if (!active.length) return null; // no plot race → no favor need
   if (corruptionBlocksSocial(cat, hero)) return null; // Isolated: cannot consult
@@ -517,7 +545,7 @@ function planConsult(s: GameState, cat: Catalog, hero: HeroState): HeroAction | 
   if (hero.favor >= cheapest) return null; // already able to break a plot — don't burn the token
   for (const c of charactersHere(s, hero.id)) {
     if (consultWouldCorrupt(s, c)) continue;
-    return { kind: 'consult', character: c, choice: pickConsultChoice(s, cat, hero, c) };
+    return { kind: 'consult', character: c, choice: pickConsultChoice(s, cat, hero, c, rng) };
   }
   return null;
 }
@@ -685,7 +713,7 @@ export const missionAware: HeroStrategy = {
     // Fund the plot race: consulting a co-located Character for favor (the classic
     // "ask the characters for favours" tactic) is the heroes' best favor source —
     // do it before marching or fighting when favor is the bottleneck.
-    const consult = planConsult(s, cat, hero);
+    const consult = planConsult(s, cat, hero, rng);
     if (consult) return consult;
     const easyFoe = engageableMonsters(s, heroId).find((m) => worthFightingForCards(s, cat, hero, m));
     if (easyFoe) return { kind: 'engage', monsterId: easyFoe };
