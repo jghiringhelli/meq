@@ -89,6 +89,83 @@ function heroWisdom(cat: Catalog, h: HeroState): number {
   return (cat.heroes[h.id]?.wisdom ?? 0) + (h.statBonus?.wisdom ?? 0);
 }
 
+/** A hero's effective value of any attribute (base + persistent stat bonuses). */
+function heroStat(cat: Catalog, h: HeroState, stat: 'fortitude' | 'strength' | 'agility' | 'wisdom'): number {
+  return ((cat.heroes[h.id] as any)?.[stat] ?? 0) + (h.statBonus?.[stat] ?? 0);
+}
+
+/** Whether Sauron currently has a plot in play that actually matters — a marker
+ *  moving 3/turn (always urgent), or a 2/turn plot that would push its own
+ *  marker to trigger the Finale (reach it) or the Shadow Falls (with the other
+ *  two markers already there). Small 1/turn plots don't qualify: they aren't
+ *  worth burning a Character's one-shot ability over. */
+function importantActivePlot(s: GameState, cat: Catalog): boolean {
+  const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
+  for (const e of s.sauron.activePlots ?? []) {
+    const plot = cat.plots.find((p) => p.id === e.eventId);
+    if (!plot) continue;
+    const advance = plot.advance ?? 1;
+    if (advance >= 3) return true;
+    if (advance >= 2) {
+      const marker = (plot.marker ?? 'red') as 'yellow' | 'red' | 'black';
+      const cur = st[marker] ?? 0;
+      const others = (['yellow', 'red', 'black'] as const).filter((m) => m !== marker).map((m) => st[m] ?? 0);
+      if (cur + advance >= STORY_FINALE) return true;
+      if (cur + advance >= SHADOW_FALLS && others.every((m) => m >= SHADOW_FALLS)) return true;
+    }
+  }
+  return false;
+}
+
+/** Whether the Finale (the single champion-vs-Ringwraiths last stand) is close
+ *  enough that pre-Finale Training (Dain II) or a combat attribute (Boromir's
+ *  Strength) is worth banking now rather than favor for the ongoing plot race. */
+function finaleLooming(s: GameState): boolean {
+  const heroSpaces = Math.max(0, s.story.length - s.story.sauronProgress);
+  const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
+  const leadMarker = Math.max(st.yellow, st.red, st.black);
+  return heroSpaces <= 4 || leadMarker >= STORY_FINALE - 4 || s.story.turn >= 7;
+}
+
+/** Consult choice: favor (2, fungible, funds plot-breaking) vs. the Character's
+ *  one-shot ability (never repeatable — the Character leaves the board either
+ *  way). Rules of thumb from actual play:
+ *   - Wisdom (Gandalf) is scarce and powerful, especially with few heroes or a
+ *     hero stuck at 1 — take it almost on sight.
+ *   - Agility (Aragorn) is nearly as good as Strength but more versatile
+ *     (evasion + Preparation-step card draws), so it's worth taking more freely
+ *     than Strength — unless an important plot needs this favor right now.
+ *   - Strength (Boromir) only pays off in an actual fight, so it's only worth
+ *     it heading into the Finale window, and only absent an urgent plot.
+ *   - Training (Dain II) pays off right before the last stand, not mid-race.
+ *   - Draining the Shadow Pool (Thranduil) only matters if it actually delays
+ *     something big, and only while the pool isn't already flush (diminishing
+ *     returns once Sauron is sitting on a large war chest).
+ *   - Randomly discarding Sauron's Shadow hand (Saruman) rarely lands on
+ *     anything that matters: he draws plenty, and his genuinely dangerous cards
+ *     already cost him Shadow Pool influence to play — favor is the safer pick.
+ *   - Unmodeled/utility characters (Théoden's Horse, etc.): default to favor. */
+function pickConsultChoice(s: GameState, cat: Catalog, hero: HeroState, character: string): 'favor' | 'ability' {
+  const name = character.trim().toLowerCase();
+  const activeHeroCount = s.heroes.filter((h) => h.status === 'active').length;
+  const urgentPlot = importantActivePlot(s, cat);
+  switch (name) {
+    case 'gandalf':
+      return activeHeroCount <= 2 || heroStat(cat, hero, 'wisdom') <= 1 ? 'ability' : 'favor';
+    case 'aragorn':
+      return heroStat(cat, hero, 'agility') < 5 && !urgentPlot ? 'ability' : 'favor';
+    case 'boromir':
+      return heroStat(cat, hero, 'strength') < 5 && finaleLooming(s) && !urgentPlot ? 'ability' : 'favor';
+    case 'dain ii':
+    case 'dain':
+      return finaleLooming(s) ? 'ability' : 'favor';
+    case 'thranduil':
+      return s.sauron.influence > 0 && s.sauron.influence <= 6 && urgentPlot ? 'ability' : 'favor';
+    default:
+      return 'favor';
+  }
+}
+
 /** Whether a hero should pick a fight VOLUNTARILY. Heroes gain nothing from
  *  combat (rulebook: monsters/minions are obstacles, not objectives), so they
  *  only engage when they can win cheaply — high agility (evades blows) or a full
@@ -440,7 +517,7 @@ function planConsult(s: GameState, cat: Catalog, hero: HeroState): HeroAction | 
   if (hero.favor >= cheapest) return null; // already able to break a plot — don't burn the token
   for (const c of charactersHere(s, hero.id)) {
     if (consultWouldCorrupt(s, c)) continue;
-    return { kind: 'consult', character: c, choice: 'favor' };
+    return { kind: 'consult', character: c, choice: pickConsultChoice(s, cat, hero, c) };
   }
   return null;
 }
