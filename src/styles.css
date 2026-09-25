@@ -566,7 +566,7 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .enc-tray-card.dim { opacity: 0.5; filter: grayscale(0.5); }
 .enc-tray-card:not(:disabled) { cursor: pointer; }
 .enc-tray-card:not(:disabled):hover { transform: translateY(-2px); }
-.enc-tray-art { width: 130px; height: 182px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; }
+.enc-tray-art { width: 130px; height: 182px; object-fit: contain; background: #0b0906; border-radius: 4px; flex: 0 0 auto; }
 .enc-tray-body { min-width: 0; }
 .enc-tray-name { font-weight: 700; color: var(--accent); font-size: 1.1rem; }
 .enc-tray-text { font-size: 0.92rem; line-height: 1.4; color: #cdc3a6; margin-top: 0.3rem; }

@@ -338,7 +338,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           // art (~90px to the inner edge of the printed colour ring) instead of
           // scaling with neighbour spacing.
           const rr = 90;
-          const T = clamp(72 * s, 46, 104);
+          const T = clamp(84 * s, 52, 120);
           const gap = 6 * s;
 
           // How many chips fit within the cell before we collapse to a "+n" tile.
@@ -349,6 +349,11 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const nTiles = shown.length + (overflow ? 1 : 0);
           const totalW = nTiles > 0 ? nTiles * T + (nTiles - 1) * gap : 0;
           const startX = -totalW / 2 + T / 2;
+          // Figures sit a touch below the node's dead-centre (rather than
+          // dead-on-centre), matching where tokens rest on the printed board
+          // circle and leaving the location's name banner (top of the circle)
+          // unobstructed.
+          const figY = 14 * s;
 
           return (
             <g key={l.id} transform={`translate(${l.coords.x},${l.coords.y})`}
@@ -383,12 +388,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
               {influence > 0 && <circle r={rr + 2} fill={infColor} fillOpacity={0.10 + infLevel * 0.07} stroke={infColor} strokeWidth={4} strokeOpacity={0.35 + infLevel * 0.14} />}
               {CAL && <circle r={10} fill="#ff2d2d" stroke="#000" strokeWidth={2} />}
 
-              {/* figure cluster, centered on the node */}
-              {shown.map((c, i) => renderChip(c, startX + i * (T + gap), 0, T, s))}
+              {/* figure cluster, centered on the node (nudged slightly below dead-centre) */}
+              {shown.map((c, i) => renderChip(c, startX + i * (T + gap), figY, T, s))}
               {overflow > 0 && (() => {
                 const cx = startX + shown.length * (T + gap);
                 return (
-                  <g transform={`translate(${cx},0)`}>
+                  <g transform={`translate(${cx},${figY})`}>
                     <rect x={-T / 2} y={-T / 2} width={T} height={T} rx={T * 0.18} fill="#141014" stroke="#c8b890" strokeWidth={Math.max(2, 3 * s)} />
                     <text y={T * 0.16} textAnchor="middle" fontSize={T * 0.4} fontWeight={700} fill="#f0e2c0">+{overflow}</text>
                   </g>
@@ -627,12 +632,28 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
               text: 'Sauron places Influence on locations to make them perilous (heroes there draw Peril cards) and to fuel plots. Influence in the Shadow Pool (chest) is Sauron\'s spendable reserve. Heroes reduce influence through quests, encounters, and clearing effects.',
             });
           };
+          const eventDeckInfo = () => {
+            const missions = state.sauron.activeEventPlots ?? [];
+            const lines = missions.length
+              ? missions.map((m) => {
+                  const p = cat.plots.find((x) => x.id === m.eventId);
+                  return `${p?.name ?? m.eventId} — at ${cat.locations[m.location!]?.name ?? m.location}`;
+                })
+              : ['No Event-deck missions currently in play.'];
+            inspect({
+              title: 'Event Deck', subtitle: `${missions.length} active mission(s)`,
+              lines,
+              text: 'Event-deck missions (drawn from the Event deck) sit at their target location, advancing their coloured story marker every Story Step until a hero Explores that location to discard them.',
+            });
+          };
           const zones: { key: string; x: number; y: number; w: number; h: number; on: () => void; tip: string }[] = [
             { key: 'story', x: 2760, y: 40, w: 3200, h: 230, on: storyInfo, tip: 'Story track — turn, phase & markers' },
             { key: 'actions', x: 5130, y: 2960, w: 940, h: 700, on: actionsInfo, tip: 'Sauron Actions & Shadow Pool' },
             { key: 'favor', x: 1225, y: 90, w: 925, h: 480, on: favorInfo, tip: 'Favor & Characters — hero economy' },
             { key: 'influence', x: 1660, y: 3615, w: 915, h: 480, on: influenceInfo, tip: 'Influence — Sauron\'s reach' },
+            { key: 'eventdeck', x: 2160, y: 40, w: 560, h: 230, on: eventDeckInfo, tip: 'Event deck — active missions' },
           ];
+          const activeMissions = state.sauron.activeEventPlots ?? [];
           return (
             <g>
               {zones.map((z) => (
@@ -642,6 +663,18 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                   <title>{z.tip}</title>
                 </rect>
               ))}
+              {/* Event-deck badge (top-left, just left of the Story track): a
+                  visible marker so an active Event-deck mission is not only
+                  shown as an icon at its board location, but also flagged here
+                  where the physical Event deck box sits. */}
+              {activeMissions.length > 0 && (
+                <g transform="translate(2440,155)" style={{ cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); eventDeckInfo(); }}>
+                  <title>{`Event Deck: ${activeMissions.length} active mission(s) — click for details`}</title>
+                  <circle r={90} fill="#1e6b2e" stroke="#8fe6a0" strokeWidth={6} />
+                  <text y={12} textAnchor="middle" fontSize={64} fontWeight={700} fill="#eafaea">{activeMissions.length}</text>
+                </g>
+              )}
             </g>
           );
         })()}
@@ -687,7 +720,8 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
             whole deck". */}
         {(() => {
           const active = state.sauron.activePlots ?? [];
-          const cx = 5540, w = 220, h = 400;           // tower plot-slot geometry (board px, measured off the art)
+          const cx = 5540, w = 250, h = 440;           // tower plot-slot geometry (board px, measured off the art;
+                                                        // enlarged from 220×400 — cards read too small vs. the slot)
           const ys = [800, 1400, 2000];                // slot centres, top → bottom
           return (
             <g pointerEvents="none">
@@ -715,7 +749,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                     <rect x={x} y={y} width={w} height={h} rx={10}
                       fill="#1a0d0d" stroke="#c0392b" strokeWidth={5} opacity={0.97} />
                     {img && (
-                      <image href={img} x={x + 5} y={y + 5} width={w - 10} height={h - 10}
+                      <image href={img} x={x + 3} y={y + 3} width={w - 6} height={h - 6}
                         preserveAspectRatio="xMidYMid slice" style={{ clipPath: `inset(0 round 8px)` }} />
                     )}
                     <text x={cx} y={y - 12} textAnchor="middle" fontSize={22} fontWeight={700}
