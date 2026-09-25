@@ -8,6 +8,7 @@ const MARKER_COLOR: Record<StoryMarkerColor, string> = {
 
 export default function PlotRow({ state, cat }: { state: GameState; cat: Catalog }) {
   const activePlots = state.sauron.activePlots ?? [];
+  const activeMissions = state.sauron.activeEventPlots ?? [];
   const events = state.sauron.activeEvents;
   const inspect = useInspect();
   return (
@@ -45,6 +46,36 @@ export default function PlotRow({ state, cat }: { state: GameState; cat: Catalog
           </div>
         );
       })}
+      {activeMissions.length > 0 && (
+        <>
+          <span className="plot-title plot-title--missions">Active Missions</span>
+          {activeMissions.map((pm) => {
+            const p = cat.plots.find((x) => x.id === pm.eventId);
+            const img = p ? plotArt(p.image) : undefined;
+            const locName = pm.location ? (cat.locations[pm.location]?.name ?? pm.location) : '?';
+            return (
+              <div
+                key={'mission-' + pm.eventId}
+                className="plot-card plot-card--mission"
+                onClick={() => inspect({
+                  title: p?.name ?? pm.eventId,
+                  img,
+                  subtitle: `Active mission · at ${locName}`,
+                  lines: [p?.affectsText ? `Affects: ${p.affectsText}` : ''].filter(Boolean),
+                  text: p?.effect ?? '',
+                })}
+                title={`${p?.name ?? pm.eventId}\nAt: ${locName}\n${p?.effect ?? ''}\n(Explore here to discard)`}
+              >
+                {img && <img className="plot-art" src={img} alt={p?.name ?? pm.eventId} />}
+                <span className="plot-name">{p?.name ?? pm.eventId}</span>
+                <span className="plot-meta">
+                  <span className="plot-counter" title="location">@ {locName}</span>
+                </span>
+              </div>
+            );
+          })}
+        </>
+      )}
       {events.length > 0 && (
         <>
           <span className="plot-title plot-title--events">Events &mdash; turn {state.story.turn}</span>

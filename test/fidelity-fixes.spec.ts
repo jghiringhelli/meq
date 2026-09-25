@@ -304,6 +304,9 @@ describe('M3 — Sauron chooses Combat or Peril', () => {
     const hero = out.heroes[out.activeHeroIndex];
     expect(hero.perilResolvedAt ?? []).not.toContain(ctx.to);
     expect(ambushPending(out, hero)).toBe(true); // must fight the minion
+    // The Combat-or-Peril decision must be explicit in the log, not silent
+    // (players need to see that the Eye deliberately chose combat).
+    expect(out.log.some((l) => l.detail.includes('Combat or Peril: forces combat'))).toBe(true);
   });
 
   it('a human Sauron gets an interactive Combat-or-Peril decision', () => {

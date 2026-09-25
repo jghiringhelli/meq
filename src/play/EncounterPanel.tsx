@@ -57,7 +57,10 @@ export default function EncounterPanel({ state, cat, onResolve, onChoose, onReve
             })}
           </div>
           {!multi && (
-            <button className="primary enc-tray-ok" onClick={() => onReveal()}>
+            <button
+              className="primary enc-tray-ok"
+              onClick={() => (applicable.length === 0 ? onResolve() : onReveal())}
+            >
               OK
             </button>
           )}

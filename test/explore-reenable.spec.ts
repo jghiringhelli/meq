@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
-import { canExplore, heroExplore } from '../src/engine/phases';
+import { canExplore, heroExplore, resolveEncounter } from '../src/engine/phases';
 import type { GameState } from '../src/engine/types';
 
 /** Single active hero standing on a haven, ready to explore. */
@@ -36,6 +36,38 @@ describe('explore — Encounter step is per-turn, not once-per-game (fidelity)',
     const { s } = havenGame();
     s.heroes[0].encounterStepDone = true;
     expect(canExplore(s, cat, s.heroes[0].id)).toBe(false);
+  });
+});
+
+describe('Explore whiff — drawn cards are still shown (card-counting), not silently discarded', () => {
+  const nonMatchingHavenCards = (loc: string) => Object.values(cat.encounters)
+    .filter((e) => e.regionGroup === 'Haven' && e.location.trim().toLowerCase() !== cat.locations[loc].name.toLowerCase()
+      && !e.location.trim().toLowerCase().startsWith('any location'))
+    .slice(0, 3)
+    .map((e) => e.id);
+
+  it('sets a pendingEncounter tray with the drawn cards when none apply', () => {
+    const { s, loc } = havenGame();
+    const h = s.heroes[0];
+    // Stack the Haven Encounter deck with cards that do NOT affect this haven,
+    // so the draw is guaranteed to whiff.
+    const nonMatching = nonMatchingHavenCards(loc);
+    expect(nonMatching.length).toBeGreaterThan(0);
+    (s.encounterDecks ||= {})['Haven'] = [...nonMatching].reverse();
+    const s2 = heroExplore(s, cat, h.id);
+    expect(s2.pendingEncounter).toBeTruthy();
+    expect(s2.pendingEncounter!.applicable).toEqual([]);
+    expect(s2.pendingEncounter!.drawn!.length).toBeGreaterThan(0);
+  });
+
+  it('resolving a whiff clears the tray without applying any card effect', () => {
+    const { s, loc } = havenGame();
+    const h = s.heroes[0];
+    const nonMatching = nonMatchingHavenCards(loc);
+    (s.encounterDecks ||= {})['Haven'] = [...nonMatching].reverse();
+    const s2 = heroExplore(s, cat, h.id);
+    const s3 = resolveEncounter(s2, cat);
+    expect(s3.pendingEncounter).toBeNull();
   });
 });
 

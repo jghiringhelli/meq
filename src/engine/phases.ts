@@ -92,8 +92,10 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
         (hero.perilResolvedAt ||= []).push(to);
         log(s, 'sauron', 'Sauron', `Combat or Peril: chooses Peril at ${cat.locations[to]?.name ?? to}`);
         maybeDrawPeril(s, cat, heroId, to);
+      } else {
+        // otherwise combat is forced: the foe blocks travel (Ambush) until fought.
+        log(s, 'sauron', 'Sauron', `Combat or Peril: forces combat at ${cat.locations[to]?.name ?? to}`);
       }
-      // otherwise combat is forced: the foe blocks travel (Ambush) until fought.
     } else {
       // Human Sauron decides interactively (Combat or Peril) before the hero may
       // continue — but only when the location is genuinely perilous.
@@ -360,6 +362,12 @@ function runEncounterStep(s: GameState, cat: Catalog, heroId: HeroId): boolean {
   const affecting = drawn.filter((c) => encounterAffects(cat, c, hero.location));
   if (!affecting.length) {
     log(s, 'encounter-draw', heroId, `Encounter at ${hero.location}: drew ${drawn.length}, none apply`);
+    // Still show the drawn cards in the reveal tray (card-counting matters even
+    // on a whiff) rather than silently skipping straight to end-of-turn.
+    if (drawn.length) {
+      s.pendingEncounter = { locationId: hero.location, cardId: drawn[0], decisions: [], drawn, applicable: [], revealed: false };
+      return true;
+    }
     return false;
   }
   // Lowest priority number wins when more than one drawn card applies (manual: resolve
@@ -492,8 +500,15 @@ export function resolveEncounter(state: GameState, cat: Catalog): GameState {
   const s = clone(state);
   const pe = s.pendingEncounter;
   if (!pe) throw new Error('No pending encounter');
-  const enc = cat.encounters[pe.cardId];
   const heroId = (s.map.heroesAt[pe.locationId] ?? [])[0] ?? s.heroes[s.activeHeroIndex].id;
+  // Whiff: none of the drawn cards applied here (shown in the tray purely for
+  // card-counting). `cardId` is only a display placeholder in this case — its
+  // tree must NOT be applied, since it does not affect this location.
+  if ((pe.applicable ?? []).length === 0) {
+    s.pendingEncounter = null;
+    return s;
+  }
+  const enc = cat.encounters[pe.cardId];
   const plan = planEncounter(s, cat, heroId, enc?.tree ?? { k: 'none' }, pe.decisions);
   if (!plan.complete) return s; // awaiting a player choice
   if (plan.atoms.length) applyAtoms(s, cat, heroId, plan.atoms, `encounter ${enc?.name ?? pe.cardId}`);
