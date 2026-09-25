@@ -551,7 +551,10 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
     foeName: pc.defender.name, foeKind: isMinion ? 'minion' : 'monster',
     rounds: pc.round, damageTaken: hero.damagePool.length - damageTakenBefore,
     notes: s.log.slice(logStart + 1).map((e) => e.detail),
+    report: pc.report.slice(),
+    seq: s.log.length ? s.log[s.log.length - 1].seq : 0,
   };
+  (s.combatHistory ??= []).push(s.lastCombatSummary);
   return s;
 }
 

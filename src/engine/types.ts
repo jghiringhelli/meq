@@ -653,6 +653,13 @@ export interface CombatSummary {
   /** log lines emitted while resolving the outcome (quest reward, defeat
    *  consequences, etc.) — joined for display. */
   notes: string[];
+  /** full round-by-round bout log (card vs. card, damage, cancellations) so
+   *  the player can review exactly how the combat played out, not just the
+   *  final tally — see CombatSummaryModal.tsx. */
+  report: CombatBoutLog[];
+  /** wall-clock-ish sequence number (log seq at combat end) so history
+   *  entries can be sorted/keyed stably. */
+  seq: number;
 }
 export interface LogEvent {
   seq: number;              // monotonic, per-game
@@ -676,6 +683,10 @@ export interface GameState {
    *  are unaffected). The human UI shows this until the player hits Continue;
    *  a fresh combat simply overwrites it. */
   lastCombatSummary?: CombatSummary | null;
+  /** every combat's summary this game, oldest first, kept after the summary
+   *  modal is dismissed so the player can review a past combat later (see
+   *  the "Combat history" panel in App.tsx / CombatSummaryModal.tsx). */
+  combatHistory?: CombatSummary[];
   /** an encounter drawn at a location, awaiting the player to resolve it.
    *  `decisions` records choices made so far (replay-driven resolution).
    *  `drawn` are the (up to 3) Encounter cards revealed this draw; `applicable`

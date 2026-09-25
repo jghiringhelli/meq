@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadCatalog } from './data/loadAssets';
-import type { Catalog, GameState, HeroId, MonsterId, Side } from './engine/types';
+import type { Catalog, CombatSummary, GameState, HeroId, MonsterId, Side } from './engine/types';
 import {
   newGame, legalMoves, engageableMonsters, canExplore,
   favorHere, charactersHere, plotHere, canCleanse, canDarkPath, canCompleteQuest, otherHeroesHere,
@@ -59,6 +59,7 @@ export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [artMatched, setArtMatched] = useState(() => (getUserArt() ? 1 : 0));
   const [travelTo, setTravelTo] = useState<string | null>(null);
+  const [historyView, setHistoryView] = useState<CombatSummary | null>(null);
   const [focusMap, setFocusMap] = useState(() => {
     try { return localStorage.getItem('meq-focus-map') === '1'; } catch { return false; }
   });
@@ -586,6 +587,7 @@ export default function App() {
         <span className="subtitle">Turn {state.story.turn} · {PHASE_STEPS.find((s) => s.phases.includes(state.phase))?.label ?? state.phase}
           {state.winner ? ` · WINNER: ${state.winner}` : ''}</span>
         <PhaseTrack phase={state.phase} />
+        {!state.winner && <PhaseToast phase={state.phase} />}
         <div style={{ flex: 1 }} />
         {!state.winner && state.phase !== 'HeroActions' && !state.pendingChoice && !state.pendingCombat
           && !state.pendingReveal && !state.pendingTree
@@ -643,6 +645,23 @@ export default function App() {
             <Collapsible id="turncycle" icon="🔄" label="Turn order" summary={turnCycleSummary} open={isPanelOpen('turncycle')} onToggle={togglePanel} dir="col">
               <TurnCycle state={state} cat={cat} />
             </Collapsible>
+            {!!state.combatHistory?.length && (
+              <Collapsible id="combathistory" icon="⚔" label="Combat history"
+                summary={`${state.combatHistory.length} fought`} open={isPanelOpen('combathistory')} onToggle={togglePanel} dir="col">
+                <ul className="combat-history-list">
+                  {state.combatHistory.slice().reverse().map((c) => (
+                    <li key={c.seq}>
+                      <button className="ghost combat-history-row" onClick={() => setHistoryView(c)}>
+                        <span className={`combat-history-result r-${c.result}`}>
+                          {c.result === 'attacker' ? '✔' : c.result === 'defender' ? '✘' : c.result === 'escape' ? '⤴' : '—'}
+                        </span>
+                        {c.heroName} vs {c.foeName} ({c.rounds}r{c.damageTaken > 0 ? `, −${c.damageTaken}` : ''})
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Collapsible>
+            )}
           </div>
           <HeroPanel
             state={state} cat={cat} active={inHeroActions}
@@ -663,7 +682,11 @@ export default function App() {
       )}
 
       {state.lastCombatSummary && !state.pendingCombat && (
-        <CombatSummaryModal summary={state.lastCombatSummary} onContinue={doDismissCombatSummary} />
+        <CombatSummaryModal summary={state.lastCombatSummary} cat={cat} onContinue={doDismissCombatSummary} />
+      )}
+
+      {historyView && (
+        <CombatSummaryModal summary={historyView} cat={cat} readOnly onContinue={() => setHistoryView(null)} />
       )}
 
       {iControlSauron && net.role !== 'client' && state.activeSide === 'Sauron'
@@ -772,6 +795,39 @@ const PHASE_STEPS: { label: string; phases: string[] }[] = [
   { label: 'Action', phases: ['SauronMinions'] },
   { label: 'Advance', phases: ['StoryAdvance'] },
 ];
+
+// Short "what happens now" blurb for the phase-detail toast (rulebook step
+// order, see rules-digest.md) — shown briefly whenever the phase changes so a
+// new player can follow along without memorizing the turn structure.
+const PHASE_DETAIL: Record<string, string> = {
+  HeroRefresh: 'Each hero draws a card, then may Rest (recover Life) before acting — Rest must happen before Move.',
+  HeroActions: 'Heroes act in any order: Move, Explore, Engage, Consult a favor/skill, or other actions, until all are spent.',
+  SauronRefresh: 'Story step: the Ring and (if any hero fled combat) War counters advance on the Story track.',
+  SauronEvents: 'Sauron prepares a Plot (places influence toward it) and may trigger an Event card.',
+  SauronMinions: "Sauron's minions and monsters act — Nazgûl and other threats move, engage, or place influence.",
+  StoryAdvance: 'The Story track advances one space per Hero-Rally point banked this round.',
+  GameOver: 'The game has ended.',
+};
+
+function PhaseToast({ phase }: { phase: string }) {
+  const [visible, setVisible] = useState(false);
+  const [shown, setShown] = useState(phase);
+  useEffect(() => {
+    setShown(phase);
+    setVisible(true);
+    const hide = setTimeout(() => setVisible(false), 4200);
+    return () => clearTimeout(hide);
+  }, [phase]);
+  const label = PHASE_STEPS.find((s) => s.phases.includes(shown))?.label ?? shown;
+  const detail = PHASE_DETAIL[shown];
+  if (!detail) return null;
+  return (
+    <div className={`phase-toast${visible ? ' phase-toast--in' : ' phase-toast--out'}`} aria-live="polite">
+      <strong>{label}</strong>
+      <span>{detail}</span>
+    </div>
+  );
+}
 
 // Friendly caption for the smart button when it advances the (AI) dark side —
 // it names the step the click is about to run.

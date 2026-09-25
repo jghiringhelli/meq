@@ -211,6 +211,17 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .phase-track { display: flex; gap: 2px; align-items: center; margin-left: 0.75rem; }
 .phase-step { font-size: 0.68rem; padding: 0.12rem 0.45rem; border-radius: 3px; background: #2f261a; border: 1px solid #4a3d2c; opacity: 0.6; white-space: nowrap; }
 .phase-step.active { opacity: 1; background: var(--accent); color: #201a10; border-color: var(--accent); font-weight: 700; }
+.phase-toast {
+  position: fixed; top: 58px; left: 50%; transform: translate(-50%, -8px);
+  display: flex; align-items: baseline; gap: 0.5rem; max-width: 560px;
+  background: rgba(20,16,10,0.94); border: 1px solid var(--accent); border-radius: 8px;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; color: #e6d9b8; box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  opacity: 0; pointer-events: none; z-index: 40;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.phase-toast strong { color: var(--accent); white-space: nowrap; }
+.phase-toast--in { opacity: 1; transform: translate(-50%, 0); }
+.phase-toast--out { opacity: 0; transform: translate(-50%, -8px); }
 
 .counter-bar { display: flex; gap: 0.6rem; padding: 0.5rem 1rem; background: #201a12; border-bottom: 1px solid #3a2f22; flex-wrap: wrap; }
 .counter { display: flex; flex-direction: column; padding: 0.35rem 0.7rem; background: var(--panel); border: 1px solid #3a2f22; border-radius: 5px; min-width: 110px; }
@@ -399,8 +410,16 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .choice-card-nums { font-size: 0.85rem; color: #c9b98f; }
 .choice-card-ab { font-size: 0.8rem; color: #b0a48a; font-style: italic; }
 .combat-summary { width: 440px; }
+.combat-summary-report { max-height: 260px; margin-bottom: 0.8rem; }
 .combat-summary-notes { text-align: left; list-style: disc; margin: 0 0 0.9rem 1.2rem; padding: 0; font-size: 0.88rem; color: #d8c8a0; max-height: 220px; overflow-y: auto; }
 .combat-summary-notes li { margin-bottom: 0.3rem; }
+.combat-history-list { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; }
+.combat-history-row { display: flex; align-items: center; gap: 0.4rem; width: 100%; text-align: left; font-size: 0.82rem; padding: 0.3rem 0.5rem; }
+.combat-history-result { font-weight: 700; width: 1.1em; text-align: center; }
+.combat-history-result.r-attacker { color: #6fcf6f; }
+.combat-history-result.r-defender { color: #ff6b6b; }
+.combat-history-result.r-escape { color: #d8b45a; }
+.combat-history-result.r-standoff { color: #a99668; }
 .travel-modal { background: var(--panel); border: 2px solid var(--accent); border-radius: 8px; padding: 1rem 1.2rem; width: 560px; max-width: 94vw; }
 .travel-modal h3 { margin: 0 0 0.5rem; color: var(--accent); font-size: 1.05rem; }
 .travel-modal .travel-req { margin: 0 0 0.8rem; color: #d8c8a0; font-size: 0.9rem; }

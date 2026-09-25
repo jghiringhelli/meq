@@ -48,4 +48,34 @@ describe('post-combat summary', () => {
     // Dismissing the summary does not itself resolve the training choice.
     expect(s.pendingChoice?.kind).toBe('training');
   });
+
+  it('keeps a persistent combatHistory (with the round-by-round report) after the summary is dismissed', () => {
+    let s = newGame(cat, 7, ['beravor', 'thalin']);
+    for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+    let hero = s.heroes.find((h) => h.id === 'beravor')!;
+    const quest = cat.quests['quest-beravor-spies-in-mithlond'];
+    const loc = locByName(cat, 'The Grey Havens')!;
+    hero.quests = { startingDone: false, advancedDone: false, startingQuestId: quest.id };
+    registerQuestCombat(cat, hero, quest, loc);
+    const fromLoc = s.map.heroesAt[hero.location];
+    if (fromLoc) fromLoc.splice(fromLoc.indexOf(hero.id), 1);
+    hero.location = loc;
+    (s.map.heroesAt[loc] ||= []).push(hero.id);
+
+    s = heroExplore(s, cat, 'beravor');
+    s = heroEngage(s, cat, 'beravor', 'mon-crebain');
+    let guard = 0;
+    while (s.pendingCombat && !s.pendingCombat.resolved && guard++ < 50) {
+      s = resolveChoice(s, cat, s.pendingChoice!.options[0].id);
+    }
+    expect(s.combatHistory?.length).toBe(1);
+    expect(s.combatHistory![0].report.length).toBeGreaterThan(0);
+    expect(s.combatHistory![0]).toBe(s.lastCombatSummary);
+
+    s = dismissCombatSummary(s);
+    // The recap is gone, but the history entry survives for later review.
+    expect(s.lastCombatSummary).toBeFalsy();
+    expect(s.combatHistory?.length).toBe(1);
+    expect(s.combatHistory![0].foeName).toMatch(/Crebain/i);
+  });
 });
