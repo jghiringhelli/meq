@@ -7,6 +7,9 @@ import { useInspect } from './CardInspector';
 interface Props {
   state: GameState; cat: Catalog;
   onChoose?: (optionId: string) => void;
+  /** Does THIS browser's viewer control Sauron? See Board.tsx's `sauronView`
+   *  for why this can't just read `state.humanSide` online. */
+  sauronView?: boolean;
 }
 
 // A small stat pill (attribute name + value).
@@ -115,7 +118,7 @@ function CardFace({ cat, card, ownerRef, kind }: { cat: Catalog; card?: CardId; 
   );
 }
 
-export default function CombatBoard({ state, cat, onChoose }: Props) {
+export default function CombatBoard({ state, cat, onChoose, sauronView }: Props) {
   const pc = state.pendingCombat!;
   const ch = state.pendingChoice;
   const inspect = useInspect();
@@ -138,7 +141,7 @@ export default function CombatBoard({ state, cat, onChoose }: Props) {
   // the hero's own deck, given training identities stay secret until revealed.
   const heroLiveState = state.heroes.find((h) => h.id === hero.refId);
   const heroIntel = state.sauron.heroIntel?.[hero.refId]?.revealedTrained ?? [];
-  const heroDeckBreak = state.humanSide === 'Sauron'
+  const heroDeckBreak = (sauronView ?? state.humanSide === 'Sauron')
     ? heroKnownDeckBreakdown(cat, String(hero.refId), hero, heroIntel, heroLiveState?.trainedCount ?? 0)
     : undefined;
 

@@ -71,6 +71,18 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
       return SAURON_ROLE;
     case 'shadowReaction':
       return SAURON_ROLE;
+    case 'sauronStoryStep':
+    case 'sauronPlayPlot':
+    case 'sauronResolveEvents':
+    case 'sauronBeginAction':
+    case 'sauronPlaceInfluence':
+    case 'sauronSpawnMonster':
+    case 'sauronDeployMinion':
+    case 'sauronMoveFigure':
+    case 'sauronHealMinion':
+    case 'sauronPlayShadow':
+    case 'sauronEndActionStep':
+      return SAURON_ROLE;
     case 'treeDecision':
       // The player who owns the paused card decision: Sauron for his own cards,
       // otherwise the affected hero.

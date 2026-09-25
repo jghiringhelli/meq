@@ -15,6 +15,12 @@ interface Props {
   consultable?: string[];
   consultDisabled?: boolean;
   onConsult?: (character: string, choice: 'favor' | 'ability') => void;
+  /** Does THIS browser's viewer control Sauron? Solo/hotseat has only one
+   *  screen so this always matches `state.humanSide === 'Sauron'`, but online
+   *  it must come from the roster (per-viewer) — otherwise revealing facedown
+   *  monster tokens to Sauron would also reveal them on every hero player's
+   *  screen, since `state` itself is shared across all connected browsers. */
+  sauronView?: boolean;
 }
 
 const TERRAIN_COLOR: Record<string, string> = {
@@ -67,7 +73,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -130,7 +136,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
     // token back, never which monster it is — UNLESS revealed (combat, Argalad's
     // Survivalist, or an "examine tokens" effect). Sauron always sees every face.
     const regionFill = REGION_COLOR[cat.locations[lid]?.regionColor] ?? '#6a4a2a';
-    const revealed = state.humanSide === 'Sauron' || (state.map.revealedMonstersAt ?? []).includes(lid);
+    const revealed = (sauronView ?? state.humanSide === 'Sauron') || (state.map.revealedMonstersAt ?? []).includes(lid);
     for (const [id, c] of Object.entries(monCount)) {
       const mon = cat.monsters[id];
       figs.push({ key: 'mon' + id, art: revealed ? monsterArt(id) : '', border: MONSTER_BORDER, count: c,

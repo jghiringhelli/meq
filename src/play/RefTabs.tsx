@@ -83,9 +83,9 @@ function aggregate(ids: CardId[], resolve: (id: CardId) => RefItem): RefItem[] {
  *  respected: to a hero, unrevealed monster/rumor tokens are shown only as a
  *  face-down count (their identity is disclosed only where revealed, or when the
  *  viewer plays Sauron). */
-function boardGroups(cat: Catalog, state: GameState): RefGroup[] {
+function boardGroups(cat: Catalog, state: GameState, sauronView: boolean): RefGroup[] {
   const m = state.map;
-  const heroView = state.humanSide !== 'Sauron';
+  const heroView = !sauronView;
   const sections: RefSection[] = [];
 
   // Story markers (public).
@@ -183,7 +183,7 @@ function boardGroups(cat: Catalog, state: GameState): RefGroup[] {
   return [{ key: 'all', label: '', sections }];
 }
 
-function buildTabs(cat: Catalog, state: GameState): RefTab[] {
+function buildTabs(cat: Catalog, state: GameState, sauronView: boolean): RefTab[] {
   const one = (items: RefItem[]): RefGroup[] => [{ key: 'all', label: '', sections: [{ label: '', items, empty: 'none' }] }];
 
   // ---- catalog tabs ----
@@ -341,7 +341,7 @@ function buildTabs(cat: Catalog, state: GameState): RefTab[] {
   }];
 
   return [
-    { key: 'board', icon: '📍', label: 'Board', groups: boardGroups(cat, state) },
+    { key: 'board', icon: '📍', label: 'Board', groups: boardGroups(cat, state, sauronView) },
     { key: 'monsters', icon: '👹', label: 'Bestiary', groups: one(monsters) },
     { key: 'minions', icon: '☠', label: 'Minions', groups: one(minions) },
     { key: 'heroes', icon: '🛡', label: 'Heroes', groups: one(heroes) },
@@ -357,12 +357,12 @@ function buildTabs(cat: Catalog, state: GameState): RefTab[] {
   ];
 }
 
-export default function RefTabs({ state, cat }: { state: GameState; cat: Catalog }) {
+export default function RefTabs({ state, cat, sauronView }: { state: GameState; cat: Catalog; sauronView?: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
   const [groupKey, setGroupKey] = useState<string | null>(null);
   const [preview, setPreview] = useState<RefItem | null>(null);
   const inspect = useInspect();
-  const tabs = useMemo(() => buildTabs(cat, state), [cat, state]);
+  const tabs = useMemo(() => buildTabs(cat, state, sauronView ?? state.humanSide === 'Sauron'), [cat, state, sauronView]);
   const active = tabs.find((t) => t.key === open) ?? null;
   const group = active?.groups.find((g) => g.key === groupKey) ?? active?.groups[0] ?? null;
 

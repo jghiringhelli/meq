@@ -143,6 +143,19 @@ export default function App() {
     if (net.role === 'host' && roster) net.broadcastRoster(roster);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roster]);
+  // Host: keep the engine's `humanSide` flag in sync with who actually holds
+  // the Sauron role online. The phase machine (advance(), sauronmech.ts,
+  // encounter.ts combat-or-peril/shadow reactions) only knows this one
+  // game-wide flag — it predates multiplayer and has no roster concept — so
+  // whenever a connected human claims/releases Sauron post-setup, this is
+  // what makes the engine actually pause and wait for their SauronPanel
+  // clicks instead of silently auto-playing the whole turn via the AI.
+  useEffect(() => {
+    if (net.role !== 'host' || !roster) return;
+    const sauronClaim = roster[SAURON_ROLE];
+    const wantSide: Side = (sauronClaim?.kind === 'human' && sauronClaim.connected !== false) ? 'Sauron' : 'Hero';
+    setState((s) => (s && s.humanSide !== wantSide ? { ...s, humanSide: wantSide } : s));
+  }, [net.role, roster]);
 
   // Drive whichever hero roles are AI-controlled: in solo play (no roster)
   // that means the WHOLE hero side, only when a human plays Sauron (the
@@ -200,7 +213,14 @@ export default function App() {
     setSetup(false);
     if (pendingHost) {
       setPendingHost(false);
-      net.createHost().then(() => setRoster(emptyRoster(s))).catch(() => {});
+      net.createHost().then(() => {
+        // If the host picked "Sauron" on the setup screen, honor that as an
+        // implicit self-claim of the role — otherwise the roster→humanSide
+        // sync effect below would immediately flip it back to AI-Sauron,
+        // since a freshly hosted roster starts with every role 'open'.
+        const empty = emptyRoster(s);
+        setRoster(humanSide === 'Sauron' ? hostClaimRole(empty, s, 'host', 'Host', SAURON_ROLE, false) : empty);
+      }).catch(() => {});
     }
   }, [catalog, pendingHost, net]);
 
@@ -615,7 +635,7 @@ export default function App() {
           <PlotRow state={state} cat={cat} />
         </Collapsible>
       </div>
-      <RefTabs state={state} cat={cat} />
+      <RefTabs state={state} cat={cat} sauronView={iControlSauron} />
 
       <main className="app-main play-layout">
         <Board
@@ -624,6 +644,7 @@ export default function App() {
           onMove={pendingMoveTree ? doPendingMove : (inHeroActions && !ambush ? doMove : undefined)}
           consultable={econ.characters} consultDisabled={!inHeroActions || activeHero.actionsRemaining <= 0 || ambush}
           onConsult={doConsult}
+          sauronView={iControlSauron}
         />
         <aside className={`side${focusMap ? ' side-narrow' : ''}`}>
           <div className="side-rail">
@@ -678,7 +699,7 @@ export default function App() {
 
       {state.pendingCombat && (
         <CombatBoard state={state} cat={cat}
-          onChoose={state.pendingChoice ? doChoice : undefined} />
+          onChoose={state.pendingChoice ? doChoice : undefined} sauronView={iControlSauron} />
       )}
 
       {state.lastCombatSummary && !state.pendingCombat && (
@@ -689,9 +710,9 @@ export default function App() {
         <CombatSummaryModal summary={historyView} cat={cat} readOnly onContinue={() => setHistoryView(null)} />
       )}
 
-      {iControlSauron && net.role !== 'client' && state.activeSide === 'Sauron'
+      {iControlSauron && state.activeSide === 'Sauron'
         && !state.winner && !state.pendingCombat && !state.pendingChoice && (
-        <SauronPanel state={state} cat={cat} onApply={(next) => setState(next)} />
+        <SauronPanel state={state} cat={cat} dispatch={dispatch} />
       )}
 
       {state.pendingChoice && !state.pendingCombat && !state.lastCombatSummary && (

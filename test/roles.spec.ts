@@ -101,4 +101,39 @@ describe('multiplayer role / controller model', () => {
     // p1 can dispatch again immediately, without re-claiming.
     expect(mayDispatch(r, 'p1', false, s, { t: 'move', heroId: h, to: 'bree' })).toBe(true);
   });
+
+  it('actionRole maps every interactive-Sauron-turn action to SAURON_ROLE (regression: a networked client controlling Sauron needs sauronStoryStep/sauronPlayPlot/etc. to route through the same role check as combatOrPeril/shadowReaction)', () => {
+    const s = freshGame();
+    expect(actionRole(s, { t: 'sauronStoryStep' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronPlayPlot', plotId: 'x' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronResolveEvents' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronBeginAction', track: 'influence' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronPlaceInfluence', loc: 'bree' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronSpawnMonster', monsterId: 'mon-crebain', loc: 'bree' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronDeployMinion', minionId: 'min-x', loc: 'bree' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronMoveFigure', kind: 'monster', id: 'x', from: 'bree', to: 'archet' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronHealMinion', minionId: 'min-x' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronPlayShadow', cardId: 'x' })).toBe(SAURON_ROLE);
+    expect(actionRole(s, { t: 'sauronEndActionStep' })).toBe(SAURON_ROLE);
+  });
+
+  it('only the player who claimed Sauron may dispatch a sauron* action (regression: remote-Sauron gameplay must be role-checked like any other action)', () => {
+    const s = freshGame();
+    let r = emptyRoster(s);
+    // unclaimed → nobody but the host may act as Sauron
+    expect(mayDispatch(r, 'p1', false, s, { t: 'sauronStoryStep' })).toBe(false);
+    r = assignRole(r, SAURON_ROLE, { kind: 'human', playerId: 'p1', name: 'Sam' });
+    expect(mayDispatch(r, 'p1', false, s, { t: 'sauronStoryStep' })).toBe(true);
+    expect(mayDispatch(r, 'p2', false, s, { t: 'sauronStoryStep' })).toBe(false);
+    // and a hero-role player still cannot act as Sauron
+    const h = heroId(s);
+    r = assignRole(r, h, { kind: 'human', playerId: 'p2', name: 'Ann' });
+    expect(mayDispatch(r, 'p2', false, s, { t: 'sauronEndActionStep' })).toBe(false);
+  });
+
+  it('the host may always dispatch sauron* actions (referee)', () => {
+    const s = freshGame();
+    const r = emptyRoster(s);
+    expect(mayDispatch(r, 'host', true, s, { t: 'sauronStoryStep' })).toBe(true);
+  });
 });

@@ -5,7 +5,8 @@
 // applyAction is a pure (GameState, Catalog, Action) -> GameState reducer that
 // delegates to the existing pure engine functions. The App and any future
 // network/session layer should route ALL player intents through here.
-import type { Catalog, GameState, HeroId, MonsterId, LocationId, CardId } from './types';
+import type { Catalog, GameState, HeroId, MonsterId, MinionId, LocationId, CardId } from './types';
+import type { EyeTrack } from './sauronmech';
 import {
   advance, heroMove, heroRest, heroEngage, endHeroActions, resolveChoice,
   heroExplore, resolveEncounter, chooseEncounter, revealEncounter, dismissReveal,
@@ -13,6 +14,9 @@ import {
   heroDarkPath, heroRetrieveFavor, heroConsultCharacter, heroCompleteQuest,
   heroDiscardPlot, heroCleanseCorruption, heroTradeFavor, heroSurvey, resolveCombatOrPeril,
   resolveShadowReaction, resolveTreeDecision,
+  sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
+  sauronPlayPlot, sauronBeginAction, sauronPlaceInfluence,
+  sauronSpawnMonster, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow,
 } from './game';
 
 /** A serializable player intent. `t` is the discriminant tag. */
@@ -39,7 +43,18 @@ export type Action =
   | { t: 'survey'; heroId: HeroId }
   | { t: 'combatOrPeril'; choice: 'combat' | 'peril' }
   | { t: 'shadowReaction'; cardId: CardId | null }
-  | { t: 'treeDecision'; optionIndex: number };
+  | { t: 'treeDecision'; optionIndex: number }
+  | { t: 'sauronStoryStep' }
+  | { t: 'sauronPlayPlot'; plotId: string }
+  | { t: 'sauronResolveEvents' }
+  | { t: 'sauronBeginAction'; track: EyeTrack }
+  | { t: 'sauronPlaceInfluence'; loc: LocationId }
+  | { t: 'sauronSpawnMonster'; monsterId: MonsterId; loc: LocationId }
+  | { t: 'sauronDeployMinion'; minionId: MinionId; loc: LocationId }
+  | { t: 'sauronMoveFigure'; kind: 'monster' | 'minion'; id: string; from: LocationId; to: LocationId }
+  | { t: 'sauronHealMinion'; minionId: MinionId }
+  | { t: 'sauronPlayShadow'; cardId: string }
+  | { t: 'sauronEndActionStep' };
 
 export type ActionType = Action['t'];
 
@@ -81,6 +96,17 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'combatOrPeril': return resolveCombatOrPeril(state, cat, action.choice);
     case 'shadowReaction': return resolveShadowReaction(state, cat, action.cardId);
     case 'treeDecision': return resolveTreeDecision(state, cat, action.optionIndex);
+    case 'sauronStoryStep': return sauronStoryStep(state, cat);
+    case 'sauronPlayPlot': return sauronPlayPlot(state, cat, action.plotId);
+    case 'sauronResolveEvents': return sauronResolveEvents(state, cat);
+    case 'sauronBeginAction': return sauronBeginAction(state, cat, action.track);
+    case 'sauronPlaceInfluence': return sauronPlaceInfluence(state, cat, action.loc);
+    case 'sauronSpawnMonster': return sauronSpawnMonster(state, cat, action.monsterId, action.loc);
+    case 'sauronDeployMinion': return sauronDeployMinion(state, cat, action.minionId, action.loc);
+    case 'sauronMoveFigure': return sauronMoveFigure(state, cat, action.kind, action.id, action.from, action.to);
+    case 'sauronHealMinion': return sauronHealMinion(state, cat, action.minionId);
+    case 'sauronPlayShadow': return sauronPlayShadow(state, cat, action.cardId);
+    case 'sauronEndActionStep': return sauronEndActionStep(state, cat);
     default: {
       const _exhaustive: never = action;
       return _exhaustive;

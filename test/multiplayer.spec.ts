@@ -155,4 +155,58 @@ describe('multiplayer — host-authoritative flow (1 Sauron host + 3 hero client
     const viaEngine = JSON.stringify(applyAction(solo, cat, { t: 'endHeroActions' }));
     expect(viaHost).toBe(viaEngine);
   });
+
+  it('lets a Sauron-role client drive their own turn (story step → events → begin action → end) without the host — regression: SauronPanel used to bypass the Action layer entirely via a raw setState, which only worked for the host and silently did nothing useful for a remote client', () => {
+    const t = new Table();
+    t.connect('p1');
+    t.claim('p1', 'Sam', SAURON_ROLE);
+    t.advanceToHeroActions();
+    // End every hero's turn (as host/referee) until control passes to Sauron,
+    // resolving any incidental pending prompts (tree decisions / choices) that
+    // a hero's turn-end can raise along the way.
+    for (let i = 0; i < 40 && t.game.phase !== 'SauronRefresh'; i++) {
+      if (t.game.pendingTree) { t.hostAct({ t: 'treeDecision', optionIndex: 0 }); continue; }
+      if (t.game.pendingChoice) { t.hostAct({ t: 'choice', optionId: t.game.pendingChoice.options[0].id }); continue; }
+      t.hostAct({ t: 'endHeroActions' });
+    }
+    expect(t.game.phase).toBe('SauronRefresh');
+
+    // Any incidental pending prompt (tree decision / choice) raised along the
+    // way — by either a hero's turn-end or a Sauron step itself — is resolved
+    // by the host (referee) before the Sauron-role client's next step.
+    const settle = () => {
+      for (let i = 0; i < 10 && (t.game.pendingTree || t.game.pendingChoice); i++) {
+        if (t.game.pendingTree) t.hostAct({ t: 'treeDecision', optionIndex: 0 });
+        else if (t.game.pendingChoice) t.hostAct({ t: 'choice', optionId: t.game.pendingChoice.options[0].id });
+      }
+    };
+
+    const beforeStory = JSON.stringify(t.game);
+    t.submit('p1', { t: 'sauronStoryStep' });
+    expect(JSON.stringify(t.game)).not.toBe(beforeStory);
+    settle();
+    expect(t.game.phase).toBe('SauronEvents');
+
+    t.submit('p1', { t: 'sauronResolveEvents' });
+    settle();
+    expect(t.game.phase).toBe('SauronMinions');
+
+    // A player who never claimed Sauron cannot act on their behalf.
+    t.connect('p2');
+    const beforeReject = JSON.stringify(t.game);
+    t.submit('p2', { t: 'sauronEndActionStep' });
+    expect(JSON.stringify(t.game)).toBe(beforeReject);
+
+    // The Sauron-role client ends their own Action Step.
+    t.submit('p1', { t: 'sauronEndActionStep' });
+    settle();
+    expect(t.game.phase).not.toBe('SauronMinions');
+
+    // Every connected mirror (including the non-Sauron client) converged on
+    // the same authoritative state — this is the crux of the regression: a
+    // remote Sauron player's turn must actually reach every other peer.
+    const snap = JSON.stringify(t.game);
+    expect(t.mirrors.p1).toBe(snap);
+    expect(t.mirrors.p2).toBe(snap);
+  });
 });

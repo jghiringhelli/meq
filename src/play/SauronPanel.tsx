@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import type { Catalog, GameState, LocationId } from '../engine/types';
+import type { Action } from '../engine/actions';
 import {
-  sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
-  sauronPlayPlot, sauronBeginAction, sauronActionYields,
-  sauronPlaceInfluence, sauronSpawnMonster, sauronDeployMinion,
-  sauronMoveFigure, sauronHealMinion, sauronPlayShadow,
+  sauronActionYields,
   playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
   moveTargets, adjacentLocations,
 } from '../engine/game';
@@ -12,14 +10,17 @@ import { placementTargets, influenceAt } from '../engine/influence';
 
 interface Props {
   state: GameState; cat: Catalog;
-  onApply: (next: GameState) => void;
+  /** Every Sauron decision is a serializable Action so it can be sent over the
+   *  wire when this browser is a networked client controlling Sauron — see
+   *  engine/actions.ts's sauron* variants and App.tsx's `dispatch`. */
+  dispatch: (action: Action) => void;
 }
 
 type Mode = 'spawn' | 'deploy' | 'move' | 'heal' | 'shadow' | null;
 
 const locName = (cat: Catalog, id: LocationId) => cat.locations[id]?.name ?? id;
 
-export default function SauronPanel({ state, cat, onApply }: Props) {
+export default function SauronPanel({ state, cat, dispatch }: Props) {
   const [mode, setMode] = useState<Mode>(null);
   const [figure, setFigure] = useState<string>('');
   const s = state;
@@ -39,7 +40,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
   const figures = boardFigures(s);
   const selected = figures.find((f) => `${f.kind}:${f.id}:${f.loc}` === figure);
 
-  const apply = (next: GameState) => { setMode(null); setFigure(''); onApply(next); };
+  const apply = (action: Action) => { setMode(null); setFigure(''); dispatch(action); };
 
   return (
     <div className="sauron-overlay">
@@ -64,7 +65,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
         {phase === 'SauronRefresh' && (
           <div className="sauron-step">
             <p className="prompt">Story Step — advance the dark story clock.</p>
-            <button className="primary" onClick={() => onApply(sauronStoryStep(s, cat))}>
+            <button className="primary" onClick={() => dispatch({ t: 'sauronStoryStep' })}>
               Begin Sauron turn ▶
             </button>
           </div>
@@ -76,7 +77,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
             <div className="sauron-plots">
               {playablePlots(s, cat).slice(0, 8).map((p) => (
                 <button key={p.id} className="sauron-plot-btn"
-                  onClick={() => onApply(sauronPlayPlot(s, cat, p.id))}>
+                  onClick={() => dispatch({ t: 'sauronPlayPlot', plotId: p.id })}>
                   <span className="cc-label">{p.name}</span>
                   <span className="cc-ability">
                     {p.marker ?? 'red'} +{p.advance ?? p.track.length} · cost {p.influenceCost ?? 0}
@@ -86,7 +87,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
               ))}
               {playablePlots(s, cat).length === 0 && <p className="muted">No affordable plots (slots full or too costly).</p>}
             </div>
-            <button className="primary" onClick={() => onApply(sauronResolveEvents(s, cat))}>
+            <button className="primary" onClick={() => dispatch({ t: 'sauronResolveEvents' })}>
               Resolve events & begin actions ▶
             </button>
           </div>
@@ -102,7 +103,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
                 {(['influence', 'draw', 'command'] as const).map((tr) => (
                   <button key={tr} className="sauron-mode-btn"
                     disabled={(s.sauronActionsLeft ?? 0) <= 0 || yields[tr] == null}
-                    onClick={() => { setMode(null); onApply(sauronBeginAction(s, cat, tr)); }}>
+                    onClick={() => { setMode(null); dispatch({ t: 'sauronBeginAction', track: tr }); }}>
                     {tr === 'influence' ? 'Place influence' : tr === 'draw' ? 'Draw cards' : 'Command'}
                     {yields[tr] != null && <span className="cc-ability"> +{yields[tr]}</span>}
                   </button>
@@ -118,7 +119,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
             {!s.sauronPending && mode === 'shadow' && (
               <div className="sauron-picker">
                 {playableShadow(s, cat).map((cid) => (
-                  <button key={cid} onClick={() => apply(sauronPlayShadow(s, cat, cid))}>
+                  <button key={cid} onClick={() => apply({ t: 'sauronPlayShadow', cardId: cid })}>
                     {cat.shadow[cid]?.name ?? cid}
                   </button>
                 ))}
@@ -131,7 +132,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
               <div className="sauron-picker">
                 <p className="prompt">Place {s.sauronPending.remaining} more influence token(s) on the board.</p>
                 {placementTargets(s, cat).map((loc) => (
-                  <button key={loc} onClick={() => apply(sauronPlaceInfluence(s, cat, loc))}>
+                  <button key={loc} onClick={() => apply({ t: 'sauronPlaceInfluence', loc })}>
                     {locName(cat, loc)} <span className="muted">(now {influenceAt(s, loc)})</span>
                   </button>
                 ))}
@@ -162,7 +163,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
                         <span className="pick-name">{m.name}</span>
                         {targetLocs.map((loc) => (
                           <button key={loc}
-                            onClick={() => apply(sauronSpawnMonster(s, cat, m.id, loc))}>{locName(cat, loc)}</button>
+                            onClick={() => apply({ t: 'sauronSpawnMonster', monsterId: m.id, loc })}>{locName(cat, loc)}</button>
                         ))}
                       </div>
                     ))}
@@ -175,7 +176,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
                       <div key={mid} className="pick-row">
                         <span className="pick-name">{cat.minions[mid]?.name ?? mid}</span>
                         {targetLocs.map((loc) => (
-                          <button key={loc} onClick={() => apply(sauronDeployMinion(s, cat, mid, loc))}>{locName(cat, loc)}</button>
+                          <button key={loc} onClick={() => apply({ t: 'sauronDeployMinion', minionId: mid, loc })}>{locName(cat, loc)}</button>
                         ))}
                       </div>
                     ))}
@@ -197,7 +198,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
                       <div className="pick-row">
                         {moveTargets(s, cat, selected.kind, selected.loc).map((to) => (
                           <button key={to}
-                            onClick={() => apply(sauronMoveFigure(s, cat, selected.kind, selected.id, selected.loc, to))}>
+                            onClick={() => apply({ t: 'sauronMoveFigure', kind: selected.kind, id: selected.id, from: selected.loc, to })}>
                             → {locName(cat, to)}
                           </button>
                         ))}
@@ -210,7 +211,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
                 {mode === 'heal' && (
                   <div className="sauron-picker">
                     {woundedMinions(s, cat).map((mid) => (
-                      <button key={mid} onClick={() => apply(sauronHealMinion(s, cat, mid))}>
+                      <button key={mid} onClick={() => apply({ t: 'sauronHealMinion', minionId: mid })}>
                         {cat.minions[mid]?.name ?? mid}
                       </button>
                     ))}
@@ -220,7 +221,7 @@ export default function SauronPanel({ state, cat, onApply }: Props) {
               </>
             )}
 
-            <button className="primary end-turn" onClick={() => onApply(sauronEndActionStep(s, cat))}>
+            <button className="primary end-turn" onClick={() => dispatch({ t: 'sauronEndActionStep' })}>
               End Sauron turn ▶
             </button>
           </div>
