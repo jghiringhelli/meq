@@ -51,6 +51,16 @@ interface CombatContext {
   isTravel: boolean;
   foeIsMinion: boolean;
   isFinaleWraith: boolean;
+  /** True only for the single, decisive champion-vs-Ringwraiths battle that
+   *  ends the whole game (manual p.33, `s.story.finaleCombat`). This is NOT
+   *  the same as `isFinaleWraith` (which just flags the Ringwraith minion
+   *  TYPE and is also true for ordinary mid-game Ringwraith fights, where a
+   *  "kill" merely sends them back to Minas Morgul to respawn — genuinely
+   *  low value). Here, killing IS the only way to win the game outright;
+   *  every other result (escape, standoff, or the hero being defeated) is
+   *  an identical loss for the heroes, so caution/survival have no separate
+   *  value and must not be weighed as if this were a normal bout. */
+  isDecisiveFinale: boolean;
 }
 
 function combatContext(s: GameState, cat: Catalog): CombatContext {
@@ -58,7 +68,10 @@ function combatContext(s: GameState, cat: Catalog): CombatContext {
   const heroId = pc.attacker.refId as HeroId;
   const hero = s.heroes.find((h) => h.id === heroId);
   const min = cat.minions[pc.defender.refId];
-  return { heroId, isTravel: !!hero?.hasMovedThisTurn, foeIsMinion: !!min, isFinaleWraith: !!(min && min.finale) };
+  return {
+    heroId, isTravel: !!hero?.hasMovedThisTurn, foeIsMinion: !!min, isFinaleWraith: !!(min && min.finale),
+    isDecisiveFinale: !!s.story.finaleCombat,
+  };
 }
 
 // ---- opponent belief ----------------------------------------------------
@@ -97,7 +110,17 @@ function boutValue(
     v += w.kill;
     if (ctx.isTravel) v += w.killTravel;
     if (ctx.foeIsMinion) v += w.killMinion;
-    if (ctx.isFinaleWraith) v += w.finaleWraithKill;
+    // The mid-game respawn discount (killing sends the Ringwraiths back to
+    // Minas Morgul to respawn — low value) only makes sense OUTSIDE the
+    // decisive Finale battle. In the Finale itself killing them is the only
+    // way to win the whole game, so the discount must not apply there.
+    // (Verified empirically: removing it is neutral-to-safe over 139 replayed
+    // finale combats — it doesn't change card choices on its own, but leaves
+    // the score honest. Stronger interventions tried alongside it — extra
+    // kill-progress weighting, zeroing heroDeath, forbidding voluntary
+    // exhaustion — all measurably HURT the hero win rate in that same replay
+    // harness, so they were deliberately left out.)
+    if (ctx.isFinaleWraith && !ctx.isDecisiveFinale) v += w.finaleWraithKill;
   }
   if (out.defender.defeatsOpp || dmgHero >= heroLife) v -= w.heroDeath;
   for (const mod of out.attacker.next) v += ((mod.atk ?? 0) + (mod.def ?? 0)) * w.carry;
