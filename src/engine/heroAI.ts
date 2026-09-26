@@ -439,8 +439,12 @@ export function coordinatedPlotTarget(
   }
   if (assign.has(hero.id)) return targetSetFor(assign.get(hero.id)!);
 
-  // 2. Converge to pool: the most dangerous plot no one can solo-afford but the
-  //    party's combined favor could cover — send its two nearest heroes to meet.
+  // 2. Converge to pool: for EACH plot no one can solo-afford but the party's
+  //    combined favor could cover, send its two nearest heroes to meet. Check
+  //    every such plot (not just the single most-dangerous one) before giving
+  //    up — a hero irrelevant to the top pooling target may still be one of
+  //    the two nearest heroes to a lesser one, and bailing out on the first
+  //    miss was silently abandoning those plots to advance uncontested.
   const partyFavor = activeHeroes
     .filter((h) => !corruptionBlocksSocial(cat, h))
     .reduce((n, h) => n + h.favor, 0);
@@ -451,7 +455,6 @@ export function coordinatedPlotTarget(
       .sort((a, b) => distTo(a, p.loc) - distTo(b, p.loc))
       .slice(0, 2);
     if (team.some((h) => h.id === hero.id)) return targetSetFor(p.loc);
-    return null; // not on the pool team → bank favor to become a future feeder
   }
   return null;
 }
