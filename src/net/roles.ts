@@ -1,25 +1,19 @@
-// Role / controller model for multiplayer. Pure and engine-agnostic: the game
-// engine never knows who controls a role — the session layer decides who may
-// dispatch a given Action and runs the AI for roles nobody has claimed.
-//
-// A "role" is a hero id or the string 'Sauron'. Each role is controlled by a
-// human player, by the AI, or is open (unclaimed → treated as AI at runtime).
+// Role / controller model for multiplayer, specialized from the shared
+// boardgame-kit roles module (see boardgame-kit/README.md) to this game's
+// role type (a hero id or the string 'Sauron') and action shape.
 import type { GameState } from '../engine/types';
 import type { Action } from '../engine/actions';
+import {
+  mayDispatch as mayDispatchShared, seatsOf as seatsOfShared, aiSeats as aiSeatsShared,
+  assignSeat as assignSeatShared, releasePlayer as releasePlayerShared,
+  markDisconnected as markDisconnectedShared, markReconnected as markReconnectedShared,
+  type Roster as RosterShared, type Controller,
+} from 'boardgame-kit/roles';
 
 export const SAURON_ROLE = 'Sauron';
 export type RoleId = string; // a heroId, or SAURON_ROLE
-
-export type Controller =
-  // `connected` defaults to true when omitted (kept optional for old saves).
-  // false means the human still owns/reserves this role (nobody else can
-  // claim it and the roster remembers them) but their connection just isn't
-  // live right now — see markDisconnected/markReconnected below.
-  | { kind: 'human'; playerId: string; name: string; connected?: boolean }
-  | { kind: 'ai' }
-  | { kind: 'open' };
-
-export type Roster = Record<RoleId, Controller>;
+export type { Controller };
+export type Roster = RosterShared<RoleId>;
 
 /** Every claimable role in the current game: one per hero, plus Sauron. */
 export function allRoles(state: GameState): RoleId[] {
@@ -108,30 +102,22 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
 export function mayDispatch(
   roster: Roster, playerId: string, isHost: boolean, state: GameState, action: Action,
 ): boolean {
-  if (isHost) return true;
-  const role = actionRole(state, action);
-  if (role === 'flow') return false; // only the host drives phase flow
-  const c = roster[role];
-  return !!c && c.kind === 'human' && c.playerId === playerId;
+  return mayDispatchShared(roster, playerId, isHost, actionRole(state, action));
 }
 
 /** Roles a given player controls right now. */
 export function rolesOf(roster: Roster, playerId: string): RoleId[] {
-  return Object.entries(roster)
-    .filter(([, c]) => c.kind === 'human' && c.playerId === playerId)
-    .map(([role]) => role);
+  return seatsOfShared(roster, playerId);
 }
 
 /** Roles that no human holds → the AI must run them. */
 export function aiRoles(roster: Roster): RoleId[] {
-  return Object.entries(roster)
-    .filter(([, c]) => c.kind !== 'human')
-    .map(([role]) => role);
+  return aiSeatsShared(roster);
 }
 
 /** Assign a role to a controller, returning a new roster (immutable). */
 export function assignRole(roster: Roster, role: RoleId, controller: Controller): Roster {
-  return { ...roster, [role]: controller };
+  return assignSeatShared(roster, role, controller);
 }
 
 /** Release every role held by a player (e.g. a kick, or a reconnection grace
@@ -139,11 +125,7 @@ export function assignRole(roster: Roster, role: RoleId, controller: Controller)
  *  that should still give the same player (by persistent id) a chance to
  *  seamlessly resume — this is the hard, permanent release. */
 export function releasePlayer(roster: Roster, playerId: string): Roster {
-  const next: Roster = { ...roster };
-  for (const [role, c] of Object.entries(next)) {
-    if (c.kind === 'human' && c.playerId === playerId) next[role] = { kind: 'open' };
-  }
-  return next;
+  return releasePlayerShared(roster, playerId);
 }
 
 /** A player's connection dropped: keep their role(s) reserved (nobody else can
@@ -151,19 +133,11 @@ export function releasePlayer(roster: Roster, playerId: string): Roster {
  *  can show it. Pair with a host-side grace-period timer that calls
  *  releasePlayer if they never come back. */
 export function markDisconnected(roster: Roster, playerId: string): Roster {
-  const next: Roster = { ...roster };
-  for (const [role, c] of Object.entries(next)) {
-    if (c.kind === 'human' && c.playerId === playerId) next[role] = { ...c, connected: false };
-  }
-  return next;
+  return markDisconnectedShared(roster, playerId);
 }
 
 /** The same persistent playerId reconnected before the grace period elapsed —
  *  seamlessly restore their role(s) to connected, no re-claim needed. */
 export function markReconnected(roster: Roster, playerId: string): Roster {
-  const next: Roster = { ...roster };
-  for (const [role, c] of Object.entries(next)) {
-    if (c.kind === 'human' && c.playerId === playerId) next[role] = { ...c, connected: true };
-  }
-  return next;
+  return markReconnectedShared(roster, playerId);
 }

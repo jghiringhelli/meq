@@ -1,13 +1,14 @@
-// Pure host-authoritative reducer helpers. The host is the referee: it applies
-// every action (its own and remote), enforcing per-role ownership, and owns the
-// canonical (game, roster) pair. Kept transport-free so it can be unit-tested
-// and reused by App without duplicating the rules.
+// Pure host-authoritative reducer helpers, specialized from the shared
+// boardgame-kit host module (see boardgame-kit/README.md) to this game's
+// state/action/role types and reducer.
 import type { Catalog, GameState } from '../engine/types';
 import type { Action } from '../engine/actions';
 import { applyAction } from '../engine/actions';
 import {
-  mayDispatch, assignRole, emptyRoster, releasePlayer, type Roster, type RoleId,
-} from './roles';
+  claimSeat as claimSeatShared,
+  dropPlayer as dropPlayerShared,
+} from 'boardgame-kit/host';
+import { mayDispatch, allRoles, type Roster, type RoleId } from './roles';
 
 /**
  * Apply an action a client submitted. Returns the next game state, or the
@@ -24,11 +25,10 @@ export function applyRemoteAction(
 export function claimRole(
   roster: Roster | null, game: GameState, playerId: string, name: string, role: RoleId, release: boolean,
 ): Roster {
-  const base = roster ?? emptyRoster(game);
-  return assignRole(base, role, release ? { kind: 'open' } : { kind: 'human', playerId, name });
+  return claimSeatShared(roster, allRoles(game), playerId, name, role, release);
 }
 
 /** Free every role a departing/kicked player held (they revert to open → AI). */
 export function dropPlayer(roster: Roster | null, playerId: string): Roster | null {
-  return roster ? releasePlayer(roster, playerId) : roster;
+  return dropPlayerShared(roster, playerId);
 }
