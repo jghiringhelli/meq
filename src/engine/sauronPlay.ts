@@ -161,6 +161,24 @@ export function sauronPlaceInfluence(state: GameState, cat: Catalog, loc: Locati
   return s;
 }
 
+/** Interactive Setup only: place one of the starting plot's owed "extension"
+ *  influence tokens (see setup.ts's applyStartingPlotInfluence /
+ *  state.setupInfluencePending). Uses the same extension-rule legality as the
+ *  in-game Place Influence action, but isn't gated by phase/sauronPending since
+ *  it happens before turn 1 even begins. */
+export function setupPlaceInfluence(state: GameState, cat: Catalog, loc: LocationId): GameState {
+  const p = state.setupInfluencePending;
+  if (!p || p.remaining <= 0) return state;
+  if (!canPlaceInfluence(state, cat, loc)) return state;
+  const s = clone(state);
+  const placed = placeInfluenceAction(s, cat, loc, 1);
+  if (placed <= 0) return state;
+  s.setupInfluencePending!.remaining -= 1;
+  if (s.setupInfluencePending!.remaining <= 0) s.setupInfluencePending = undefined;
+  log(s, 'setup', 'Sauron', `extends influence to ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
+  return s;
+}
+
 /** Spawn command: field a monster from the reserve at a legal location. Costs one
  *  command of the current Command action (rulebook p.18 — NOT Shadow-Pool influence). */
 export function sauronSpawnMonster(state: GameState, cat: Catalog, monsterId: MonsterId, loc: LocationId): GameState {

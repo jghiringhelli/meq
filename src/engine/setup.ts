@@ -25,7 +25,10 @@ function pick(state: GameState, ids: string[]): string {
 }
 
 /** Pick the seat heroes (default: first `seats` from the catalog roster order). */
-export function newGame(cat: Catalog, seed: number, heroIds?: HeroId[], humanSide: 'Hero' | 'Sauron' = 'Hero'): GameState {
+export function newGame(
+  cat: Catalog, seed: number, heroIds?: HeroId[], humanSide: 'Hero' | 'Sauron' = 'Hero',
+  interactiveSetup = false,
+): GameState {
   const roster = heroIds && heroIds.length ? heroIds : Object.keys(cat.heroes).slice(0, 2);
 
   const state: GameState = {
@@ -107,7 +110,7 @@ export function newGame(cat: Catalog, seed: number, heroIds?: HeroId[], humanSid
   // monster tokens are placed at setup — per the rulebook, monsters only enter
   // via Sauron's Command actions onto influenced locations.
   placeStartingMinions(state, cat);
-  seedStartingPlot(state, cat);
+  seedStartingPlot(state, cat, interactiveSetup);
   seedSauronHands(state, cat);
 
   log(state, 'setup', 'system',
@@ -170,7 +173,7 @@ function placeStartingMinions(state: GameState, cat: Catalog): void {
 /** Place Sauron's starting plot (the setup difference tied to his mission). The
  *  Sauron player picks one of the three; the automa picks deterministically. Its
  *  colored story marker starts at the START space and advances each Story Step. */
-function seedStartingPlot(state: GameState, cat: Catalog): void {
+function seedStartingPlot(state: GameState, cat: Catalog, interactiveSetup: boolean): void {
   const starting = cat.plots.filter((p) => p.starting);
   if (!starting.length) return;
   const chosen = starting[Math.abs(state.rngCursor) % starting.length];
@@ -183,7 +186,7 @@ function seedStartingPlot(state: GameState, cat: Catalog): void {
   });
   // Follow the plot's "Setup" instruction: seed Sauron's initial influence onto
   // the board (N per Shadow Stronghold, M in extension, K in the Shadow Pool).
-  applyStartingPlotInfluence(state, cat, chosen.effect ?? '');
+  applyStartingPlotInfluence(state, cat, chosen.effect ?? '', interactiveSetup);
   log(state, 'setup', 'Sauron', `starting plot: ${chosen.name} (feeds ${marker} marker +${advance}/turn)`);
   // Public recap of exactly WHERE the starting influence landed, so the hero
   // player can read the board at a glance (Shadow Pool + every seeded location).
@@ -227,8 +230,12 @@ function seedSauronHands(state: GameState, cat: Catalog): void {
 }
 
 /** Parse and apply a starting plot's Setup influence, e.g. "2 influence in each
- *  Shadow Stronghold, 7 in extension, 1 in the Shadow Pool". */
-function applyStartingPlotInfluence(state: GameState, cat: Catalog, effect: string): void {
+ *  Shadow Stronghold, 7 in extension, 1 in the Shadow Pool". The stronghold and
+ *  Shadow Pool amounts are always mechanical (the rulebook names them exactly);
+ *  the EXTENSION amount is a genuine Sauron choice of where to place it — when
+ *  `interactiveSetup` is requested, that choice is left to the human instead of
+ *  auto-placed via BFS (see setupPlaceInfluence / state.setupInfluencePending). */
+function applyStartingPlotInfluence(state: GameState, cat: Catalog, effect: string, interactiveSetup = false): void {
   const num = (re: RegExp) => { const m = effect.match(re); return m ? parseInt(m[1], 10) : 0; };
   const each = num(/(\d+)\s+influence in each Shadow Stronghold/i);
   const extensionN = num(/(\d+)\s+in extension/i);
@@ -245,9 +252,16 @@ function applyStartingPlotInfluence(state: GameState, cat: Catalog, effect: stri
     const cap = sh.strongholdMax ?? each;
     inf[sh.id] = Math.min(each, cap || each);
   }
+  if (extensionN <= 0) return;
+  if (interactiveSetup) {
+    // Hand the choice to the human: freeze everything else until every token
+    // is placed (App.tsx gates the hero-AI driver / phase-advance on this).
+    state.setupInfluencePending = { remaining: extensionN };
+    return;
+  }
   // Extension: BFS outward from the strongholds, one influence per new location
   // (skip havens and hero-occupied locations), until the budget is spent.
-  if (extensionN > 0) {
+  {
     const adj = (loc: string) => cat.edges.filter((e) => e.a === loc || e.b === loc).map((e) => (e.a === loc ? e.b : e.a));
     const seen = new Set<string>(strongholds.map((s) => s.id));
     let frontier = strongholds.map((s) => s.id);
@@ -272,6 +286,7 @@ function applyStartingPlotInfluence(state: GameState, cat: Catalog, effect: stri
     }
   }
 }
+
 
 
 

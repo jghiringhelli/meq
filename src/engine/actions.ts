@@ -16,7 +16,7 @@ import {
   resolveShadowReaction, resolveTreeDecision,
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
   sauronPlayPlot, sauronBeginAction, sauronPlaceInfluence,
-  sauronSpawnMonster, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow,
+  sauronSpawnMonster, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence,
 } from './game';
 
 /** A serializable player intent. `t` is the discriminant tag. */
@@ -49,6 +49,7 @@ export type Action =
   | { t: 'sauronResolveEvents' }
   | { t: 'sauronBeginAction'; track: EyeTrack }
   | { t: 'sauronPlaceInfluence'; loc: LocationId }
+  | { t: 'setupPlaceInfluence'; loc: LocationId }
   | { t: 'sauronSpawnMonster'; monsterId: MonsterId; loc: LocationId }
   | { t: 'sauronDeployMinion'; minionId: MinionId; loc: LocationId }
   | { t: 'sauronMoveFigure'; kind: 'monster' | 'minion'; id: string; from: LocationId; to: LocationId }
@@ -101,6 +102,7 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'sauronResolveEvents': return sauronResolveEvents(state, cat);
     case 'sauronBeginAction': return sauronBeginAction(state, cat, action.track);
     case 'sauronPlaceInfluence': return sauronPlaceInfluence(state, cat, action.loc);
+    case 'setupPlaceInfluence': return setupPlaceInfluence(state, cat, action.loc);
     case 'sauronSpawnMonster': return sauronSpawnMonster(state, cat, action.monsterId, action.loc);
     case 'sauronDeployMinion': return sauronDeployMinion(state, cat, action.minionId, action.loc);
     case 'sauronMoveFigure': return sauronMoveFigure(state, cat, action.kind, action.id, action.from, action.to);

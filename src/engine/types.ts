@@ -784,6 +784,12 @@ export interface GameState {
    *  resolves them one at a time. `remaining` counts the sub-effects still owed
    *  by the current action. Cleared when spent or when the turn ends. */
   sauronPending?: { track: 'influence' | 'command'; remaining: number };
+  /** Interactive Setup: a human-controlled Sauron places the starting plot's
+   *  "extension" influence himself (clicking the map), instead of the engine
+   *  auto-distributing it via BFS. Set by newGame when `interactiveSetup` is
+   *  requested; cleared once every token is placed. Nothing else in the game
+   *  may proceed while this is set (see setupPlaceInfluence). */
+  setupInfluencePending?: { remaining: number };
   /** Two-player game (a single hero): the hero takes 2 turns per Sauron turn.
    *  True once the hero has taken his first of the two turns this round. */
   heroSecondTurnPending?: boolean;

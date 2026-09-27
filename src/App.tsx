@@ -36,6 +36,7 @@ import { useInspect } from './play/CardInspector';
 import ReportBugModal from './play/ReportBugModal';
 import { getUserArt, heroArt } from './data/art';
 import { pendingHeroTasks } from './engine/turnTasks';
+import { placementTargets } from './engine/influence';
 import { advanceHeroSide, missionAware, mulberry32 } from './engine/heroAI';
 import { useGameSession } from './net/session';
 import { emptyRoster, rolesOf, SAURON_ROLE, markDisconnected, markReconnected, type Roster } from './net/roles';
@@ -185,6 +186,10 @@ export default function App() {
     // every other pending (hero choices, combat, encounters) is resolved inside
     // advanceHeroSide, so it must be allowed to run to reach/resume them.
     if (state.pendingCombatOrPeril || state.pendingShadowReaction || state.pendingTree) return;
+    // The interactive Setup influence placement precedes turn 1 entirely —
+    // don't let the hero AI race ahead while a human Sauron is still laying
+    // out the starting board.
+    if (state.setupInfluencePending) return;
     const next = advanceHeroSide(state, catalog, missionAware, heroRng.current, isAiHero);
     setState(next);
   }, [catalog, state, net.role, isAiHero]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -208,7 +213,7 @@ export default function App() {
     setResumable(null);
     setSeed(fresh);
     heroRng.current = mulberry32(fresh ^ 0x9e3779b9);
-    const s = newGame(catalog, fresh, heroIds, humanSide);
+    const s = newGame(catalog, fresh, heroIds, humanSide, humanSide === 'Sauron');
     setState(s);
     setSetup(false);
     if (pendingHost) {
@@ -407,6 +412,15 @@ export default function App() {
   // blocked by a modal for a decision that isn't theirs to make — dispatch was
   // already correctly role-checked server-side, but the UI wasn't.
   const iControlSauron = viewerSide === 'Sauron' || viewerSide === 'both';
+  // Locations Sauron may click on the map right now to place one influence
+  // token — either the mid-game Place Influence sub-action (sauronPending), or
+  // the interactive Setup extension placement (setupInfluencePending); both
+  // share the same extension-rule legality (engine/influence.ts).
+  const placingSetup = iControlSauron && !!state.setupInfluencePending;
+  const placingAction = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'influence';
+  const placeInfluenceTargets = placingSetup || placingAction ? placementTargets(state, cat) : undefined;
+  const doPlaceInfluence = (loc: string) =>
+    dispatch({ t: placingSetup ? 'setupPlaceInfluence' : 'sauronPlaceInfluence', loc } as Action);
   // Do I control the specific hero a pending tree-decision affects? Per-hero
   // (not the coarse viewerSide) since online multiplayer can split hero roles
   // across different people.
@@ -580,7 +594,7 @@ export default function App() {
   const travelModalOpen = !!(travelTo && inHeroActions && !ambush);
   const anyPending = !!(state.pendingCombat || state.pendingChoice || state.pendingEncounter
     || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction
-    || state.lastCombatSummary || travelModalOpen);
+    || state.lastCombatSummary || travelModalOpen || state.setupInfluencePending);
   const smartMode: 'endTurn' | 'advance' | null =
     state.winner || anyPending || iControlSauron ? null
       : inHeroActions ? 'endTurn'
@@ -610,7 +624,7 @@ export default function App() {
         {!state.winner && <PhaseToast phase={state.phase} />}
         <div style={{ flex: 1 }} />
         {!state.winner && state.phase !== 'HeroActions' && !state.pendingChoice && !state.pendingCombat
-          && !state.pendingReveal && !state.pendingTree
+          && !state.pendingReveal && !state.pendingTree && !state.setupInfluencePending
           && !(iControlSauron && state.activeSide === 'Sauron') && (
           <button className="primary" onClick={doAdvance}>Advance phase ▶</button>
         )}
@@ -645,6 +659,8 @@ export default function App() {
           consultable={econ.characters} consultDisabled={!inHeroActions || activeHero.actionsRemaining <= 0 || ambush}
           onConsult={doConsult}
           sauronView={iControlSauron}
+          placeInfluenceTargets={placeInfluenceTargets}
+          onPlaceInfluence={placeInfluenceTargets ? doPlaceInfluence : undefined}
         />
         <aside className={`side${focusMap ? ' side-narrow' : ''}`}>
           <div className="side-rail">
@@ -708,6 +724,21 @@ export default function App() {
           <NotesPanel seed={seed} />
         </aside>
       </main>
+
+      {state.setupInfluencePending && iControlSauron && (
+        <div className="banner setup-influence-banner">
+          <span>
+            Setup — extend your starting influence: place <b>{state.setupInfluencePending.remaining}</b> more
+            token{state.setupInfluencePending.remaining === 1 ? '' : 's'} by clicking a glowing{' '}
+            <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.
+          </span>
+        </div>
+      )}
+      {state.setupInfluencePending && !iControlSauron && (
+        <div className="banner setup-influence-banner">
+          <span>Setup — waiting for Sauron to finish placing starting influence ({state.setupInfluencePending.remaining} left)…</span>
+        </div>
+      )}
 
       {state.pendingCombat && (
         <CombatBoard state={state} cat={cat}

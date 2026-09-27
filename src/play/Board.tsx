@@ -15,6 +15,11 @@ interface Props {
   consultable?: string[];
   consultDisabled?: boolean;
   onConsult?: (character: string, choice: 'favor' | 'ability') => void;
+  /** Locations Sauron may currently add one influence token to (mid-game Place
+   *  Influence sub-flow, or the interactive Setup placement) — clicking one of
+   *  these dispatches onPlaceInfluence instead of the normal inspect/move click. */
+  placeInfluenceTargets?: string[];
+  onPlaceInfluence?: (loc: string) => void;
   /** Does THIS browser's viewer control Sauron? Solo/hotseat has only one
    *  screen so this always matches `state.humanSide === 'Sauron'`, but online
    *  it must come from the roster (per-viewer) — otherwise revealing facedown
@@ -73,7 +78,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -82,6 +87,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
   const locs = Object.values(cat.locations);
   const { width: w, height: h, image } = cat.board;
   const targetSet = new Set(moveTargets);
+  const placeSet = new Set(placeInfluenceTargets ?? []);
 
   // Distance to the nearest other node — drives per-node token scale so a
   // location's figures never spill into its neighbours' circles.
@@ -329,6 +335,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const infLevel = influence <= 0 ? 0 : Math.min(4, influence);
           const infColor = ['', '#e0574a', '#b8342a', '#7a1414', '#2e0606'][infLevel];
           const isTarget = targetSet.has(l.id);
+          const isPlaceTarget = placeSet.has(l.id);
           const isHover = hover === l.id;
           const regionCol = REGION_COLOR[l.regionColor] ?? '#c9a24a';
           const questHeroes = state.map.questAt?.[l.id] ?? [];
@@ -363,11 +370,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
 
           return (
             <g key={l.id} transform={`translate(${l.coords.x},${l.coords.y})`}
-              className={isTarget ? 'node target' : 'node'}
+              className={isTarget || isPlaceTarget ? 'node target' : 'node'}
               onMouseEnter={() => setHover(l.id)} onMouseLeave={() => setHover(null)}
               onClick={() => {
                 if (drag.current?.moved) return;
-                if (isTarget) onMove?.(l.id);
+                if (isPlaceTarget) onPlaceInfluence?.(l.id);
+                else if (isTarget) onMove?.(l.id);
                 else inspect(locInfo(l));
               }}
               style={{ cursor: 'pointer' }}>
@@ -375,24 +383,37 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
               {/* Lit ring: a legal move target (or a hovered node) is ringed in
                   its REGION colour ENTIRELY OUTSIDE the printed circle, so the
                   highlight never covers the location's name banner or art. A
-                  soft wide glow sits behind a crisp ring; targets gently pulse. */}
-              {(isTarget || isHover) && (() => {
+                  soft wide glow sits behind a crisp ring; targets gently pulse.
+                  Influence-placement targets use the Eye's red instead of the
+                  region colour so the two click-modes never look the same. */}
+              {(isTarget || isPlaceTarget || isHover) && (() => {
                 const rG = rr + 24; // just outside the printed circle's outer ring
+                const active = isTarget || isPlaceTarget;
+                const col = isPlaceTarget ? '#e0574a' : regionCol;
                 return (
                   <g pointerEvents="none">
-                    <circle r={rG} fill="none" stroke={regionCol}
-                      strokeWidth={isTarget ? 24 : 16} strokeOpacity={isTarget ? 0.22 : 0.13}>
-                      {isTarget && <animate attributeName="stroke-opacity" values="0.28;0.10;0.28" dur="1.7s" repeatCount="indefinite" />}
+                    <circle r={rG} fill="none" stroke={col}
+                      strokeWidth={active ? 24 : 16} strokeOpacity={active ? 0.22 : 0.13}>
+                      {active && <animate attributeName="stroke-opacity" values="0.28;0.10;0.28" dur="1.7s" repeatCount="indefinite" />}
                     </circle>
-                    <circle r={rG} fill="none" stroke={regionCol}
-                      strokeWidth={isTarget ? 7 : 5} strokeOpacity={isTarget ? 0.95 : 0.7}>
-                      {isTarget && <animate attributeName="r" values={`${rG - 2};${rG + 3};${rG - 2}`} dur="1.7s" repeatCount="indefinite" />}
+                    <circle r={rG} fill="none" stroke={col}
+                      strokeWidth={active ? 7 : 5} strokeOpacity={active ? 0.95 : 0.7}>
+                      {active && <animate attributeName="r" values={`${rG - 2};${rG + 3};${rG - 2}`} dur="1.7s" repeatCount="indefinite" />}
                     </circle>
                   </g>
                 );
               })()}
               {influence > 0 && <circle r={rr + 2} fill={infColor} fillOpacity={0.10 + infLevel * 0.07} stroke={infColor} strokeWidth={4} strokeOpacity={0.35 + infLevel * 0.14} />}
               {CAL && <circle r={10} fill="#ff2d2d" stroke="#000" strokeWidth={2} />}
+
+              {/* "+" pip: this location will accept one more influence token
+                  right now (mid-game Place Influence action, or Setup). */}
+              {isPlaceTarget && (
+                <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
+                  <circle r={17} fill="#e0574a" stroke="#1a0303" strokeWidth={3} />
+                  <text y={6} textAnchor="middle" fontSize={22} fontWeight={700} fill="#fff">+</text>
+                </g>
+              )}
 
               {/* figure cluster, centered on the node (nudged slightly below dead-centre) */}
               {shown.map((c, i) => renderChip(c, startX + i * (T + gap), figY, T, s))}

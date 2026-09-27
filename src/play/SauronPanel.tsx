@@ -6,7 +6,7 @@ import {
   playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
   moveTargets, adjacentLocations,
 } from '../engine/game';
-import { placementTargets, influenceAt } from '../engine/influence';
+import { placementTargets } from '../engine/influence';
 
 interface Props {
   state: GameState; cat: Catalog;
@@ -131,15 +131,17 @@ export default function SauronPanel({ state, cat, dispatch }: Props) {
               </div>
             )}
 
-            {/* Place Influence action in progress: lay the remaining board tokens. */}
+            {/* Place Influence action in progress: the remaining board tokens
+                are placed by clicking the glowing "+" locations on the map
+                itself (see Board.tsx's placeInfluenceTargets), not from a list
+                here — keeps the map the single source of truth for where
+                Sauron's influence can legally extend to. */}
             {s.sauronPending?.track === 'influence' && (
               <div className="sauron-picker">
-                <p className="prompt">Place {s.sauronPending.remaining} more influence token(s) on the board.</p>
-                {placementTargets(s, cat).map((loc) => (
-                  <button key={loc} onClick={() => apply({ t: 'sauronPlaceInfluence', loc })}>
-                    {locName(cat, loc)} <span className="muted">(now {influenceAt(s, loc)})</span>
-                  </button>
-                ))}
+                <p className="prompt">
+                  Place {s.sauronPending.remaining} more influence token{s.sauronPending.remaining === 1 ? '' : 's'} —
+                  click a glowing <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.
+                </p>
                 {placementTargets(s, cat).length === 0 && (
                   <span className="muted">No legal locations (extend from a stronghold).</span>
                 )}
