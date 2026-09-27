@@ -41,11 +41,15 @@ export default function SauronPanel({ state, cat, dispatch }: Props) {
   const selected = figures.find((f) => `${f.kind}:${f.id}:${f.loc}` === figure);
 
   const apply = (action: Action) => { setMode(null); setFigure(''); dispatch(action); };
+  // The turn can't end with mandatory actions unspent or a sub-action (e.g. an
+  // in-progress influence placement or Command) left hanging — mirrors the
+  // rulebook's "spend every action" requirement instead of silently letting
+  // the turn end early.
+  const canEndTurn = phase === 'SauronMinions' && (s.sauronActionsLeft ?? 0) <= 0 && !s.sauronPending;
 
   return (
-    <div className="sauron-overlay">
-      <div className="sauron-panel">
-        <h2>Sauron — the Lidless Eye</h2>
+    <div className="sauron-panel">
+      <h2>Sauron — the Lidless Eye</h2>
         <div className="sauron-status">
           <span>War chest: <strong>{s.sauron.influence}</strong></span>
           <span>Shadow hand: <strong>{s.sauron.shadowHand.length}</strong></span>
@@ -221,12 +225,13 @@ export default function SauronPanel({ state, cat, dispatch }: Props) {
               </>
             )}
 
-            <button className="primary end-turn" onClick={() => dispatch({ t: 'sauronEndActionStep' })}>
+            <button className="primary end-turn" disabled={!canEndTurn}
+              title={canEndTurn ? undefined : 'Spend all remaining actions (and finish any action in progress) before ending the turn.'}
+              onClick={() => canEndTurn && dispatch({ t: 'sauronEndActionStep' })}>
               End Sauron turn ▶
             </button>
           </div>
         )}
-      </div>
     </div>
   );
 }

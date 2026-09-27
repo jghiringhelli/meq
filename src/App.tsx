@@ -684,12 +684,24 @@ export default function App() {
               </Collapsible>
             )}
           </div>
-          <HeroPanel
-            state={state} cat={cat} active={inHeroActions}
-            engageable={engageable} canExplore={exploreHere} ambush={ambush}
-            onRest={doRest} onRestTrain={doRestTrain} onEngage={doEngage} onEndTurn={doEndTurn} onExplore={doExplore}
-            econ={econ}
-          />
+          {/* Hero hand/deck/damage are private info — never rendered for a
+           *  viewer who doesn't control (or co-control) the hero side, so a
+           *  human playing Sauron can't see hero hand contents. */}
+          {seesHeroMission && (
+            <HeroPanel
+              state={state} cat={cat} active={inHeroActions}
+              engageable={engageable} canExplore={exploreHere} ambush={ambush}
+              onRest={doRest} onRestTrain={doRestTrain} onEngage={doEngage} onEndTurn={doEndTurn} onExplore={doExplore}
+              econ={econ}
+            />
+          )}
+          {/* Sauron's action UI lives in the sidebar (not a full-screen modal)
+           *  so the map stays fully visible/illuminated at all times, and only
+           *  renders during Sauron's own turn/phases. */}
+          {iControlSauron && state.activeSide === 'Sauron'
+            && !state.winner && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
+            <SauronPanel state={state} cat={cat} dispatch={dispatch} />
+          )}
           <Collapsible id="log" icon="📜" label="Log" summary={logSummary} open={isPanelOpen('log')} onToggle={togglePanel}>
             <LogPane state={state} revealSide={viewerSide} />
           </Collapsible>
@@ -708,11 +720,6 @@ export default function App() {
 
       {historyView && (
         <CombatSummaryModal summary={historyView} cat={cat} readOnly onContinue={() => setHistoryView(null)} />
-      )}
-
-      {iControlSauron && state.activeSide === 'Sauron'
-        && !state.winner && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
-        <SauronPanel state={state} cat={cat} dispatch={dispatch} />
       )}
 
       {state.pendingChoice && !state.pendingCombat && !state.lastCombatSummary && (
