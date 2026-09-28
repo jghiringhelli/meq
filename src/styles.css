@@ -134,6 +134,7 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .sauron-picker .pick-row { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
 .sauron-picker .pick-name { min-width: 120px; font-size: 0.82rem; color: #e0c088; }
 .sauron-picker button { font-size: 0.76rem; padding: 0.25rem 0.5rem; }
+.sauron-picker button.active { border-color: #3ab86a; box-shadow: 0 0 0 1px #3ab86a inset; }
 .sauron-picker select { padding: 0.3rem; background: #17110f; color: #e8e0d0; border: 1px solid #4a3a3a; }
 .end-turn { margin-top: 0.5rem; }
 .muted { color: #8a7f6b; font-size: 0.8rem; font-style: italic; }

@@ -18,7 +18,7 @@ export {
   sauronPlaceInfluence, sauronSpawnMonster, sauronDeployMinion,
   sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence,
   playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
-  moveTargets, adjacentLocations,
+  moveTargets, adjacentLocations, sauronCommandTargets,
 } from './sauronPlay';
 export { legalMoves, moveOptions, validateMovePayment } from './mechanics';
 export { resolveShadowReaction, resolveTreeDecision, autoResolvePendingTree } from './combat';

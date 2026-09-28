@@ -123,6 +123,20 @@ export function reserveMinions(s: GameState, cat: Catalog): MinionId[] {
   return Object.values(cat.minions).filter((m) => !onBoard.has(m.id) && !(m.finale && s.story.finale)).map((m) => m.id);
 }
 
+/** Locations worth spawning a monster or deploying a minion at during the
+ *  Command sub-action: where heroes stand, one step around them, Sauron's own
+ *  seat, and any active plot's location — a curated shortlist (not the full
+ *  map) since the rulebook leaves the choice to Sauron but any spot far from
+ *  the action is never actually useful. Shared by SauronPanel's sidebar list
+ *  and Board's on-map click targets so both always agree. */
+export function sauronCommandTargets(s: GameState, cat: Catalog): LocationId[] {
+  const heroLocs = s.heroes.filter((h) => h.status === 'active').map((h) => h.location);
+  const near = new Set<LocationId>([s.sauron.location, ...heroLocs]);
+  for (const l of heroLocs) for (const n of adjacentLocations(cat, l)) near.add(n);
+  for (const p of s.sauron.activePlots ?? []) if (p.location) near.add(p.location as LocationId);
+  return [...near];
+}
+
 /** Every Sauron figure on the board (monsters + minions) with its location. */
 export function boardFigures(s: GameState): { kind: 'monster' | 'minion'; id: string; loc: LocationId }[] {
   const out: { kind: 'monster' | 'minion'; id: string; loc: LocationId }[] = [];

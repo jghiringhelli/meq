@@ -26,6 +26,11 @@ interface Props {
    *  so all three never look alike (blue ring + arrow badge here). */
   moveFigureTargets?: string[];
   onMoveFigureTarget?: (loc: string) => void;
+  /** Legal destinations for Sauron's currently-selected monster/minion in the
+   *  Spawn/Deploy Command sub-actions — a fourth on-map click-mode (green ring
+   *  + a dot badge), distinct from the other three. */
+  commandTargets?: string[];
+  onCommandTarget?: (loc: string) => void;
   /** Does THIS browser's viewer control Sauron? Solo/hotseat has only one
    *  screen so this always matches `state.humanSide === 'Sauron'`, but online
    *  it must come from the roster (per-viewer) — otherwise revealing facedown
@@ -84,7 +89,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence, moveFigureTargets, onMoveFigureTarget }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence, moveFigureTargets, onMoveFigureTarget, commandTargets, onCommandTarget }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -95,6 +100,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
   const targetSet = new Set(moveTargets);
   const placeSet = new Set(placeInfluenceTargets ?? []);
   const moveFigSet = new Set(moveFigureTargets ?? []);
+  const commandSet = new Set(commandTargets ?? []);
 
   // Distance to the nearest other node — drives per-node token scale so a
   // location's figures never spill into its neighbours' circles.
@@ -344,6 +350,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const isTarget = targetSet.has(l.id);
           const isPlaceTarget = placeSet.has(l.id);
           const isMoveFigureTarget = moveFigSet.has(l.id);
+          const isCommandTarget = commandSet.has(l.id);
           const isHover = hover === l.id;
           const regionCol = REGION_COLOR[l.regionColor] ?? '#c9a24a';
           const questHeroes = state.map.questAt?.[l.id] ?? [];
@@ -378,12 +385,13 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
 
           return (
             <g key={l.id} transform={`translate(${l.coords.x},${l.coords.y})`}
-              className={isTarget || isPlaceTarget || isMoveFigureTarget ? 'node target' : 'node'}
+              className={isTarget || isPlaceTarget || isMoveFigureTarget || isCommandTarget ? 'node target' : 'node'}
               onMouseEnter={() => setHover(l.id)} onMouseLeave={() => setHover(null)}
               onClick={() => {
                 if (drag.current?.moved) return;
                 if (isPlaceTarget) onPlaceInfluence?.(l.id);
                 else if (isMoveFigureTarget) onMoveFigureTarget?.(l.id);
+                else if (isCommandTarget) onCommandTarget?.(l.id);
                 else if (isTarget) onMove?.(l.id);
                 else inspect(locInfo(l));
               }}
@@ -393,13 +401,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                   its REGION colour ENTIRELY OUTSIDE the printed circle, so the
                   highlight never covers the location's name banner or art. A
                   soft wide glow sits behind a crisp ring; targets gently pulse.
-                  Influence-placement targets use the Eye's red, and Sauron's
-                  Move-figure destinations use a distinct blue, so all three
-                  click-modes never look the same. */}
-              {(isTarget || isPlaceTarget || isMoveFigureTarget || isHover) && (() => {
+                  Each on-map click-mode gets its own colour (region/blue/red/
+                  green) so none are ever visually ambiguous with another. */}
+              {(isTarget || isPlaceTarget || isMoveFigureTarget || isCommandTarget || isHover) && (() => {
                 const rG = rr + 24; // just outside the printed circle's outer ring
-                const active = isTarget || isPlaceTarget || isMoveFigureTarget;
-                const col = isPlaceTarget ? '#e0574a' : isMoveFigureTarget ? '#4a7ee0' : regionCol;
+                const active = isTarget || isPlaceTarget || isMoveFigureTarget || isCommandTarget;
+                const col = isPlaceTarget ? '#e0574a' : isMoveFigureTarget ? '#4a7ee0' : isCommandTarget ? '#3ab86a' : regionCol;
                 return (
                   <g pointerEvents="none">
                     <circle r={rG} fill="none" stroke={col}
@@ -422,6 +429,15 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                 <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
                   <circle r={17} fill="#e0574a" stroke="#1a0303" strokeWidth={3} />
                   <text y={6} textAnchor="middle" fontSize={22} fontWeight={700} fill="#fff">+</text>
+                </g>
+              )}
+
+              {/* "◉" pip: Sauron's selected monster/minion may be spawned or
+                  deployed here right now (Command action's Spawn/Deploy). */}
+              {isCommandTarget && (
+                <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
+                  <circle r={17} fill="#3ab86a" stroke="#0a2313" strokeWidth={3} />
+                  <text y={6} textAnchor="middle" fontSize={18} fontWeight={700} fill="#fff">◉</text>
                 </g>
               )}
 
@@ -545,22 +561,24 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
               })()}
 
               {/* Click hit overlay: when this node is a legal target for travel,
-                  influence placement, or Sauron's Move-figure destination, a
-                  transparent disc on TOP of any tokens captures the click —
-                  otherwise a monster/influence chip's inspect handler (which
-                  stops propagation) would swallow it and the click could never
-                  reach the node's own handler. Drawn last so it wins the hit
-                  test, for all three on-map click-modes alike. */}
-              {((isTarget && onMove) || (isPlaceTarget && onPlaceInfluence) || (isMoveFigureTarget && onMoveFigureTarget)) && (
+                  influence placement, Sauron's Move-figure destination, or a
+                  Spawn/Deploy target, a transparent disc on TOP of any tokens
+                  captures the click — otherwise a monster/influence chip's
+                  inspect handler (which stops propagation) would swallow it
+                  and the click could never reach the node's own handler.
+                  Drawn last so it wins the hit test, for all four on-map
+                  click-modes alike. */}
+              {((isTarget && onMove) || (isPlaceTarget && onPlaceInfluence) || (isMoveFigureTarget && onMoveFigureTarget) || (isCommandTarget && onCommandTarget)) && (
                 <circle r={rr} fill="transparent" style={{ cursor: 'pointer' }}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (drag.current?.moved) return;
                     if (isPlaceTarget) onPlaceInfluence?.(l.id);
                     else if (isMoveFigureTarget) onMoveFigureTarget?.(l.id);
+                    else if (isCommandTarget) onCommandTarget?.(l.id);
                     else onMove?.(l.id);
                   }}>
-                  <title>{isPlaceTarget ? `Place influence at ${l.name}` : isMoveFigureTarget ? `Move here: ${l.name}` : `Travel to ${l.name}`}</title>
+                  <title>{isPlaceTarget ? `Place influence at ${l.name}` : isMoveFigureTarget ? `Move here: ${l.name}` : isCommandTarget ? `Target: ${l.name}` : `Travel to ${l.name}`}</title>
                 </circle>
               )}
             </g>
