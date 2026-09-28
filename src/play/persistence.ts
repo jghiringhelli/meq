@@ -1,18 +1,20 @@
 // M12 — localStorage persistence: save/resume the in-progress game, keep a
 // completed-game history, and export a full "report a problem" bundle.
+// The generic localStorage plumbing (safe get/set/remove, save-slot,
+// capped-history, per-author-notes, last-crash stash) lives in
+// boardgame-kit/storage (shared with other games); this module wires it up
+// to meq's own GameState/HistoryEntry shapes and adds the meq-specific
+// "report a problem" bundle export.
 import type { GameState } from '../engine/types';
+import {
+  storage, createSaveSlot, createHistoryStore, createNotesStore, createCrashStore,
+  type CrashInfo,
+} from 'boardgame-kit/storage';
 
-const SAVE_KEY = 'meq.save.v1';
-const HISTORY_KEY = 'meq.history.v1';
-const NOTES_KEY_PREFIX = 'meq.notes.v1.';
 const SCHEMA = 1;
+const NAMESPACE = 'meq';
 
-interface SaveEnvelope {
-  schema: number;
-  seed: number;
-  savedAt: string;
-  state: GameState;
-}
+export type { CrashInfo };
 
 export interface HistoryEntry {
   seed: number;
@@ -23,68 +25,49 @@ export interface HistoryEntry {
   finishedAt: string;
 }
 
-function safeGet(key: string): string | null {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
-function safeSet(key: string, value: string): void {
-  try { localStorage.setItem(key, value); } catch { /* quota / disabled */ }
-}
-function safeRemove(key: string): void {
-  try { localStorage.removeItem(key); } catch { /* ignore */ }
-}
+const saveSlot = createSaveSlot<GameState>(NAMESPACE, SCHEMA);
+const history = createHistoryStore<HistoryEntry>(NAMESPACE);
+const notes = createNotesStore(NAMESPACE);
+const crashes = createCrashStore(NAMESPACE);
 
 /** Persist the current in-progress game so it survives a reload. */
-export function saveGame(seed: number, state: GameState): void {
-  const env: SaveEnvelope = { schema: SCHEMA, seed, savedAt: new Date().toISOString(), state };
-  try { safeSet(SAVE_KEY, JSON.stringify(env)); } catch { /* non-serializable — skip */ }
+export function saveGame(_seed: number, state: GameState): void {
+  saveSlot.save(state);
 }
 
 /** Load a resumable in-progress game (null if none / unfinished-only). */
 export function loadSavedGame(): { seed: number; state: GameState } | null {
-  const raw = safeGet(SAVE_KEY);
-  if (!raw) return null;
-  try {
-    const env = JSON.parse(raw) as SaveEnvelope;
-    if (env.schema !== SCHEMA || !env.state) return null;
-    return { seed: env.seed, state: env.state };
-  } catch { return null; }
+  const loaded = saveSlot.load();
+  return loaded ? { seed: loaded.state.seed, state: loaded.state } : null;
 }
 
 export function hasSavedGame(): boolean {
-  return loadSavedGame() !== null;
+  return saveSlot.has();
 }
 
 export function clearSavedGame(): void {
-  safeRemove(SAVE_KEY);
+  saveSlot.clear();
 }
 
 /** Append a finished game to the persistent history and drop the live save. */
 export function recordCompletedGame(seed: number, state: GameState): void {
-  const entry: HistoryEntry = {
+  history.record({
     seed,
     winner: state.winner ?? null,
     winReason: state.winReason,
     round: state.round,
     turn: state.story?.turn ?? 0,
     finishedAt: new Date().toISOString(),
-  };
-  const list = loadHistory();
-  list.unshift(entry);
-  safeSet(HISTORY_KEY, JSON.stringify(list.slice(0, 100)));
+  });
   clearSavedGame();
 }
 
 export function loadHistory(): HistoryEntry[] {
-  const raw = safeGet(HISTORY_KEY);
-  if (!raw) return [];
-  try {
-    const list = JSON.parse(raw);
-    return Array.isArray(list) ? (list as HistoryEntry[]) : [];
-  } catch { return []; }
+  return history.load();
 }
 
 export function clearHistory(): void {
-  safeRemove(HISTORY_KEY);
+  history.clear();
 }
 
 /**
@@ -96,23 +79,12 @@ export function clearHistory(): void {
  * single shared slot ('me') which is all that's needed on separate devices,
  * since each remote player's notes already live in their own browser.
  */
-function notesKey(seed: number, author = 'me'): string {
-  return `${NOTES_KEY_PREFIX}${seed}.${author}`;
-}
-
 export function loadNotes(seed: number, author = 'me'): string {
-  return safeGet(notesKey(seed, author)) ?? '';
+  return notes.load(seed, author);
 }
 
 export function saveNotes(seed: number, text: string, author = 'me'): void {
-  if (text.trim() === '') { safeRemove(notesKey(seed, author)); return; }
-  safeSet(notesKey(seed, author), text);
-}
-
-export interface CrashInfo {
-  message: string;
-  stack?: string;
-  componentStack?: string;
+  notes.save(seed, text, author);
 }
 
 /**
@@ -167,18 +139,19 @@ export function exportProblemReport(
  * (e.g. from the ErrorBoundary fallback screen, which has no live GameState
  * of its own) can still attach it. Kept out of GameState/network entirely.
  */
-const LAST_CRASH_KEY = 'meq.last-crash.v1';
-
 export function recordCrash(crash: CrashInfo): void {
-  try { safeSet(LAST_CRASH_KEY, JSON.stringify({ ...crash, at: new Date().toISOString() })); } catch { /* ignore */ }
+  crashes.record(crash);
 }
 
 export function loadLastCrash(): (CrashInfo & { at: string }) | null {
-  const raw = safeGet(LAST_CRASH_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  return crashes.load();
 }
 
 export function clearLastCrash(): void {
-  safeRemove(LAST_CRASH_KEY);
+  crashes.clear();
 }
+
+// Re-exported so callers that only need the raw safe-localStorage primitives
+// (rather than one of the higher-level stores above) don't need their own
+// try/catch wrappers either.
+export const { safeGet, safeSet, safeRemove } = storage;

@@ -1,28 +1,20 @@
 // Append-only structured event log (the audit trail — SPEC §5).
 // Every game event is captured as an ordered, structured record so a whole
 // session can be dumped to JSON and analysed later (see dumpLogJson).
-import type { GameState, LogEvent } from './types';
+// The generic append/seq/context-merge mechanics live in boardgame-kit/log
+// (shared with other games); this module just supplies meq's own per-event
+// context (turn/round/phase/side) and the meq-specific JSON export shape.
+import type { GameState } from './types';
+import { createLogger } from 'boardgame-kit/log';
 
-export function log(
-  state: GameState,
-  type: string,
-  actor: string,
-  detail: string,
-  data?: Record<string, unknown>,
-): void {
-  const e: LogEvent = {
-    seq: state.log.length,
+export const log = createLogger<GameState, { turn: number; round: number; phase: GameState['phase']; side: GameState['activeSide'] }>(
+  (state) => ({
     turn: state.story?.turn ?? 0,
     round: state.round,
     phase: state.phase,
     side: state.activeSide,
-    type,
-    actor,
-    detail,
-    ...(data ? { data } : {}),
-  };
-  state.log.push(e);
-}
+  }),
+);
 
 /** Serialise the full ordered event log to a JSON string for offline analysis.
  *  `revealSide` controls which side's secret mission is included — omit it (or
