@@ -5,7 +5,7 @@ import {
   newGame, legalMoves, engageableMonsters, canExplore,
   favorHere, charactersHere, plotHere, canCleanse, canDarkPath, canCompleteQuest, otherHeroesHere,
   canDiscardPlot, plotCounterCost,
-  canSurvey,
+  canSurvey, moveTargets as moveTargetsFor,
 } from './engine/game';
 import { applyAction, type Action } from './engine/actions';
 import Board from './play/Board';
@@ -421,6 +421,19 @@ export default function App() {
   const placeInfluenceTargets = placingSetup || placingAction ? placementTargets(state, cat) : undefined;
   const doPlaceInfluence = (loc: string) =>
     dispatch({ t: placingSetup ? 'setupPlaceInfluence' : 'sauronPlaceInfluence', loc } as Action);
+  // Sauron's Move-figure Command sub-action: the figure being moved is picked
+  // in SauronPanel (its selection is lifted up into this state so Board can
+  // highlight destinations), but the DESTINATION is clicked directly on the
+  // map — same on-map pattern as influence placement, just its own colour/badge
+  // so the two click-modes are never visually ambiguous.
+  const [sauronMoveFigureSel, setSauronMoveFigureSel] = useState<{ kind: 'monster' | 'minion'; id: string; loc: string } | null>(null);
+  const moveFigureTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
+    && sauronMoveFigureSel ? moveTargetsFor(state, cat, sauronMoveFigureSel.kind, sauronMoveFigureSel.loc) : undefined;
+  const doMoveFigure = (to: string) => {
+    if (!sauronMoveFigureSel) return;
+    dispatch({ t: 'sauronMoveFigure', kind: sauronMoveFigureSel.kind, id: sauronMoveFigureSel.id, from: sauronMoveFigureSel.loc, to } as Action);
+    setSauronMoveFigureSel(null);
+  };
   // Do I control the specific hero a pending tree-decision affects? Per-hero
   // (not the coarse viewerSide) since online multiplayer can split hero roles
   // across different people.
@@ -661,6 +674,8 @@ export default function App() {
           sauronView={iControlSauron}
           placeInfluenceTargets={placeInfluenceTargets}
           onPlaceInfluence={placeInfluenceTargets ? doPlaceInfluence : undefined}
+          moveFigureTargets={moveFigureTargets}
+          onMoveFigureTarget={moveFigureTargets ? doMoveFigure : undefined}
         />
         <aside className={`side${focusMap ? ' side-narrow' : ''}`}>
           <div className="side-rail">
@@ -716,7 +731,8 @@ export default function App() {
            *  renders during Sauron's own turn/phases. */}
           {iControlSauron && state.activeSide === 'Sauron'
             && !state.winner && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
-            <SauronPanel state={state} cat={cat} dispatch={dispatch} />
+            <SauronPanel state={state} cat={cat} dispatch={dispatch}
+              moveFigureSel={sauronMoveFigureSel} onSelectMoveFigure={setSauronMoveFigureSel} />
           )}
           <Collapsible id="log" icon="📜" label="Log" summary={logSummary} open={isPanelOpen('log')} onToggle={togglePanel}>
             <LogPane state={state} revealSide={viewerSide} />

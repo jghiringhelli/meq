@@ -20,6 +20,12 @@ interface Props {
    *  these dispatches onPlaceInfluence instead of the normal inspect/move click. */
   placeInfluenceTargets?: string[];
   onPlaceInfluence?: (loc: string) => void;
+  /** Legal destinations for Sauron's currently-selected figure in the Move
+   *  Command sub-action (SauronPanel's figure picker, lifted up into
+   *  App.tsx's state) — a third on-map click-mode, distinct from move/place
+   *  so all three never look alike (blue ring + arrow badge here). */
+  moveFigureTargets?: string[];
+  onMoveFigureTarget?: (loc: string) => void;
   /** Does THIS browser's viewer control Sauron? Solo/hotseat has only one
    *  screen so this always matches `state.humanSide === 'Sauron'`, but online
    *  it must come from the roster (per-viewer) — otherwise revealing facedown
@@ -78,7 +84,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence, moveFigureTargets, onMoveFigureTarget }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -88,6 +94,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
   const { width: w, height: h, image } = cat.board;
   const targetSet = new Set(moveTargets);
   const placeSet = new Set(placeInfluenceTargets ?? []);
+  const moveFigSet = new Set(moveFigureTargets ?? []);
 
   // Distance to the nearest other node — drives per-node token scale so a
   // location's figures never spill into its neighbours' circles.
@@ -336,6 +343,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           const infColor = ['', '#e0574a', '#b8342a', '#7a1414', '#2e0606'][infLevel];
           const isTarget = targetSet.has(l.id);
           const isPlaceTarget = placeSet.has(l.id);
+          const isMoveFigureTarget = moveFigSet.has(l.id);
           const isHover = hover === l.id;
           const regionCol = REGION_COLOR[l.regionColor] ?? '#c9a24a';
           const questHeroes = state.map.questAt?.[l.id] ?? [];
@@ -370,11 +378,12 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
 
           return (
             <g key={l.id} transform={`translate(${l.coords.x},${l.coords.y})`}
-              className={isTarget || isPlaceTarget ? 'node target' : 'node'}
+              className={isTarget || isPlaceTarget || isMoveFigureTarget ? 'node target' : 'node'}
               onMouseEnter={() => setHover(l.id)} onMouseLeave={() => setHover(null)}
               onClick={() => {
                 if (drag.current?.moved) return;
                 if (isPlaceTarget) onPlaceInfluence?.(l.id);
+                else if (isMoveFigureTarget) onMoveFigureTarget?.(l.id);
                 else if (isTarget) onMove?.(l.id);
                 else inspect(locInfo(l));
               }}
@@ -384,12 +393,13 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                   its REGION colour ENTIRELY OUTSIDE the printed circle, so the
                   highlight never covers the location's name banner or art. A
                   soft wide glow sits behind a crisp ring; targets gently pulse.
-                  Influence-placement targets use the Eye's red instead of the
-                  region colour so the two click-modes never look the same. */}
-              {(isTarget || isPlaceTarget || isHover) && (() => {
+                  Influence-placement targets use the Eye's red, and Sauron's
+                  Move-figure destinations use a distinct blue, so all three
+                  click-modes never look the same. */}
+              {(isTarget || isPlaceTarget || isMoveFigureTarget || isHover) && (() => {
                 const rG = rr + 24; // just outside the printed circle's outer ring
-                const active = isTarget || isPlaceTarget;
-                const col = isPlaceTarget ? '#e0574a' : regionCol;
+                const active = isTarget || isPlaceTarget || isMoveFigureTarget;
+                const col = isPlaceTarget ? '#e0574a' : isMoveFigureTarget ? '#4a7ee0' : regionCol;
                 return (
                   <g pointerEvents="none">
                     <circle r={rG} fill="none" stroke={col}
@@ -412,6 +422,15 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                 <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
                   <circle r={17} fill="#e0574a" stroke="#1a0303" strokeWidth={3} />
                   <text y={6} textAnchor="middle" fontSize={22} fontWeight={700} fill="#fff">+</text>
+                </g>
+              )}
+
+              {/* "→" pip: Sauron's selected figure may move here right now
+                  (Command action's Move sub-flow). */}
+              {isMoveFigureTarget && (
+                <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
+                  <circle r={17} fill="#4a7ee0" stroke="#0a1a33" strokeWidth={3} />
+                  <text y={6} textAnchor="middle" fontSize={20} fontWeight={700} fill="#fff">→</text>
                 </g>
               )}
 
@@ -525,15 +544,23 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
                 );
               })()}
 
-              {/* Travel hit overlay: when this node is a legal move target, a
-                  transparent disc on TOP of any tokens captures the click for the
-                  move — otherwise a monster/influence chip's inspect handler
-                  (which stops propagation) would swallow it and the hero could
-                  never travel here. Drawn last so it wins the hit test. */}
-              {isTarget && onMove && (
+              {/* Click hit overlay: when this node is a legal target for travel,
+                  influence placement, or Sauron's Move-figure destination, a
+                  transparent disc on TOP of any tokens captures the click —
+                  otherwise a monster/influence chip's inspect handler (which
+                  stops propagation) would swallow it and the click could never
+                  reach the node's own handler. Drawn last so it wins the hit
+                  test, for all three on-map click-modes alike. */}
+              {((isTarget && onMove) || (isPlaceTarget && onPlaceInfluence) || (isMoveFigureTarget && onMoveFigureTarget)) && (
                 <circle r={rr} fill="transparent" style={{ cursor: 'pointer' }}
-                  onClick={(e) => { e.stopPropagation(); if (!drag.current?.moved) onMove(l.id); }}>
-                  <title>{`Travel to ${l.name}`}</title>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (drag.current?.moved) return;
+                    if (isPlaceTarget) onPlaceInfluence?.(l.id);
+                    else if (isMoveFigureTarget) onMoveFigureTarget?.(l.id);
+                    else onMove?.(l.id);
+                  }}>
+                  <title>{isPlaceTarget ? `Place influence at ${l.name}` : isMoveFigureTarget ? `Move here: ${l.name}` : `Travel to ${l.name}`}</title>
                 </circle>
               )}
             </g>

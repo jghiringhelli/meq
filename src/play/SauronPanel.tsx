@@ -8,21 +8,33 @@ import {
 } from '../engine/game';
 import { placementTargets } from '../engine/influence';
 
+type Mode = 'spawn' | 'deploy' | 'move' | 'heal' | 'shadow' | null;
+export type { Mode };
+
 interface Props {
   state: GameState; cat: Catalog;
   /** Every Sauron decision is a serializable Action so it can be sent over the
    *  wire when this browser is a networked client controlling Sauron — see
    *  engine/actions.ts's sauron* variants and App.tsx's `dispatch`. */
   dispatch: (action: Action) => void;
+  /** Move-figure destination picking happens on the map (App.tsx wires
+   *  Board's moveFigureTargets/onMoveFigureTarget from this same selection) —
+   *  so the figure selection is lifted up out of local state and controlled
+   *  by the parent instead of being private to this panel. */
+  moveFigureSel?: { kind: 'monster' | 'minion'; id: string; loc: string } | null;
+  onSelectMoveFigure?: (sel: { kind: 'monster' | 'minion'; id: string; loc: string } | null) => void;
 }
-
-type Mode = 'spawn' | 'deploy' | 'move' | 'heal' | 'shadow' | null;
 
 const locName = (cat: Catalog, id: LocationId) => cat.locations[id]?.name ?? id;
 
-export default function SauronPanel({ state, cat, dispatch }: Props) {
+export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSelectMoveFigure }: Props) {
   const [mode, setMode] = useState<Mode>(null);
-  const [figure, setFigure] = useState<string>('');
+  const figure = moveFigureSel ? `${moveFigureSel.kind}:${moveFigureSel.id}:${moveFigureSel.loc}` : '';
+  const setFigure = (v: string) => {
+    if (!v) { onSelectMoveFigure?.(null); return; }
+    const [kind, id, loc] = v.split(':') as ['monster' | 'minion', string, string];
+    onSelectMoveFigure?.({ kind, id, loc });
+  };
   const s = state;
   const phase = s.phase;
   const yields = sauronActionYields(s);
@@ -201,15 +213,12 @@ export default function SauronPanel({ state, cat, dispatch }: Props) {
                       ))}
                     </select>
                     {selected && (
-                      <div className="pick-row">
-                        {moveTargets(s, cat, selected.kind, selected.loc).map((to) => (
-                          <button key={to}
-                            onClick={() => apply({ t: 'sauronMoveFigure', kind: selected.kind, id: selected.id, from: selected.loc, to })}>
-                            → {locName(cat, to)}
-                          </button>
-                        ))}
-                        {moveTargets(s, cat, selected.kind, selected.loc).length === 0 && <span className="muted">No legal move.</span>}
-                      </div>
+                      moveTargets(s, cat, selected.kind, selected.loc).length > 0 ? (
+                        <p className="prompt">
+                          Click a glowing <span style={{ color: '#4a7ee0', fontWeight: 700 }}>→</span> location on the
+                          map to move {selected.kind === 'monster' ? cat.monsters[selected.id]?.name : cat.minions[selected.id]?.name} there.
+                        </p>
+                      ) : <span className="muted">No legal move.</span>
                     )}
                   </div>
                 )}
