@@ -5,6 +5,7 @@
 // owns the deck, the draw/discard/cleanse operations, and the query helpers the
 // rest of the engine consults to enforce each card's ongoing effect.
 import type { Catalog, GameState, HeroId, HeroState, CardId } from './types';
+import { keyedShuffle, drawOne } from 'boardgame-kit/deck';
 
 /** Grant a hero `n` favor, respecting the Mistrusted (per-turn gain cap) and
  *  Despairing (absolute cap) Corruption cards. Returns the amount actually
@@ -29,37 +30,33 @@ export function syncCorruption(hero: HeroState): void {
   hero.corruption = hero.corruptionCards?.length ?? 0;
 }
 
-/** A deterministic, non-gameplay shuffle (never touches the shared rng stream),
- *  matching the pattern used by the Sauron plot/deck helpers. */
-function localShuffle(ids: CardId[], seed: number): CardId[] {
-  const a = [...ids];
-  let r = (seed ^ 0x51ec7) >>> 0;
-  const rand = () => { r = (r * 1103515245 + 12345) >>> 0; return r / 0x100000000; };
-  for (let j = a.length - 1; j > 0; j--) { const t = Math.floor(rand() * (j + 1)); [a[j], a[t]] = [a[t], a[j]]; }
-  return a;
-}
-
-/** Build the shuffled Corruption deck (all card ids) for setup. */
+/** Build the shuffled Corruption deck (all card ids) for setup. Uses a
+ *  deterministic, non-gameplay shuffle stream (never touches the shared rng
+ *  cursor), matching the pattern used by the Sauron plot/deck helpers. */
 export function buildCorruptionDeck(cat: Catalog, seed: number): CardId[] {
-  return localShuffle(Object.keys(cat.corruption), seed);
+  return keyedShuffle(Object.keys(cat.corruption), (seed ^ 0x51ec7) >>> 0);
 }
 
 function hero(s: GameState, heroId: HeroId): HeroState {
   return s.heroes.find((h) => h.id === heroId)!;
 }
 
+/** Fold the discard pile back into the deck (a deterministic, non-gameplay
+ *  shuffle keyed off the seed+turn — never touches the shared rng cursor). */
 function reshuffleDiscardIntoDeck(s: GameState): void {
   const deck = (s.corruptionDeck ??= []);
   const disc = (s.corruptionDiscard ??= []);
   if (!disc.length) return;
-  deck.push(...localShuffle(disc.splice(0), s.seed ^ (0x1301 + (s.story?.turn ?? 0))));
+  const key = (s.seed ^ (0x1301 + (s.story?.turn ?? 0)) ^ 0x51ec7) >>> 0;
+  deck.push(...keyedShuffle(disc.splice(0), key));
 }
 
 /** Draw the top Corruption card (reshuffling the discard when the deck runs dry). */
 function drawTop(s: GameState): CardId | null {
   const deck = (s.corruptionDeck ??= []);
-  if (!deck.length) reshuffleDiscardIntoDeck(s);
-  return deck.length ? deck.shift()! : null;
+  const disc = (s.corruptionDiscard ??= []);
+  const key = (s.seed ^ (0x1301 + (s.story?.turn ?? 0)) ^ 0x51ec7) >>> 0;
+  return drawOne(deck, disc, (arr) => keyedShuffle(arr, key));
 }
 
 /** Apply an "immediate" Corruption card's one-off effect, then (per the card

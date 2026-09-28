@@ -2,6 +2,7 @@
 import type { Catalog, GameState, HeroState, HeroId, MapState } from './types';
 import { placeCharacterUnique } from './characters';
 import { shuffle, nextInt } from './rng';
+import { keyedShuffle } from 'boardgame-kit/deck';
 import { drawInto, gameStage } from './mechanics';
 import { log } from './log';
 import { locByName, registerQuestCombat, questTargetLocation } from './quests';
@@ -210,13 +211,8 @@ function seedSauronHands(state: GameState, cat: Catalog): void {
   // are never drawn/played as regular plots.
   const nonStarting = cat.plots.filter((p) => !p.starting && !p.eventDeckPlot).map((p) => p.id);
   // Local deterministic shuffle keyed off the seed only (no state.rngCursor).
-  let r = (state.seed ^ 0x5c0b1a7) >>> 0;
-  const rand = () => { r = (r * 1103515245 + 12345) >>> 0; return r / 0x100000000; };
-  const deck = [...nonStarting];
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
+  const key = (state.seed ^ 0x5c0b1a7) >>> 0;
+  const deck = keyedShuffle(nonStarting, key);
   // Draw 5, keep the best 2, return the other 3 to the bottom of the deck.
   const drawn = deck.splice(0, 5);
   const keep = keepBestPlots(cat, drawn, 2);

@@ -7,6 +7,7 @@ import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman, statValu
 import { influenceAt, plotMakesPerilous } from './influence';
 import { plotPlacement } from './plotReqs';
 import { shuffle, nextInt } from './rng';
+import { keyedShuffle } from 'boardgame-kit/deck';
 import { corruptionPerilBonus, corruptionSauronShadowRedraw } from './corruption';
 import { locByName } from './quests';
 import { log } from './log';
@@ -257,11 +258,8 @@ export function drawPlots(s: GameState, cat: Catalog, n: number, log?: Logger): 
   const drawn: string[] = [];
   for (let i = 0; i < n; i++) {
     if (!deck.length && disc.length) {
-      let r = (s.seed ^ (0x91007 + s.story.turn)) >>> 0;
-      const rand = () => { r = (r * 1103515245 + 12345) >>> 0; return r / 0x100000000; };
-      const d = disc.splice(0);
-      for (let j = d.length - 1; j > 0; j--) { const t = Math.floor(rand() * (j + 1)); [d[j], d[t]] = [d[t], d[j]]; }
-      deck.push(...d);
+      const key = (s.seed ^ (0x91007 + s.story.turn)) >>> 0;
+      deck.push(...keyedShuffle(disc.splice(0), key));
     }
     if (!deck.length) break;
     drawn.push(deck.shift()!);

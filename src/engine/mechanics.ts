@@ -5,6 +5,7 @@ import type {
 } from './types';
 import { STORY_FINALE, STAGE_SIZE } from './types';
 import { shuffle } from './rng';
+import { drawInto as kitDrawInto } from 'boardgame-kit/deck';
 import { log } from './log';
 import { recoverHero } from './heroLife';
 import { corruptionRestDefeatSteps, corruptionTravelCap } from './corruption';
@@ -146,15 +147,7 @@ export function clamp(n: number, lo: number, hi: number): number {
 export function drawInto(
   state: GameState, deck: CardId[], hand: CardId[], discard: CardId[], n: number,
 ): void {
-  for (let i = 0; i < n; i++) {
-    if (deck.length === 0) {
-      if (discard.length === 0) return;
-      const reshuffled = shuffle(state, discard);
-      deck.push(...reshuffled);
-      discard.length = 0;
-    }
-    hand.push(deck.shift()!);
-  }
+  kitDrawInto(deck, hand, discard, n, (arr) => shuffle(state, arr));
 }
 
 export function neighbors(cat: Catalog, loc: LocationId): PathEdge[] {
