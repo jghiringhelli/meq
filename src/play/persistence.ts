@@ -10,6 +10,7 @@ import {
   storage, createSaveSlot, createHistoryStore, createNotesStore, createCrashStore,
   type CrashInfo,
 } from 'boardgame-kit/storage';
+import { downloadText } from 'boardgame-kit/download';
 
 const SCHEMA = 1;
 const NAMESPACE = 'meq';
@@ -114,23 +115,7 @@ export function exportProblemReport(
   };
   const json = JSON.stringify(bundle, null, 2);
   const filename = `meq-report-seed${seed}-round${state?.round ?? 0}.json`;
-  try {
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  } catch {
-    // Fallback: open the JSON in a new tab if downloads are blocked.
-    try {
-      const w = window.open('', '_blank');
-      if (w) { w.document.write(`<pre>${json.replace(/</g, '&lt;')}</pre>`); }
-    } catch { /* ignore */ }
-  }
+  downloadText(filename, json, 'application/json');
   return filename;
 }
 

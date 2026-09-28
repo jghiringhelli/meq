@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { GameState } from '../engine/types';
 import { dumpLogJson } from '../engine/log';
+import { downloadText } from 'boardgame-kit/download';
 
 // Group the many log event types into a few human-friendly filters.
 const GROUPS: Record<string, (t: string) => boolean> = {
@@ -11,13 +12,8 @@ const GROUPS: Record<string, (t: string) => boolean> = {
 };
 
 function downloadLog(state: GameState, revealSide: 'Hero' | 'Sauron' | 'both' | 'none') {
-  const blob = new Blob([dumpLogJson(state, true, revealSide)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `meq-log-seed${state.seed}-turn${state.story?.turn ?? 0}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const filename = `meq-log-seed${state.seed}-turn${state.story?.turn ?? 0}.json`;
+  downloadText(filename, dumpLogJson(state, true, revealSide), 'application/json');
 }
 
 /** `revealSide`: which side's secret mission this viewer is entitled to see in
