@@ -77,6 +77,18 @@ export default function App() {
   const togglePanel = (key: string) => setPanelOpen((m) => ({ ...m, [key]: !isPanelOpen(key) }));
   const toggleFocusMap = () => { setFocusMap((v) => !v); setPanelOpen({}); };
   const heroRng = useRef(mulberry32(0));
+  // Sauron's Move-figure / Spawn-monster / Deploy-minion Command sub-actions:
+  // the figure/monster/minion being acted on is picked in SauronPanel (lifted
+  // up into this state so Board can highlight destinations), but the
+  // DESTINATION is clicked directly on the map. Hoisted above every early
+  // `return` below (landing/setup/join screens) — these hooks must run on
+  // EVERY render regardless of whether `state` exists yet, or React throws
+  // "Rendered more hooks than during the previous render" the instant a game
+  // actually starts and the component's render path reaches further down.
+  const [sauronMoveFigureSel, setSauronMoveFigureSel] = useState<{ kind: 'monster' | 'minion'; id: string; loc: string } | null>(null);
+  const [sauronCommandSel, setSauronCommandSel] = useState<
+    { kind: 'spawn'; monsterId: string } | { kind: 'deploy'; minionId: string } | null
+  >(null);
 
   // ---- Multiplayer session (host-authoritative). Off by default (solo play). ----
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -421,12 +433,10 @@ export default function App() {
   const placeInfluenceTargets = placingSetup || placingAction ? placementTargets(state, cat) : undefined;
   const doPlaceInfluence = (loc: string) =>
     dispatch({ t: placingSetup ? 'setupPlaceInfluence' : 'sauronPlaceInfluence', loc } as Action);
-  // Sauron's Move-figure Command sub-action: the figure being moved is picked
-  // in SauronPanel (its selection is lifted up into this state so Board can
-  // highlight destinations), but the DESTINATION is clicked directly on the
-  // map — same on-map pattern as influence placement, just its own colour/badge
-  // so the two click-modes are never visually ambiguous.
-  const [sauronMoveFigureSel, setSauronMoveFigureSel] = useState<{ kind: 'monster' | 'minion'; id: string; loc: string } | null>(null);
+  // Sauron's Move-figure Command sub-action — same on-map pattern as influence
+  // placement, just its own colour/badge so the two click-modes are never
+  // visually ambiguous. (sauronMoveFigureSel's useState is hoisted above the
+  // early returns near the top of this component — see comment there.)
   const moveFigureTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
     && sauronMoveFigureSel ? moveTargetsFor(state, cat, sauronMoveFigureSel.kind, sauronMoveFigureSel.loc) : undefined;
   const doMoveFigure = (to: string) => {
@@ -437,9 +447,8 @@ export default function App() {
   // Spawn-monster / deploy-minion Command sub-actions: same lifted-selection
   // pattern as Move-figure above — SauronPanel's sidebar picks WHICH
   // monster/minion, then the destination is clicked on the map.
-  const [sauronCommandSel, setSauronCommandSel] = useState<
-    { kind: 'spawn'; monsterId: string } | { kind: 'deploy'; minionId: string } | null
-  >(null);
+  // (sauronCommandSel's useState is hoisted above the early returns near the
+  // top of this component — see comment there.)
   const commandTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
     && sauronCommandSel ? sauronCommandTargets(state, cat) : undefined;
   const doCommandTarget = (loc: string) => {
