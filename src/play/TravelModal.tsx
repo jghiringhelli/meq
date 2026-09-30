@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Catalog, HeroState } from '../engine/types';
 import { moveOptions, validateMovePayment } from '../engine/game';
 import { combatCardArt } from '../data/art';
@@ -30,7 +30,14 @@ export default function TravelModal({ cat, hero, to, onConfirm, onCancel }: Prop
     return hero.hand.slice(0, opt.anyCardCost).map((cid, i) => `${cid}#${i}`);
   });
 
-  if (!opt) { onCancel(); return null; }
+  // Bail out (closing the modal) via an effect rather than during render:
+  // calling onCancel() synchronously here would update the parent (App)
+  // while this component is still rendering, which React disallows.
+  useEffect(() => {
+    if (!opt) onCancel();
+  }, [opt, onCancel]);
+
+  if (!opt) return null;
 
   const toggle = (cid: string, idx: number) => {
     const key = `${cid}#${idx}`;
