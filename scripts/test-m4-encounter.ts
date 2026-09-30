@@ -45,22 +45,16 @@ function resolve(id: string, decisions: number[], setup?: (s: GameState, h: Hero
   assert(hero.items.includes('Horse'), 'Court of Theoden: wisdom>monsters → gained Horse item');
 }
 
-// --- 2. damage-shield choice: take the hit vs. block it -------------------
-{
-  const id = 'enc-haven-deadmen-s-dike'; // "dealt 4 damage... reduce by shields... if 0, gain 2 favor + training"
-  // option 1 = take 4 damage
-  {
-    const start = newGame(cat, 1).heroes[0].life;
-    const { hero } = resolve(id, [1]);
-    assert(hero.life === start - 4, 'Deadmen\u2019s Dike: "take damage" → -4 life');
-  }
-  // option 0 = discard 4 cards to negate, then reward (2 favor + training)
-  {
-    const { hero } = resolve(id, [0]);
-    assert(hero.favor === 2 && hero.training === 1, 'Deadmen\u2019s Dike: "block" → +2 favor, +1 training');
-    assert(hero.life === newGame(cat, 1).heroes[0].life, 'Deadmen\u2019s Dike: blocked → no life lost');
-  }
-}
+// --- 2. damage-shield resolution: Deadmen's Dike ---------------------------
+// "Your hero is dealt 4 damage. You may discard cards (shield icons) to
+// reduce it; if reduced to 0, gain 2 favor + training." This card compiles to
+// a `shieldBlock` tree node, which — unlike the plain choice/conditional
+// trees exercised elsewhere in this file — is resolved procedurally against
+// the hero's actual hand during commitEncounter (greedy shield-discard
+// simulation), not via planEncounter's `decisions` index list (there is no
+// decision node to index into). The real, current coverage for this exact
+// mechanic (full take/partial/full-block outcomes) lives in
+// test/shield-block.spec.ts (vitest) — see that file rather than here.
 
 // --- 3. optional with corruption cost: The Palantirs ----------------------
 // "You may receive 1 Corruption to remove 1 influence from the Shadow Pool
@@ -81,10 +75,13 @@ function resolve(id: string, decisions: number[], setup?: (s: GameState, h: Hero
 }
 
 // --- 4. pure conditional: Intrigue Within Meduseld ------------------------
-// "If wisdom >= influence in your region, gain 2 favor." region influence 0.
+// "If wisdom >= influence in your region, gain 2 favor." Needs region
+// influence at 0 to test the true branch — a fresh game is NOT influence-free
+// (Sauron's strongholds seed real starting board influence, rulebook setup),
+// so this must explicitly clear it rather than assume a pristine board.
 {
   const id = 'enc-haven-intrigue-within-meduseld';
-  const { hero } = resolve(id, []);
+  const { hero } = resolve(id, [], (st) => { st.sauron.locationInfluence = {}; });
   assert(hero.favor === 2, 'Intrigue: wisdom>=0 region influence → +2 favor');
 }
 

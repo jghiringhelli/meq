@@ -31,6 +31,12 @@ function walk(node, card) {
       node.options.forEach((o) => { if (o.cost) atomsUsed.add(o.cost.op); walk(o.eff, card); });
       break;
     case 'none': break;
+    case 'shieldBlock':
+      // A fixed damage/shield-discard resolution baked into the interpreter
+      // itself (see encounter.ts's applyTreeNode 'shieldBlock' case) — the
+      // only generic atom it can still emit is its own reward subtree.
+      if (node.reward) walk(node.reward, card);
+      break;
     default: problems.push(`${card}: unknown node kind '${node.k}'`);
   }
 }

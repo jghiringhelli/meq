@@ -11,9 +11,9 @@
 // Run: npx tsx scripts/test-m7-training-influence.ts
 import { loadCatalog } from '../src/data/loadAssets';
 import { newGame } from '../src/engine/game';
-import { grantTraining, isTrainedCard } from '../src/engine/mechanics';
+import { grantTraining, isTrainedCard, resolveTrainingChoice } from '../src/engine/mechanics';
 import {
-  heroModel, updateHeroIntel, eyeSpendInfluence, ratePlot, rankPlots,
+  heroModel, updateHeroIntel, ratePlot, rankPlots,
 } from '../src/engine/ai';
 import type { GameState } from '../src/engine/types';
 
@@ -29,16 +29,30 @@ function weightOf(m: ReturnType<typeof heroModel>, id: string): number {
 
 const cat = loadCatalog();
 
-// --- training draws real Skill cards into the shared deck -------------------
+// --- training draws real Skill cards into the hero's hand -------------------
+// NOTE: training is now interactive — grantTraining raises a `pendingChoice`
+// per level (draw two, keep one) rather than synchronously injecting cards,
+// and the kept card goes to the hero's HAND (not straight into the deck; it
+// becomes a deck member only once it later cycles hand → rest pool → life
+// pool, same as any other Hero card). See test/training.spec.ts for the
+// authoritative interactive-choice coverage; this just re-derives the
+// M7-specific "both kept cards are real Skill cards" + deck-drain assertions
+// against the current API.
 {
   const s: GameState = newGame(cat, 5);
   const hero = s.heroes[0];
-  const deck0 = hero.deck.length;
+  const hand0 = hero.hand.length;
   const skillDeck0 = s.skillDeck?.length ?? 0;
   grantTraining(s, cat, hero, 2);
-  assert(hero.deck.length === deck0 + 2, 'training adds 2 kept Skill cards into the hero deck');
+  let guard = 0;
+  while (s.pendingChoice?.kind === 'training' && guard++ < 10) {
+    const optionId = s.pendingChoice.options[0].id;
+    s.pendingChoice = null; // mirrors game.ts's resolveChoice, which clears before dispatching
+    resolveTrainingChoice(s, cat, optionId);
+  }
+  assert(hero.hand.length === hand0 + 2, 'training adds 2 kept Skill cards into the hero hand');
   assert(hero.trainedCount === 2 && hero.training === 2, 'training bumps the public counters');
-  const injected = hero.deck.filter((id) => isTrainedCard(cat, id)).length;
+  const injected = hero.hand.filter((id) => isTrainedCard(cat, id)).length;
   assert(injected === 2, 'both kept cards are real Skill-deck cards');
   // draw 2, keep 1 → 4 cards leave the Skill deck; 2 discarded faceup
   assert((s.skillDeck?.length ?? 0) === skillDeck0 - 4, 'training draws two Skill cards per level');
@@ -85,27 +99,17 @@ const cat = loadCatalog();
 }
 
 // --- influence doctrine: hoard early, spend late ---------------------------
-{
-  const sumInfl = (s: GameState) => Object.values(s.sauron.locationInfluence).reduce((n, v) => n + (v as number), 0);
-  // EARLY (turn 1 of a long track): the Eye keeps a war chest, does not dump.
-  const early: GameState = newGame(cat, 5);
-  early.sauron.influence = 12;
-  const earlyBefore = sumInfl(early);
-  eyeSpendInfluence(early, cat);
-  const earlyRegionTokens = sumInfl(early) - earlyBefore; // tokens the Eye added this turn
-  assert(early.sauron.influence >= 5, 'early game: the Eye hoards a war chest (does not drain to 0)');
-  assert(earlyRegionTokens <= 2, 'early game: only light path-block tokens are placed');
-
-  // LATE (final third): the Eye spends the chest down into pressure.
-  const late: GameState = newGame(cat, 5);
-  late.sauron.influence = 12;
-  late.story.turn = late.story.length; // fraction 1.0 > 2/3
-  const lateBefore = sumInfl(late);
-  eyeSpendInfluence(late, cat);
-  const lateRegionTokens = sumInfl(late) - lateBefore;
-  assert(late.sauron.influence < early.sauron.influence, 'late game: the Eye spends more of its influence');
-  assert(lateRegionTokens > earlyRegionTokens, 'late game: heavier region pressure than early game');
-}
+// NOTE: `eyeSpendInfluence` (a single combined "drain the Shadow Pool into
+// board pressure" command) was removed and replaced with two separate,
+// rules-faithful commands that never touch `s.sauron.influence` (the Shadow
+// Pool) at all: `eyePlaceInfluenceOnce` (board influence — an unlimited
+// resource) and `eyeSpawnMonsterOnce` (monster placement — gated by board
+// state, not Pool spend; rulebook pp.13/18). There is no more "hoard early,
+// spend late" Shadow-Pool-draining doctrine to test here — the Eye's actual
+// pacing/pressure doctrine (tempo vs balanced vs attrition) is covered by
+// `test/sauron-doctrine.spec.ts` (vitest), which documents exactly how this
+// redesign changed the observable signal (more Shadow cards + perils under
+// attrition, not more Pool spend).
 
 // --- plot valuation: keep advance-2+, bluff advance-1 ----------------------
 {

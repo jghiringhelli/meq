@@ -7,9 +7,9 @@ import { loadCatalog } from '../src/data/loadAssets';
 import {
   newGame, advance, heroMove, heroRest, endHeroActions, heroEngage, heroExplore,
   resolveEncounter, canExplore, legalMoves, engageableMonsters, resolveChoice,
-  chooseEncounter, encounterPlan,
+  chooseEncounter, encounterPlan, autoResolvePendingTree,
 } from '../src/engine/game';
-import { chooseMonsterCard, eyeSpendInfluence, AI_ECONOMY } from '../src/engine/ai';
+import { chooseMonsterCard, eyePlaceInfluenceOnce, eyeSpawnMonsterOnce, AI_ECONOMY } from '../src/engine/ai';
 import { regionInfluenceTotal } from '../src/engine/influence';
 import type { GameState, LocationId } from '../src/engine/types';
 import type { PlanResult } from '../src/engine/encounter';
@@ -71,22 +71,36 @@ const cat = loadCatalog();
   const seat = inRegion?.id ?? adjacent;
   assert(!!seat, 'a hero-free seat exists near the hero');
   s.sauron.locationInfluence[seat!] = 2;
-  const monstersBefore = Object.values(s.map.monstersAt).reduce((n, a) => n + a.length, 0);
-  const inflBefore = s.sauron.influence;
-  eyeSpendInfluence(s, cat);
-  assert(s.sauron.influence < inflBefore, 'Eye spent shadow influence');
+  // NOTE: the Eye's economy was originally modelled as spending a single Shadow
+  // Pool budget across both board-influence pressure and monster spawns. Rules
+  // fidelity work later split these into two independent, faithful commands
+  // (rulebook pp.15-16): Place Influence draws from the unlimited board
+  // Influence area (not the Pool), and Place Monster Token requires only an
+  // influenced, hero-free seat — neither actually spends `sauron.influence`
+  // (the Pool), which the automa instead saves for Shadow cards. So this now
+  // exercises both commands directly instead of a since-removed combined spend.
+  const tokensBefore = Object.values(s.map.monstersAt).reduce((n, a) => n + a.length, 0)
+    + Object.values(s.map.rumorsAt ?? {}).reduce((n, c) => n + (c as number), 0);
+  eyePlaceInfluenceOnce(s, cat);
+  eyeSpawnMonsterOnce(s, cat);
   const placed = Object.values(s.sauron.locationInfluence ?? {}).reduce((n, v) => n + (v as number), 0);
   assert(placed >= AI_ECONOMY.influencePerHeroRegion || regionInfluenceTotal(s, cat, region) > 0, 'Eye pushed influence onto the board (extending toward heroes)');
-  const monstersAfter = Object.values(s.map.monstersAt).reduce((n, a) => n + a.length, 0);
-  assert(monstersAfter > monstersBefore, 'Eye fielded at least one new monster');
+  // A drawn token can be a real monster OR a blank "false rumor" (rulebook
+  // p.16) — heroes can't tell them apart, and both consume the command, so
+  // count either as "the Eye fielded a token", not specifically a monster.
+  const tokensAfter = Object.values(s.map.monstersAt).reduce((n, a) => n + a.length, 0)
+    + Object.values(s.map.rumorsAt ?? {}).reduce((n, c) => n + (c as number), 0);
+  assert(tokensAfter > tokensBefore, 'Eye fielded at least one new token (monster or false rumor)');
 }
-// with no budget, the economy policy is a no-op
+// with no influenced seat yet, Place Monster Token has nothing legal to do
+// (rules prerequisite: a monster token may only be fielded on an influenced,
+// hero-free location — rulebook p.16) — this is a board-state gate, not a
+// Shadow Pool budget check (that combined-budget mechanic was removed).
 {
   const s: GameState = newGame(cat, 5);
-  s.sauron.influence = 0;
   const before = JSON.stringify(s.map.monstersAt);
-  eyeSpendInfluence(s, cat);
-  assert(s.sauron.influence === 0 && JSON.stringify(s.map.monstersAt) === before, 'no influence → economy policy is a no-op');
+  eyeSpawnMonsterOnce(s, cat);
+  assert(JSON.stringify(s.map.monstersAt) === before, 'no influenced seat → Place Monster Token is a no-op');
 }
 
 // --- full auto games with the Eye active -----------------------------------
@@ -121,6 +135,7 @@ function run(seed: number) {
   while (!state.winner && steps < 20000) {
     steps++;
     if (state.pendingChoice) { state = resolveChoice(state, cat, bestCombat(state)); continue; }
+    if (state.pendingTree) { state = autoResolvePendingTree(state, cat); continue; }
     if (state.pendingCombat) { continue; }
     if (state.pendingEncounter) {
       const plan = encounterPlan(state, cat);

@@ -13,7 +13,7 @@ import { newGame } from '../src/engine/setup';
 import {
   advance, endHeroActions, resolveEncounter, chooseEncounter, encounterPlan,
 } from '../src/engine/phases';
-import { resolveChoice } from '../src/engine/game';
+import { resolveChoice, autoResolvePendingTree } from '../src/engine/game';
 import { STRATEGIES, applyHeroAction, mulberry32 } from '../src/engine/heroAI';
 import { checkInvariants } from '../src/engine/invariants';
 import type { GameState, HeroId } from '../src/engine/types';
@@ -96,6 +96,7 @@ function runGame(heroIds: HeroId[], seed: number): RunResult {
   while (!s.winner && steps < 20000) {
     steps++;
     if (s.pendingChoice) { s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); check(); continue; }
+    if (s.pendingTree) { s = autoResolvePendingTree(s, cat); check(); continue; }
     if (s.pendingCombat) { check(); break; } // combat left dangling => engine bug; caught by invariant loop guard
     if (s.pendingEncounter) {
       const plan = encounterPlan(s, cat);

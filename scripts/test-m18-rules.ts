@@ -51,15 +51,21 @@ function ready(): GameState {
 }
 
 // --- Ambush: a foe on the hero's location forces combat before Travel ---
+// (Havens are exempt — rulebook p.22: "combat only takes place if the hero
+// allows it" there — so this must place the hero at a non-Haven location,
+// or the Haven exception silently defeats the whole test.)
 {
   const s = ready();
   const h = s.heroes[0];
+  const nonHaven = Object.values(cat.locations).find((l) => l.kind !== 'haven' && legalMoves(cat, { ...h, location: l.id }).length > 0);
+  assert(!!nonHaven, 'a non-Haven location with a legal move exists to test against');
+  h.location = nonHaven!.id;
   const mv = legalMoves(cat, h)[0];
   assert(!!mv, 'the hero has at least one legal move to test against');
   // place a minion on the hero's location
   (s.map.minionsAt ||= {});
   (s.map.minionsAt[h.location] ||= []).push('minion-gothmog' as any);
-  assert(ambushPending(s, h), 'ambushPending is true with a foe present');
+  assert(ambushPending(s, h, cat), 'ambushPending is true with a foe present');
   let threw = false;
   try { heroMove(s, cat, h.id, mv.to); } catch { threw = true; }
   assert(threw, 'heroMove is rejected while a foe ambushes');

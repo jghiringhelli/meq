@@ -62,9 +62,13 @@ function ready(): GameState {
   const loc = s.heroes[0].location;
   s.map.charactersAt![loc] = ['gandalf'];
   assert(charactersHere(s, id).includes('gandalf'), 'charactersHere lists the character');
-  // ability: recruits ally, no favor, character leaves the board
+  // ability: per-character effect (Gandalf: +1 wisdom), no favor, no generic
+  // ally-recruitment placeholder, character leaves the board
   const sAbility = heroConsultCharacter(s, cat, id, 'gandalf', 'ability');
-  assert(sAbility.heroes[0].allies!.includes('gandalf') && sAbility.heroes[0].favor === 0, 'consult (ability) recruits ally and grants no favor');
+  assert(
+    sAbility.heroes[0].statBonus?.wisdom === 1 && sAbility.heroes[0].favor === 0 && !(sAbility.heroes[0].allies ?? []).includes('gandalf'),
+    'consult (ability) applies Gandalf\'s real ability (+1 wisdom) and grants no favor',
+  );
   assert(!(sAbility.map.charactersAt![loc] ?? []).includes('gandalf'), 'character leaves the board once consulted for ability');
   // favor: +2 favor, no ally, character still leaves the board
   const sFavor = heroConsultCharacter(s, cat, id, 'gandalf', 'favor');
@@ -93,7 +97,7 @@ function ready(): GameState {
   s.heroes[0].location = slot.id;
   s.heroes[0].favor = 6;
   const plot = cat.plots.find((p) => !p.starting && (p.favorToCounter ?? 0) > 0 && !p.affects)!;
-  s.sauron.activePlots = [{ eventId: plot.id, step: 0 }];
+  s.sauron.activePlots = [{ eventId: plot.id, step: 0, location: slot.id }];
   const before = s.heroes[0].favor;
   const s1 = heroDiscardPlot(s, cat, id);
   assert(

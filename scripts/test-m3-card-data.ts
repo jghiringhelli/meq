@@ -7,7 +7,7 @@ import { loadCatalog } from '../src/data/loadAssets';
 import {
   newGame, advance, heroMove, heroRest, endHeroActions, heroEngage, heroExplore,
   resolveEncounter, canExplore, legalMoves, engageableMonsters, resolveChoice, checkWin,
-  chooseEncounter, encounterPlan,
+  chooseEncounter, encounterPlan, autoResolvePendingTree,
 } from '../src/engine/game';
 import { evalMission } from '../src/engine/missions';
 import { applyOps } from '../src/engine/noncombat';
@@ -96,6 +96,7 @@ function run(seed: number): { state: GameState; encounters: number; steps: numbe
   while (!state.winner && steps < CAP) {
     steps++;
     if (state.pendingChoice) { state = resolveChoice(state, cat, bestCombat(state)); continue; }
+    if (state.pendingTree) { state = autoResolvePendingTree(state, cat); continue; }
     if (state.pendingCombat) continue;
     if (state.pendingEncounter) {
       const plan = encounterPlan(state, cat);

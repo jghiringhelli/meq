@@ -6,7 +6,7 @@
 import { loadCatalog } from '../src/data/loadAssets';
 import {
   newGame, advance, heroMove, heroRest, endHeroActions, heroEngage,
-  legalMoves, engageableMonsters, resolveChoice,
+  legalMoves, engageableMonsters, resolveChoice, autoResolvePendingTree,
 } from '../src/engine/game';
 import type { GameState, Catalog, LocationId } from '../src/engine/types';
 
@@ -42,12 +42,20 @@ function run(seed: number): { state: GameState; steps: number } {
   while (!state.winner && steps < CAP) {
     steps++;
     if (state.pendingChoice) { state = resolveChoice(state, cat, bestCombatOption(cat, state)); continue; }
+    if (state.pendingTree) { state = autoResolvePendingTree(state, cat); continue; }
     if (state.pendingCombat) { continue; } // resolved via choices
     if (state.phase === 'HeroActions') {
       const hero = state.heroes[state.activeHeroIndex];
       if (hero.status !== 'active' || hero.actionsRemaining <= 0) { state = endHeroActions(state, cat); continue; }
       const foes = engageableMonsters(state, hero.id);
       if (foes.length) { state = heroEngage(state, cat, hero.id, foes[0]); continue; }
+      // Rest (rulebook p.20) must happen before Travel this turn, so try it
+      // first while in a haven — trying it only as a move-less fallback (as
+      // this bot originally did) can attempt it AFTER already moving, which
+      // the engine correctly rejects.
+      if (cat.locations[hero.location].kind === 'haven' && !hero.restedThisTurn && !hero.hasMovedThisTurn) {
+        state = heroRest(state, cat, hero.id); continue;
+      }
       const moves = legalMoves(cat, hero);
       if (moves.length) {
         const monsterLocs = new Set<LocationId>(
@@ -57,9 +65,7 @@ function run(seed: number): { state: GameState; steps: number } {
         state = heroMove(state, cat, hero.id, target.to);
         continue;
       }
-      // no move possible: rest if in a haven, else end turn
-      if (cat.locations[hero.location].kind === 'haven' && !hero.restedThisTurn) state = heroRest(state, cat, hero.id);
-      else state = endHeroActions(state, cat);
+      state = endHeroActions(state, cat);
       continue;
     }
     state = advance(state, cat);
