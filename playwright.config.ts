@@ -10,7 +10,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5174',
+    baseURL: 'http://localhost:5199',
     trace: 'on-first-retry',
     ...devices['Desktop Chrome'],
   },

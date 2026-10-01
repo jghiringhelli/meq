@@ -348,11 +348,38 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .plot-title--missions { margin-left: 0.6rem; border-left: 1px solid #3a2f22; padding-left: 0.6rem; color: #8fdba0; }
 
 .play-layout { display: flex; gap: 1rem; align-items: flex-start; }
-.board-wrap { flex: 1; background: #14110b; border: 1px solid #3a2f22; border-radius: 6px; overflow: hidden; }
+.board-wrap { flex: 1; background: #14110b; border: 1px solid #3a2f22; border-radius: 6px; overflow: hidden; min-height: 400px; }
 .board { width: 100%; height: auto; display: block; }
 .node.target circle { filter: drop-shadow(0 0 6px var(--accent)); }
 .side { width: 360px; display: flex; flex-direction: column; gap: 0.8rem; }
 .side-compact { width: 220px; }
+
+/* Mobile responsiveness: stack vertically, make sidebar full-width on small screens. */
+@media (max-width: 960px) {
+  .play-layout { flex-direction: column; gap: 0.8rem; }
+  .side, .side-compact { width: 100%; }
+  .board-wrap { min-height: 320px; }
+}
+
+@media (max-width: 600px) {
+  .play-layout { gap: 0.5rem; }
+  .board-wrap {
+    min-height: 280px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .board { min-width: 800px; }
+  .side { gap: 0.5rem; }
+  .hero-panel { padding: 0.5rem; }
+  .hand { gap: 0.3rem; }
+  .card { width: 80px; font-size: 0.65rem; }
+  button { padding: 0.35rem 0.6rem; font-size: 0.85rem; }
+  .start-main.start-main { padding: 1rem 0.75rem 2rem; }
+  .smart-next { bottom: 12px; padding: 0.6rem 1.2rem; font-size: 0.95rem; }
+  .enc-tray { margin-top: 2vh; padding: 0.8rem 1rem 1rem; }
+  .tree-decision-panel { width: 85vw; padding: 0.9rem 1rem; }
+}
 
 .hero-panel { background: var(--panel); border: 1px solid #3a2f22; border-radius: 6px; padding: 0.7rem; }
 .hero-head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; margin-bottom: 0.4rem; }
