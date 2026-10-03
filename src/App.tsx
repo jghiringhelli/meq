@@ -576,7 +576,7 @@ export default function App() {
   })();
   const netSummary = (() => {
     const roles = Object.values(roster ?? {});
-    const humans = roles.filter((r) => r.kind === 'human').length;
+    const humans = roles.filter((r) => r?.kind === 'human').length;
     return `${humans}/${roles.length} seats claimed`;
   })();
   const turnCycleSummary = state.activeSide === 'Sauron' ? "Sauron's turn"
