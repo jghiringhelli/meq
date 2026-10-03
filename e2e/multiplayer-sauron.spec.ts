@@ -172,9 +172,15 @@ test('a remote client can claim and play Sauron over the network', async ({ brow
     await client.getByRole('button', { name: 'Resolve events & begin actions' }).click();
     await expect.poll(async () => (await readMini(client))?.phase, { timeout: 10_000 }).toBe('SauronMinions');
 
-    // Action Step: end immediately (proves the whole round-trip works without
-    // needing to model every possible action UI).
-    await client.getByRole('button', { name: 'End Sauron turn' }).click();
+    // Action Step: spend every action on the self-contained 'Draw cards' track
+    // (End turn is disabled until all actions are spent), then end.
+    const endBtn = client.getByRole('button', { name: 'End Sauron turn' });
+    for (let i = 0; i < 8 && await endBtn.isDisabled(); i++) {
+      await client.getByRole('button', { name: /Draw cards/ }).click();
+      await client.waitForTimeout(150);
+    }
+    await expect(endBtn).toBeEnabled();
+    await endBtn.click();
 
     // Both mirrors converge back to a hero turn (or the story advancing further).
     await expect.poll(async () => (await readMini(host))?.activeSide, { timeout: 15_000 }).toBe('Hero');

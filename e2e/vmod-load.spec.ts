@@ -10,10 +10,10 @@ test('loads art directly from the .vmod module', async ({ page }) => {
   test.skip(!fs.existsSync(vmod), 'Middle_Earth_Quest_1.6.vmod not present (BYO copyrighted module)');
   await page.goto('/');
   await page.setInputFiles('input[accept=".vmod,.zip"]', vmod);
-  const summary = page.locator('.art-loader__summary').filter({ hasText: 'matched' });
+  const summary = page.locator('.art-status--on');
   await expect(summary).toBeVisible({ timeout: 30_000 });
   const text = await summary.textContent();
-  const m = text?.match(/matched (\d+) \/ (\d+)/);
+  const m = text?.match(/(\d+) \/ (\d+) images matched/);
   expect(m).not.toBeNull();
   const matched = Number(m![1]);
   console.log('[vmod] summary:', text?.trim());

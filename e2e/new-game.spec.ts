@@ -12,7 +12,7 @@ test('starting a new game renders the board and HUD without runtime errors', asy
   await expect(page.getByTestId('hud')).toBeVisible();
 
   // Sanity-check the HUD shows the Story Track / Sauron counters.
-  await expect(page.getByText('Story Track')).toBeVisible();
+  await expect(page.getByTestId('hud').getByText('Story Track')).toBeVisible();
   await expect(page.getByTestId('hud').locator('.counter.sauron')).toContainText('influence');
 
   // Guard against the assignStartingQuest crash and any other uncaught error

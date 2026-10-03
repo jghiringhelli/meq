@@ -1,0 +1,26 @@
+name: Autofix dispatch
+
+# A maintainer applies the `autofix` label to a player-report issue to hand it
+# to the Copilot coding agent. Nothing runs automatically on new issues
+# (prevents prompt injection from player text and keeps Actions cost low).
+# Requires repo secret COPILOT_ASSIGN_TOKEN (PAT able to assign Copilot).
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  dispatch:
+    if: github.event.label.name == 'autofix'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment guardrails and assign agent
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_ASSIGN_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue comment "$ISSUE" --repo "$REPO" --body-file .github/autofix-instructions.md
+          gh issue edit "$ISSUE" --repo "$REPO" --add-assignee "copilot-swe-agent[bot]"
