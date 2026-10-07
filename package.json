@@ -17,7 +17,7 @@
     "verify:effects": "node scripts/verify-effect-coverage.mjs"
   },
   "dependencies": {
-    "boardgame-kit": "file:../boardgame-kit",
+    "boardgame-kit": "github:jghiringhelli/boardgame-kit#f2b3c954aa6e066bec1e97edba7e249d81b6b617",
     "jszip": "^3.10.1",
     "peerjs": "^1.5.5",
     "react": "^18.3.1",
