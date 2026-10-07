@@ -95,7 +95,10 @@ export default function App() {
   const [heroPanel, setHeroPanel] = useState<
     { heroId?: HeroId; act?: HeroAction; text?: string; results: string[] } | null
   >(null);
-  const lastActLogLen = useRef(0);
+  const lastActLogLen = useRef(-1);
+  useEffect(() => {
+    if (state?.activeSide === 'Sauron') lastActLogLen.current = -1;
+  }, [state?.activeSide]);
 
   // ---- Multiplayer session (host-authoritative). Off by default (solo play). ----
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -213,7 +216,7 @@ export default function App() {
       if (heroPanel?.act) return; // waiting for Sauron to press Continue
       const peek: { heroId?: HeroId; act?: HeroAction } = {};
       const next = advanceHeroSide(state, catalog, missionAware, heroRng.current, isAiHero, 5000, peek);
-      const results = next.log.slice(lastActLogLen.current)
+      const results = lastActLogLen.current < 0 ? [] : next.log.slice(lastActLogLen.current)
         .filter((e) => e.type !== 'phase' && e.type !== 'setup')
         .map((e) => e.detail);
       if (peek.act && peek.heroId) {
@@ -473,7 +476,7 @@ export default function App() {
   // (sauronCommandSel's useState is hoisted above the early returns near the
   // top of this component — see comment there.)
   const commandTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
-    && sauronCommandSel ? sauronCommandTargets(state, cat) : undefined;
+    && sauronCommandSel ? sauronCommandTargets(state, cat, sauronCommandSel.kind) : undefined;
   const doCommandTarget = (loc: string) => {
     if (!sauronCommandSel) return;
     if (sauronCommandSel.kind === 'spawn') dispatch({ t: 'sauronSpawnMonster', monsterId: sauronCommandSel.monsterId, loc } as Action);
@@ -797,6 +800,11 @@ export default function App() {
             token{state.setupInfluencePending.remaining === 1 ? '' : 's'} by clicking a glowing{' '}
             <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.
           </span>
+        </div>
+      )}
+      {state.winner && (
+        <div className="game-over-banner" role="status">
+          <b>Game over — {state.winner} wins.</b> Use ☰ Main menu to start a new game.
         </div>
       )}
       {heroPanel && iControlSauron && state.activeSide === 'Hero' && !state.pendingCombat && !state.pendingCombatOrPeril

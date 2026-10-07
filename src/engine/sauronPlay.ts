@@ -18,7 +18,7 @@ const num = (v: number | string): number => (typeof v === 'number' ? v : Number(
 export function playablePlots(s: GameState, cat: Catalog): Plot[] {
   const active = new Set((s.sauron.activePlots ?? []).map((e) => e.eventId));
   if (active.size >= 3) return [];
-  if (s.story.turn <= 1) return []; // Plot Step is skipped on the first game turn
+  if (s.story.turn <= 1 || s.sauronPlotPlayed) return []; // skipped turn 1; one plot per Plot Step
   const hand = new Set(s.sauron.plotHand ?? []);
   return cat.plots.filter((p) =>
     !p.starting && hand.has(p.id) && !active.has(p.id) && s.sauron.influence >= num(p.influenceCost));
@@ -29,12 +29,13 @@ export function playablePlots(s: GameState, cat: Catalog): Plot[] {
  *  Sauron to discard any influence from the Shadow Pool") — it is never spent.
  *  Phase stays in SauronEvents; the caller then resolves the Event Step. */
 export function sauronPlayPlot(state: GameState, cat: Catalog, plotId: string): GameState {
-  if (state.phase !== 'SauronEvents' || state.story.turn <= 1) return state;
+  if (state.phase !== 'SauronEvents' || state.story.turn <= 1 || state.sauronPlotPlayed) return state;
   const p = cat.plots.find((x) => x.id === plotId);
   if (!p) return state;
   const cost = num(p.influenceCost);
   if (state.sauron.influence < cost) return state; // threshold gate only — not a spend
   const s = clone(state);
+  s.sauronPlotPlayed = true;
   s.sauron.plotHand = (s.sauron.plotHand ?? []).filter((id) => id !== plotId);
   applyPlotCard(s, cat, p, cost, (msg) => log(s, 'sauron', 'Sauron', msg));
   return s;
@@ -130,7 +131,9 @@ export function reserveMinions(s: GameState, cat: Catalog): MinionId[] {
  *  map) since the rulebook leaves the choice to Sauron but any spot far from
  *  the action is never actually useful. Shared by SauronPanel's sidebar list
  *  and Board's on-map click targets so both always agree. */
-export function sauronCommandTargets(s: GameState, cat: Catalog): LocationId[] {
+export function sauronCommandTargets(s: GameState, cat: Catalog, kind?: 'spawn' | 'deploy'): LocationId[] {
+  // Monster tokens may only go where the engine will accept them: an influenced location with no hero.
+  if (kind === 'spawn') return (Object.keys(cat.locations) as LocationId[]).filter((l) => monsterPlaceable(s, l));
   const heroLocs = s.heroes.filter((h) => h.status === 'active').map((h) => h.location);
   const near = new Set<LocationId>([s.sauron.location, ...heroLocs]);
   for (const l of heroLocs) for (const n of adjacentLocations(cat, l)) near.add(n);
@@ -225,6 +228,14 @@ export function sauronSpawnMonster(state: GameState, cat: Catalog, monsterId: Mo
   (s.map.monstersAt[loc] ||= []).push(monsterId);
   spendCommand(s);
   log(s, 'sauron', 'Sauron', `fields ${cat.monsters[monsterId].name} at ${loc}`);
+  return s;
+}
+
+/** Command is "up to N": the player may stop issuing commands early. */
+export function sauronFinishCommand(state: GameState): GameState {
+  if (state.sauronPending?.track !== 'command') return state;
+  const s = clone(state);
+  s.sauronPending = undefined;
   return s;
 }
 

@@ -793,6 +793,8 @@ export interface GameState {
   /** Interactive Setup: the starting plot card says 'keep K of N Shadow cards;
    *  keep K of M Plot cards'. A human Sauron picks which to keep (private to him);
    *  the turn cannot start until he confirms (see sauronKeepStartingHand). */
+  /** Plot Step: only one Plot card may be played per Sauron turn (rulebook p.13). */
+  sauronPlotPlayed?: boolean;
   setupHandPending?: { shadowOffered: string[]; shadowKeep: number; plotOffered: string[]; plotKeep: number };
   /** Two-player game (a single hero): the hero takes 2 turns per Sauron turn.
    *  True once the hero has taken his first of the two turns this round. */

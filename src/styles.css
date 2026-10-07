@@ -758,3 +758,15 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .about-body ol, .about-body ul { margin: 0.3rem 0; padding-left: 1.3rem; }
 .about-body a { color: #ffd970; }
 .about-body code { background: #241a0c; padding: 0.02rem 0.3rem; border-radius: 3px; }
+
+.sauron-keep { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; padding: 6px; border: 1px solid #5a4a2a; border-radius: 4px; cursor: pointer; }
+.sauron-keep input { margin-top: 3px; flex: none; }
+.sauron-keep:has(input:checked) { background: rgba(200,160,60,.15); border-color: #c9a24a; }
+.sauron-hand ul { margin: 2px 0 6px 18px; padding: 0; }
+.hero-step-panel { margin: 8px 0; padding: 8px 12px; border: 1px solid #c9a24a; border-radius: 6px; background: rgba(0,0,0,.35); }
+.hero-step-next { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+
+.hero-step-panel { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 60; max-width: min(720px, 94vw); box-shadow: 0 4px 24px rgba(0,0,0,.7); background: #1b1610; }
+.hero-step-results ul { margin: 4px 0 8px 18px; padding: 0; max-height: 120px; overflow: auto; font-size: 12px; }
+
+.game-over-banner { margin: 8px 12px; padding: 12px 16px; border: 2px solid #c9a24a; border-radius: 6px; background: rgba(120,20,20,.35); font-size: 18px; text-align: center; }

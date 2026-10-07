@@ -643,6 +643,7 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
 }
 
 function runSauronRefresh(s: GameState, cat: Catalog): GameState {
+  s.sauronPlotPlayed = false;
   // === Ringwraith return === defeated Ringwraiths return to Minas Morgul at the
   // start of Sauron's Action step, restored to full health.
   const returning = s.map.minionReturnPending ?? [];

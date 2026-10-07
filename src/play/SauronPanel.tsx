@@ -61,8 +61,8 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const firstTurn = (s.story?.turn ?? 1) <= 1;
   // Influence extension comes first; the hand choice follows.
   const hp = s.setupInfluencePending ? undefined : s.setupHandPending;
-  const toggle = (list: string[], set: (v: string[]) => void, id: string) =>
-    set(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>, id: string) =>
+    set((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   const plotCard = (id: string) => {
     const p = cat.plots.find((x) => x.id === id);
     return p ? `${p.name} (${p.marker ?? 'red'} +${p.advance ?? p.track.length}, cost ${p.influenceCost ?? 0})` : id;
@@ -101,16 +101,16 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
         {hp.shadowOffered.map((id) => (
           <label key={id} className="sauron-keep">
             <input type="checkbox" checked={keepShadow.includes(id)}
-              onChange={() => toggle(keepShadow, setKeepShadow, id)} />
-            {shadowCard(id)} — <span className="muted">{cat.shadow[id]?.effect}</span>
+              onChange={() => toggle(setKeepShadow, id)} />
+            <span>{shadowCard(id)} — <span className="muted">{cat.shadow[id]?.effect}</span></span>
           </label>
         ))}
         <p className="prompt">Keep {hp.plotKeep} of {hp.plotOffered.length} Plot cards:</p>
         {hp.plotOffered.map((id) => (
           <label key={id} className="sauron-keep">
             <input type="checkbox" checked={keepPlot.includes(id)}
-              onChange={() => toggle(keepPlot, setKeepPlot, id)} />
-            {plotCard(id)}
+              onChange={() => toggle(setKeepPlot, id)} />
+            <span>{plotCard(id)} — <span className="muted">{cat.plots.find((x) => x.id === id)?.effect}</span></span>
           </label>
         ))}
         <button className="primary" disabled={!ok}
@@ -168,7 +168,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                   </span>
                 </button>
               ))}
-              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">No affordable plots (slots full or too costly).</p>}
+              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">{s.sauronPlotPlayed ? 'You have played your Plot card this turn.' : 'No affordable plots (slots full or too costly).'}</p>}
             </div>
             <button className="primary" onClick={() => dispatch({ t: 'sauronResolveEvents' })}>
               Resolve events & begin actions ▶
@@ -230,7 +230,8 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
             {/* Command action in progress: issue up to `remaining` commands. */}
             {s.sauronPending?.track === 'command' && (
               <>
-                <p className="prompt">Command — issue {s.sauronPending.remaining} more command(s).</p>
+                <p className="prompt">Command — issue up to {s.sauronPending.remaining} more command(s).</p>
+              <button className="sauron-mode-btn" onClick={() => apply({ t: 'sauronFinishCommand' })}>Done commanding</button>
                 <div className="sauron-actions">
                   {(['spawn', 'deploy', 'move', 'heal'] as Mode[]).map((m) => (
                     <button key={m} className={`sauron-mode-btn${mode === m ? ' active' : ''}`}
