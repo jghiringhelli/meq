@@ -25,6 +25,9 @@ interface Props {
  *    copies a short plain-text summary to paste into WhatsApp/Discord/email.
  * No GitHub credentials are ever exposed client-side in any of these paths.
  */
+// Static hosting (GitHub Pages, served under a sub-path) has no serverless function.
+const AUTO_REPORT_AVAILABLE = (import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL === '/';
+
 export default function ReportBugModal({ seed, state, crash, onClose }: Props) {
   const [description, setDescription] = useState('');
   const [step, setStep] = useState<'form' | 'done-github' | 'done-copy' | 'done-auto'>('form');
@@ -144,10 +147,12 @@ export default function ReportBugModal({ seed, state, crash, onClose }: Props) {
               <button className="ghost" onClick={onClose}>Cancel</button>
               <button className="ghost" title="No GitHub account? Downloads the same report file and copies a short summary you can paste into a chat/email instead."
                 onClick={submitCopy}>Don't have GitHub — copy summary instead</button>
-              <button className="ghost" onClick={submitGithub}>Download report &amp; open GitHub issue myself</button>
-              <button className="primary" disabled={autoBusy} onClick={submitAuto}>
-                {autoBusy ? 'Sending…' : 'Send report automatically'}
-              </button>
+              <button className={AUTO_REPORT_AVAILABLE ? 'ghost' : 'primary'} onClick={submitGithub}>Download report &amp; open GitHub issue myself</button>
+              {AUTO_REPORT_AVAILABLE && (
+                <button className="primary" disabled={autoBusy} onClick={submitAuto}>
+                  {autoBusy ? 'Sending…' : 'Send report automatically'}
+                </button>
+              )}
             </div>
             {autoError && (
               <p className="report-crash-note">
