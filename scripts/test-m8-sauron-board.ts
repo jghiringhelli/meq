@@ -88,7 +88,8 @@ const cat = loadCatalog();
   const s = newGame(cat, 5); // fresh heroes = on-mission (0 corruption)
   s.sauron.influence = 999;
   s.sauron.activePlots = []; // clear the starting plot slot
-  assert(!advancePlots(s, cat, true, undefined), 'the Eye never advances plots while heroes hold the mission');
+  s.sauron.plotHand = []; // the Eye plays only from its hand
+  assert(!advancePlots(s, cat, true, undefined), 'the Eye cannot play a plot with none in hand');
 }
 
 // --- unit: shadow hand draws & plays on the most-corrupted hero ------------

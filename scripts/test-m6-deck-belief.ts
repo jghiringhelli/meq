@@ -1,3 +1,4 @@
+import { toHeroActions } from './_util';
 // M6 acceptance test — unified hero deck + game-long deck belief.
 //
 // Real MEQ uses ONE dual-use hero deck for both movement and combat. This test
@@ -9,7 +10,7 @@
 // Run: npx tsx scripts/test-m6-deck-belief.ts
 import { loadCatalog } from '../src/data/loadAssets';
 import {
-  newGame, advance, resolveChoice, heroEngage,
+  newGame, resolveChoice, heroEngage,
 } from '../src/engine/game';
 import { heroModel } from '../src/engine/ai';
 import type { GameState } from '../src/engine/types';
@@ -52,7 +53,7 @@ const cat = loadCatalog();
 // --- unified deck: a combat depletes the persistent hero deck ---------------
 {
   let s: GameState = newGame(cat, 5);
-  s = advance(s, cat); // HeroRefresh → HeroActions (hero now holds a hand)
+  s = toHeroActions(s, cat); // hero now holds a hand
 
   const hero = s.heroes[0];
   // Setup no longer seeds monsters on the board (rulebook: monsters enter only

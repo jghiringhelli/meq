@@ -34,6 +34,8 @@ const locName = (cat: Catalog, id: LocationId) => cat.locations[id]?.name ?? id;
 
 export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSelectMoveFigure, commandSel, onSelectCommand }: Props) {
   const [mode, setMode] = useState<Mode>(null);
+  const [keepShadow, setKeepShadow] = useState<string[]>([]);
+  const [keepPlot, setKeepPlot] = useState<string[]>([]);
   const figure = moveFigureSel ? `${moveFigureSel.kind}:${moveFigureSel.id}:${moveFigureSel.loc}` : '';
   const setFigure = (v: string) => {
     if (!v) { onSelectMoveFigure?.(null); return; }
@@ -56,9 +58,73 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   // the turn end early.
   const canEndTurn = phase === 'SauronMinions' && (s.sauronActionsLeft ?? 0) <= 0 && !s.sauronPending;
 
+  const firstTurn = (s.story?.turn ?? 1) <= 1;
+  // Influence extension comes first; the hand choice follows.
+  const hp = s.setupInfluencePending ? undefined : s.setupHandPending;
+  const toggle = (list: string[], set: (v: string[]) => void, id: string) =>
+    set(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  const plotCard = (id: string) => {
+    const p = cat.plots.find((x) => x.id === id);
+    return p ? `${p.name} (${p.marker ?? 'red'} +${p.advance ?? p.track.length}, cost ${p.influenceCost ?? 0})` : id;
+  };
+  const shadowCard = (id: string) => {
+    const c = cat.shadow[id];
+    return c ? `${c.name} (pool ${c.poolRequirement}, ${c.timing})` : id;
+  };
+  const handView = (
+    <div className="sauron-hand">
+      <b>Your hand</b>
+      <div><u>Shadow</u>{s.sauron.shadowHand.length === 0 && <span className="muted"> none</span>}
+        <ul>{s.sauron.shadowHand.map((id) => (
+          <li key={id} title={cat.shadow[id]?.effect}>{shadowCard(id)}</li>))}</ul></div>
+      <div><u>Plot</u>{(s.sauron.plotHand ?? []).length === 0 && <span className="muted"> none</span>}
+        <ul>{(s.sauron.plotHand ?? []).map((id) => (
+          <li key={id}>{plotCard(id)}</li>))}</ul></div>
+    </div>
+  );
+
+  if (s.setupInfluencePending) {
+    return (
+      <div className="sauron-panel">
+        <h2>Sauron — setup</h2>
+        <p className="prompt">Place your remaining starting influence on the map first; then you will choose your starting hand.</p>
+      </div>
+    );
+  }
+
+  if (hp) {
+    const ok = keepShadow.length === hp.shadowKeep && keepPlot.length === hp.plotKeep;
+    return (
+      <div className="sauron-panel">
+        <h2>Sauron — choose your starting hand</h2>
+        <p className="prompt">Keep {hp.shadowKeep} of {hp.shadowOffered.length} Shadow cards:</p>
+        {hp.shadowOffered.map((id) => (
+          <label key={id} className="sauron-keep">
+            <input type="checkbox" checked={keepShadow.includes(id)}
+              onChange={() => toggle(keepShadow, setKeepShadow, id)} />
+            {shadowCard(id)} — <span className="muted">{cat.shadow[id]?.effect}</span>
+          </label>
+        ))}
+        <p className="prompt">Keep {hp.plotKeep} of {hp.plotOffered.length} Plot cards:</p>
+        {hp.plotOffered.map((id) => (
+          <label key={id} className="sauron-keep">
+            <input type="checkbox" checked={keepPlot.includes(id)}
+              onChange={() => toggle(keepPlot, setKeepPlot, id)} />
+            {plotCard(id)}
+          </label>
+        ))}
+        <button className="primary" disabled={!ok}
+          onClick={() => { dispatch({ t: 'sauronKeepStartingHand', shadow: keepShadow, plot: keepPlot }); setKeepShadow([]); setKeepPlot([]); }}>
+          Confirm starting hand
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="sauron-panel">
       <h2>Sauron — the Lidless Eye</h2>
+      {handView}
         <div className="sauron-status">
           <span>War chest: <strong>{s.sauron.influence}</strong></span>
           <span>Shadow hand: <strong>{s.sauron.shadowHand.length}</strong></span>
@@ -77,16 +143,20 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
 
         {phase === 'SauronRefresh' && (
           <div className="sauron-step">
-            <p className="prompt">Story Step — advance the dark story clock.</p>
+            <p className="prompt">{firstTurn
+              ? 'First turn — the Story and Plot steps are skipped. Resolve events, then take your actions.'
+              : 'Story Step — advance the dark story clock.'}</p>
             <button className="primary" onClick={() => dispatch({ t: 'sauronStoryStep' })}>
-              Begin Sauron turn ▶
+              {firstTurn ? 'Begin first turn ▶' : 'Begin Sauron turn ▶'}
             </button>
           </div>
         )}
 
         {phase === 'SauronEvents' && (
           <div className="sauron-step">
-            <p className="prompt">Plot Step — play one plot card, or pass. Then resolve this turn's events.</p>
+            <p className="prompt">{firstTurn
+              ? 'Plot Step skipped on the first turn. Resolve this turn\'s events.'
+              : 'Plot Step — play one plot card, or pass. Then resolve this turn\'s events.'}</p>
             <div className="sauron-plots">
               {playablePlots(s, cat).slice(0, 8).map((p) => (
                 <button key={p.id} className="sauron-plot-btn"
@@ -98,7 +168,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                   </span>
                 </button>
               ))}
-              {playablePlots(s, cat).length === 0 && <p className="muted">No affordable plots (slots full or too costly).</p>}
+              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">No affordable plots (slots full or too costly).</p>}
             </div>
             <button className="primary" onClick={() => dispatch({ t: 'sauronResolveEvents' })}>
               Resolve events & begin actions ▶

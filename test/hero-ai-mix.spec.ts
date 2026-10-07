@@ -5,7 +5,7 @@
 // role is NOT AI-controlled, rather than racing ahead and playing that turn
 // for them before their own dispatched action ever arrives over the network.
 import { describe, it, expect } from 'vitest';
-import { cat } from './helpers';
+import { cat, toHeroActions } from './helpers';
 import { newGame, advance } from '../src/engine/game';
 import { advanceHeroSide, mulberry32, missionAware } from '../src/engine/heroAI';
 
@@ -13,7 +13,7 @@ const THREE = Object.keys(cat.heroes).slice(0, 3);
 
 function atHeroActions() {
   let s = newGame(cat, 5, THREE);
-  for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+  s = toHeroActions(s);
   return s;
 }
 

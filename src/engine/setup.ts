@@ -34,8 +34,8 @@ export function newGame(
 
   const state: GameState = {
     seed, rngCursor: seed | 0,
-    round: 1, phase: 'HeroRefresh',
-    activeSide: 'Hero', activeHeroIndex: 0, humanSide,
+    round: 1, phase: 'SauronRefresh',
+    activeSide: 'Sauron', activeHeroIndex: 0, humanSide,
     heroes: [], sauron: {
       influence: cat.scenario.setup.sauronInfluence,
       location: cat.scenario.setup.sauronStartLocation,
@@ -111,8 +111,8 @@ export function newGame(
   // monster tokens are placed at setup — per the rulebook, monsters only enter
   // via Sauron's Command actions onto influenced locations.
   placeStartingMinions(state, cat);
-  seedStartingPlot(state, cat, interactiveSetup);
-  seedSauronHands(state, cat);
+  const startingPlot = seedStartingPlot(state, cat, interactiveSetup);
+  seedSauronHands(state, cat, startingPlot?.effect ?? '', interactiveSetup);
 
   log(state, 'setup', 'system',
     `New game: heroes=[${roster.join(', ')}] seed=${seed} storyLen=${state.story.length}`);
@@ -174,9 +174,9 @@ function placeStartingMinions(state: GameState, cat: Catalog): void {
 /** Place Sauron's starting plot (the setup difference tied to his mission). The
  *  Sauron player picks one of the three; the automa picks deterministically. Its
  *  colored story marker starts at the START space and advances each Story Step. */
-function seedStartingPlot(state: GameState, cat: Catalog, interactiveSetup: boolean): void {
+function seedStartingPlot(state: GameState, cat: Catalog, interactiveSetup: boolean) {
   const starting = cat.plots.filter((p) => p.starting);
-  if (!starting.length) return;
+  if (!starting.length) return undefined;
   const chosen = starting[Math.abs(state.rngCursor) % starting.length];
   state.rngCursor = (state.rngCursor * 1103515245 + 12345) | 0;
   const marker = (chosen.marker ?? 'red');
@@ -197,6 +197,7 @@ function seedStartingPlot(state: GameState, cat: Catalog, interactiveSetup: bool
     .map(([id, n]) => `${cat.locations[id]?.name ?? id} (${n})`);
   log(state, 'setup', 'Sauron',
     `starting influence — Shadow Pool: ${state.sauron.influence}; on the map: ${placed.length ? placed.join(', ') : 'none'}`);
+  return chosen;
 }
 
 /** Seed Sauron's starting hands from the shuffled decks (rulebook / starting-plot
@@ -204,7 +205,7 @@ function seedStartingPlot(state: GameState, cat: Catalog, interactiveSetup: bool
  *  the 18 non-starting plots shuffled with a LOCAL rng so the shared gameplay rng
  *  stream (used by per-hero shuffles + combat) is left untouched — perturbing it
  *  here previously broke the statistical peril tests. */
-function seedSauronHands(state: GameState, cat: Catalog): void {
+function seedSauronHands(state: GameState, cat: Catalog, setupText: string, interactive: boolean): void {
   // The four "event-deck plots" (Of Serpents and Sand, The Glades of Orthanc
   // Darken, The Blood of Rhun, Dark News from Erebor) are NOT part of Sauron's
   // Plot deck — they enter play from the stage Event deck. Exclude them so they
@@ -213,18 +214,32 @@ function seedSauronHands(state: GameState, cat: Catalog): void {
   // Local deterministic shuffle keyed off the seed only (no state.rngCursor).
   const key = (state.seed ^ 0x5c0b1a7) >>> 0;
   const deck = keyedShuffle(nonStarting, key);
-  // Draw 5, keep the best 2, return the other 3 to the bottom of the deck.
-  const drawn = deck.splice(0, 5);
-  const keep = keepBestPlots(cat, drawn, 2);
-  const returned = drawn.filter((id) => !keep.includes(id));
-  state.sauron.plotHand = keep;
-  state.sauron.plotDeck = [...deck, ...returned];
+  // The starting plot card prints its own counts: "keep K of N Shadow cards;
+  // keep K of M Plot cards" (they differ per starting plot).
+  const sh = /keep (\d+) of (\d+) Shadow/i.exec(setupText);
+  const pl = /keep (\d+) of (\d+) Plot/i.exec(setupText);
+  const shadowKeep = sh ? Number(sh[1]) : 1, shadowDraw = sh ? Number(sh[2]) : 2;
+  const plotKeep = pl ? Number(pl[1]) : 2, plotDraw = pl ? Number(pl[2]) : 5;
+  const plotOffered = deck.splice(0, plotDraw);
+  state.sauron.plotDeck = deck;
   state.sauron.plotDiscard = [];
-  // Shadow hand: keep 1 (drawShadow reads but does not advance the shared rng).
-  drawShadow(state, cat, 1);
+  if (interactive) {
+    // A human Sauron chooses (see sauronKeepStartingHand). Unkept cards go back
+    // to the bottom of their decks when he confirms.
+    drawShadow(state, cat, shadowDraw);
+    const shadowOffered = [...state.sauron.shadowHand];
+    state.sauron.shadowHand = [];
+    state.sauron.plotHand = [];
+    state.setupHandPending = { shadowOffered, shadowKeep, plotOffered, plotKeep };
+    log(state, 'setup', 'Sauron', `draws ${shadowDraw} Shadow and ${plotDraw} Plot cards to choose from (keeps ${shadowKeep} + ${plotKeep})`);
+    return;
+  }
+  const keep = keepBestPlots(cat, plotOffered, plotKeep);
+  state.sauron.plotHand = keep;
+  state.sauron.plotDeck = [...deck, ...plotOffered.filter((id) => !keep.includes(id))];
+  drawShadow(state, cat, shadowKeep);
   log(state, 'setup', 'Sauron', `draws hands — ${keep.length} Plot, ${state.sauron.shadowHand.length} Shadow`);
 }
-
 /** Parse and apply a starting plot's Setup influence, e.g. "2 influence in each
  *  Shadow Stronghold, 7 in extension, 1 in the Shadow Pool". The stronghold and
  *  Shadow Pool amounts are always mechanical (the rulebook names them exactly);

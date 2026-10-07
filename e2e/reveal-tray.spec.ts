@@ -16,6 +16,13 @@ test('advancing phases surfaces reveals with cards and stays error-free', async 
   let sawReveal = false;
 
   for (let i = 0; i < 40; i++) {
+    // Sauron now opens the game, so his Event can raise a hero choice dialog first.
+    const decision = page.locator('.tree-decision-overlay button').first();
+    if (await decision.isVisible().catch(() => false)) {
+      await decision.click();
+      await page.waitForTimeout(150);
+      continue;
+    }
     const tray = page.locator('.enc-tray');
     if (await tray.isVisible().catch(() => false)) {
       sawReveal = true;

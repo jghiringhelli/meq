@@ -136,16 +136,8 @@ test('a remote client can claim and play Sauron over the network', async ({ brow
     // Host's roster mirror reflects the claim.
     await expect(host.locator('.net-role-row', { hasText: 'Sauron' })).toContainText('SauronPlayer', { timeout: 20_000 });
 
-    // --- Drive the host's hero turn(s) via the real UI until it's Sauron's turn. ---
-    let reachedSauron = false;
-    for (let i = 0; i < 200; i++) {
-      const s = await readMini(host);
-      if (s?.winner) break;
-      if (s?.activeSide === 'Sauron') { reachedSauron = true; break; }
-      await heroStep(host);
-      await host.waitForTimeout(30);
-    }
-    expect(reachedSauron, 'never reached Sauron\'s turn').toBe(true);
+    // The game opens with Sauron's turn (rulebook: Sauron first, then the heroes).
+    await expect.poll(async () => (await readMini(host))?.activeSide, { timeout: 15_000 }).toBe('Sauron');
 
     // The engine now pauses for the human client instead of auto-playing the
     // Lidless Eye — the whole point of the roster->humanSide sync fix.
@@ -165,7 +157,7 @@ test('a remote client can claim and play Sauron over the network', async ({ brow
     expect((await readMini(host))?.phase).toBe('SauronRefresh');
 
     // Story Step.
-    await client.getByRole('button', { name: 'Begin Sauron turn' }).click();
+    await client.getByRole('button', { name: /Begin (first|Sauron) turn/ }).click();
     await expect.poll(async () => (await readMini(client))?.phase, { timeout: 10_000 }).toBe('SauronEvents');
 
     // Plot/Event Step: pass on plots, resolve events.

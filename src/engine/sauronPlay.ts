@@ -18,6 +18,7 @@ const num = (v: number | string): number => (typeof v === 'number' ? v : Number(
 export function playablePlots(s: GameState, cat: Catalog): Plot[] {
   const active = new Set((s.sauron.activePlots ?? []).map((e) => e.eventId));
   if (active.size >= 3) return [];
+  if (s.story.turn <= 1) return []; // Plot Step is skipped on the first game turn
   const hand = new Set(s.sauron.plotHand ?? []);
   return cat.plots.filter((p) =>
     !p.starting && hand.has(p.id) && !active.has(p.id) && s.sauron.influence >= num(p.influenceCost));
@@ -28,7 +29,7 @@ export function playablePlots(s: GameState, cat: Catalog): Plot[] {
  *  Sauron to discard any influence from the Shadow Pool") — it is never spent.
  *  Phase stays in SauronEvents; the caller then resolves the Event Step. */
 export function sauronPlayPlot(state: GameState, cat: Catalog, plotId: string): GameState {
-  if (state.phase !== 'SauronEvents') return state;
+  if (state.phase !== 'SauronEvents' || state.story.turn <= 1) return state;
   const p = cat.plots.find((x) => x.id === plotId);
   if (!p) return state;
   const cost = num(p.influenceCost);
@@ -190,6 +191,26 @@ export function setupPlaceInfluence(state: GameState, cat: Catalog, loc: Locatio
   s.setupInfluencePending!.remaining -= 1;
   if (s.setupInfluencePending!.remaining <= 0) s.setupInfluencePending = undefined;
   log(s, 'setup', 'Sauron', `extends influence to ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
+  return s;
+}
+
+/** Interactive Setup: keep the chosen Shadow/Plot cards from those offered; the
+ *  unkept Plot cards return to the bottom of the Plot deck (Shadow cards simply
+ *  stay in the Shadow deck). */
+export function sauronKeepStartingHand(state: GameState, cat: Catalog, shadow: string[], plot: string[]): GameState {
+  void cat;
+  const p = state.setupHandPending;
+  if (!p) return state;
+  const uniq = (a: string[]) => [...new Set(a)];
+  const sh = uniq(shadow), pl = uniq(plot);
+  if (sh.length !== Math.min(p.shadowKeep, p.shadowOffered.length) || sh.some((id) => !p.shadowOffered.includes(id))) return state;
+  if (pl.length !== Math.min(p.plotKeep, p.plotOffered.length) || pl.some((id) => !p.plotOffered.includes(id))) return state;
+  const s = clone(state);
+  s.sauron.shadowHand = sh;
+  s.sauron.plotHand = pl;
+  s.sauron.plotDeck = [...(s.sauron.plotDeck ?? []), ...p.plotOffered.filter((id) => !pl.includes(id))];
+  s.setupHandPending = undefined;
+  log(s, 'setup', 'Sauron', `keeps ${sh.length} Shadow and ${pl.length} Plot cards`);
   return s;
 }
 

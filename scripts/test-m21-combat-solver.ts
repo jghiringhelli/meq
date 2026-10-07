@@ -1,3 +1,4 @@
+import { toHeroActions } from './_util';
 // M21 acceptance test — the shared combat solver (src/engine/combatSolver.ts).
 // Two parts: (1) deterministic micro-decisions on a crafted pendingCombat
 // (prefers the harder-hitting affordable card, respects the strength budget,
@@ -5,7 +6,7 @@
 // combat to completion with the solver, asserting no dangling state.
 // Run: npx tsx scripts/test-m21-combat-solver.ts
 import { loadCatalog } from '../src/data/loadAssets';
-import { newGame, advance, heroEngage, engageableMonsters, resolveChoice } from '../src/engine/game';
+import { newGame, heroEngage, engageableMonsters, resolveChoice } from '../src/engine/game';
 import { deployMinion } from '../src/engine/setup';
 import { solveCombatOption } from '../src/engine/combatSolver';
 import { mulberry32 } from '../src/engine/heroAI';
@@ -93,8 +94,7 @@ cards['t-filler'] = card({ id: 'filler', attack: 0, defense: 0, strengthCost: 0 
 // (5) integration: drive a real minion combat to completion with the solver
 {
   let s0: GameState = newGame(cat, 7);
-  let g0 = 0;
-  while (s0.phase !== 'HeroActions' && g0++ < 20) s0 = advance(s0, cat);
+  s0 = toHeroActions(s0, cat);
   const hero = s0.heroes[0];
   s0.story.sauronProgress = 8;
   const id = deployMinion(s0, cat);

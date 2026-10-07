@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cat, freshGame, minions } from './helpers';
+import { cat, freshGame, minions, toHeroActions } from './helpers';
 import { gameStage, hasItem, legalMoves, ambushPending } from '../src/engine/mechanics';
 import { deployMinion } from '../src/engine/setup';
 import { heroRest, heroMove, resolveCombatOrPeril } from '../src/engine/phases';
@@ -483,7 +483,7 @@ describe('Setup — starting hand is dealt once (rulebook p.10, p.19)', () => {
     const fresh = freshGame();
     const h0 = fresh.heroes[fresh.activeHeroIndex];
     const fort = cat.heroes[h0.id].fortitude;
-    const after = applyAction(fresh, cat, { t: 'advance' }); // runs HeroRefresh
+    const after = toHeroActions(fresh); // Sauron's opening turn, then the first Hero Refresh
     const h = after.heroes[after.activeHeroIndex];
     expect(h.hand.length).toBe(fort); // still one hand, not 2×fortitude
     expect(h.startingHandReady).toBeFalsy();

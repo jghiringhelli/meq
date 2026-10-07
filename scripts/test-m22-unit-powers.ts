@@ -1,10 +1,11 @@
+import { toHeroActions } from './_util';
 // M22 acceptance test — monster innate combat powers (monsterPowers.ts) and
 // hero special abilities (Thálin, Eleanor, Beravor). The hero is ALWAYS the
 // attacker and the monster ALWAYS the defender, so every monster power operates
 // on the defender side.
 // Run: npx tsx scripts/test-m22-unit-powers.ts
 import { loadCatalog } from '../src/data/loadAssets';
-import { newGame, advance } from '../src/engine/game';
+import { newGame } from '../src/engine/game';
 import { heroConsultCharacter, heroCompleteQuest } from '../src/engine/economy';
 import { heroRest } from '../src/engine/phases';
 import {
@@ -144,8 +145,7 @@ assert(monsterCancelsHeroCard('mon-orc', card({ type: 'ranged' }), card({ type: 
 // ---- hero special abilities ---------------------------------------------------
 function heroTurnState(heroId: string): { s: GameState; idx: number } {
   let s = newGame(cat, 5);
-  let g = 0;
-  while (s.phase !== 'HeroActions' && g++ < 30) s = advance(s, cat);
+  s = toHeroActions(s, cat);
   const idx = s.activeHeroIndex;
   s.heroes[idx].id = heroId as GameState['heroes'][number]['id'];
   s.heroes[idx].actionsRemaining = 2;

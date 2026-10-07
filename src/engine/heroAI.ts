@@ -826,6 +826,47 @@ export function playoutGame(
 }
 
 export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act: HeroAction): GameState {
+  act = coerceHeroAction(s, cat, heroId, act);
+  switch (act.kind) {
+    case 'engage': return heroEngage(s, cat, heroId, act.monsterId);
+    case 'explore': return heroExplore(s, cat, heroId);
+    case 'move': return heroMove(s, cat, heroId, act.to);
+    case 'rest': return heroRest(s, cat, heroId);
+    case 'counter-plot': return heroDiscardPlot(s, cat, heroId);
+    case 'retrieve-favor': return heroRetrieveFavor(s, cat, heroId);
+    case 'consult': return heroConsultCharacter(s, cat, heroId, act.character, act.choice);
+    case 'survey': return heroSurvey(s, cat, heroId);
+    case 'trade-favor': return heroTradeFavor(s, cat, act.fromId, act.toId, act.n);
+    case 'end': return endHeroActions(s, cat);
+  }
+}
+
+/** Plain-language description of what an AI hero is about to do (shown to a
+ *  human Sauron, who steps the heroes' turns one action at a time). */
+export function describeHeroAction(s: GameState, cat: Catalog, heroId: HeroId, raw: HeroAction): string {
+  const act = coerceHeroAction(s, cat, heroId, raw);
+  const hero = s.heroes.find((h) => h.id === heroId)!;
+  const name = cat.heroes[heroId]?.name ?? heroId;
+  const loc = (id: string) => cat.locations[id]?.name ?? id;
+  const here = loc(hero.location);
+  switch (act.kind) {
+    case 'move': return `${name} travels from ${here} to ${loc(act.to)}.`;
+    case 'explore': return `${name} explores ${here} (draws Encounter cards).`;
+    case 'engage': {
+      const foe = cat.monsters[act.monsterId]?.name ?? cat.minions[act.monsterId]?.name ?? 'a foe';
+      return `${name} engages ${foe} at ${here}.`;
+    }
+    case 'rest': return `${name} rests at ${here}.`;
+    case 'counter-plot': return `${name} spends favor to counter a plot at ${here}.`;
+    case 'retrieve-favor': return `${name} picks up a favor token at ${here}.`;
+    case 'consult': return `${name} consults ${act.character} at ${here} (${act.choice === 'ability' ? 'ability' : 'favor'}).`;
+    case 'survey': return `${name} surveys (looks at) Sauron's board information.`;
+    case 'trade-favor': return `${name} passes favor to ${cat.heroes[act.toId]?.name ?? act.toId}.`;
+    case 'end': return `${name} ends the turn${hero.encounterStepDone ? '' : ' (then draws Encounter cards if the location is not perilous)'}.`;
+  }
+}
+
+function coerceHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act: HeroAction): HeroAction {
   const hero = s.heroes.find((h) => h.id === heroId)!;
   // Rest is a once-per-turn step (rulebook p.20): if the hero has already rested,
   // there is nothing more to rest for — end the turn instead of repeating it.
@@ -844,18 +885,7 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
     const foes = engageableMonsters(s, heroId);
     if (foes.length) act = { kind: 'engage', monsterId: foes[0] };
   }
-  switch (act.kind) {
-    case 'engage': return heroEngage(s, cat, heroId, act.monsterId);
-    case 'explore': return heroExplore(s, cat, heroId);
-    case 'move': return heroMove(s, cat, heroId, act.to);
-    case 'rest': return heroRest(s, cat, heroId);
-    case 'counter-plot': return heroDiscardPlot(s, cat, heroId);
-    case 'retrieve-favor': return heroRetrieveFavor(s, cat, heroId);
-    case 'consult': return heroConsultCharacter(s, cat, heroId, act.character, act.choice);
-    case 'survey': return heroSurvey(s, cat, heroId);
-    case 'trade-favor': return heroTradeFavor(s, cat, act.fromId, act.toId, act.n);
-    case 'end': return endHeroActions(s, cat);
-  }
+  return act;
 }
 
 /** M15: drive the AI-controlled hero side one full "half turn" — from the start
@@ -872,6 +902,9 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
 export function advanceHeroSide(
   s: GameState, cat: Catalog, strat: HeroStrategy, rng: Rng,
   isAiHero: (heroId: HeroId) => boolean = () => true, maxSteps = 5000,
+  /** When given, the loop stops BEFORE applying the next AI hero action and
+   *  reports it here (for a human Sauron who steps the heroes one action at a time). */
+  peek?: { heroId?: HeroId; act?: HeroAction },
 ): GameState {
   let steps = 0;
   while (!s.winner && s.activeSide === 'Hero' && steps < maxSteps) {
@@ -900,8 +933,12 @@ export function advanceHeroSide(
     if (s.phase === 'HeroActions') {
       const hero = s.heroes[s.activeHeroIndex];
       if (!isAiHero(hero.id)) break; // control returns to this hero's human owner
-      if (hero.status !== 'active' || hero.actionsRemaining <= 0) { s = endHeroActions(s, cat); continue; }
+      if (hero.status !== 'active' || hero.actionsRemaining <= 0) {
+        if (peek && hero.status === 'active') { peek.heroId = hero.id; peek.act = { kind: 'end' }; break; }
+        s = endHeroActions(s, cat); continue;
+      }
       const act = strat.heroAction(s, cat, hero.id, rng);
+      if (peek) { peek.heroId = hero.id; peek.act = act; break; }
       s = applyHeroAction(s, cat, hero.id, act);
       continue;
     }

@@ -1,3 +1,4 @@
+import { toHeroActions } from './_util';
 // M11 — named elite minions as real board figures. Verifies the roster loads,
 // the Eye deploys reserve minions gradually during its turn, minions are
 // engageable like monsters, defeating one removes it from the board, and the
@@ -86,8 +87,7 @@ assert(roster.every((m) => !!m.ability && !!m.effectKey), 'every minion carries 
   const s = newGame(cat, 7);
   // advance into the hero's action phase before engaging
   let s0: GameState = s;
-  let g0 = 0;
-  while (s0.phase !== 'HeroActions' && g0++ < 20) s0 = advance(s0, cat);
+  s0 = toHeroActions(s0, cat);
   const hero = s0.heroes[0];
   s0.story.sauronProgress = 8; // stage 2 so a reserve minion activates
   const id = deployMinion(s0, cat);
@@ -127,8 +127,7 @@ assert(roster.every((m) => !!m.ability && !!m.effectKey), 'every minion carries 
 {
   const s = newGame(cat, 9);
   let s0: GameState = s;
-  let g0 = 0;
-  while (s0.phase !== 'HeroActions' && g0++ < 20) s0 = advance(s0, cat);
+  s0 = toHeroActions(s0, cat);
   const hero = s0.heroes[0];
   for (const loc of Object.keys(s0.map.minionsAt ?? {})) s0.map.minionsAt![loc] = [];
   (s0.map.minionsAt ||= {})[hero.location] = ['minion-mouth-of-sauron'];

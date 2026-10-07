@@ -3,13 +3,13 @@
 // both). The 8 texts below are owner-verified from the physical tokens (the
 // full set in the box; there are no Galadriel/Elrond tokens in this game).
 import { describe, it, expect } from 'vitest';
-import { cat } from './helpers';
+import { cat, toHeroActions } from './helpers';
 import { newGame, advance } from '../src/engine/game';
 import { heroConsultCharacter } from '../src/engine/economy';
 
 function ready(seed: number) {
   let s = newGame(cat, seed, ['beravor', 'thalin']);
-  for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+  s = toHeroActions(s);
   return s;
 }
 

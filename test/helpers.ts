@@ -2,7 +2,7 @@
 // loaded once; each test that mutates state builds its own fresh game via
 // `freshGame()` so tests never leak into one another.
 import { loadCatalog } from '../src/data/loadAssets';
-import { newGame } from '../src/engine/game';
+import { newGame, advance, autoResolvePendingTree, dismissReveal } from '../src/engine/game';
 import type { Catalog, GameState, CombatCard, Plot } from '../src/engine/types';
 
 export const cat: Catalog = loadCatalog();
@@ -54,3 +54,14 @@ export function collectTreeProblems(tree: any, name: string): string[] {
   return problems;
 }
 
+
+/** Advance a fresh game through Sauron's opening turn (and any pending event
+ *  choices it raises) until the first hero's HeroActions phase. */
+export function toHeroActions(s: GameState): GameState {
+  for (let i = 0; i < 60 && s.phase !== 'HeroActions'; i++) {
+    if (s.pendingTree) s = autoResolvePendingTree(s, cat);
+    else if (s.pendingReveal) s = dismissReveal(s);
+    else s = advance(s, cat);
+  }
+  return s;
+}

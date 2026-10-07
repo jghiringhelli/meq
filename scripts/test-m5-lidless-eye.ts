@@ -1,3 +1,4 @@
+import { toHeroActions } from './_util';
 // M5 acceptance test — the Lidless Eye (Sauron AI). Verifies the combat policy
 // picks legal, sensible cards; the economy policy spends influence (region
 // pressure + spawning); and full auto games with the Eye active terminate
@@ -25,7 +26,7 @@ const cat = loadCatalog();
 // --- combat policy: returns a legal card from the monster's hand -----------
 {
   let s: GameState = newGame(cat, 5);
-  s = advance(s, cat); // HeroRefresh → HeroActions
+  s = toHeroActions(s, cat);
   // drive to a combat: find a hero adjacent/at a monster, else force one
   const hero = s.heroes[0];
   // Setup no longer seeds monsters on the board (rulebook: monsters enter only

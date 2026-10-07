@@ -5,7 +5,7 @@
 // but a separate `lastCombatSummary` field now survives until the player
 // explicitly dismisses it via `dismissCombatSummary`.
 import { describe, it, expect } from 'vitest';
-import { cat } from './helpers';
+import { cat, toHeroActions } from './helpers';
 import { newGame } from '../src/engine/game';
 import { registerQuestCombat, locByName } from '../src/engine/quests';
 import { heroExplore, heroEngage, resolveChoice, dismissCombatSummary, advance } from '../src/engine/game';
@@ -13,7 +13,7 @@ import { heroExplore, heroEngage, resolveChoice, dismissCombatSummary, advance }
 describe('post-combat summary', () => {
   it('survives past pendingCombat clearing, and dismissCombatSummary clears it', () => {
     let s = newGame(cat, 7, ['beravor', 'thalin']);
-    for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+    s = toHeroActions(s);
     let hero = s.heroes.find((h) => h.id === 'beravor')!;
     const quest = cat.quests['quest-beravor-spies-in-mithlond'];
     const loc = locByName(cat, 'The Grey Havens')!;
@@ -51,7 +51,7 @@ describe('post-combat summary', () => {
 
   it('keeps a persistent combatHistory (with the round-by-round report) after the summary is dismissed', () => {
     let s = newGame(cat, 7, ['beravor', 'thalin']);
-    for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+    s = toHeroActions(s);
     let hero = s.heroes.find((h) => h.id === 'beravor')!;
     const quest = cat.quests['quest-beravor-spies-in-mithlond'];
     const loc = locByName(cat, 'The Grey Havens')!;

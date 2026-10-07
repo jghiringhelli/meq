@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cat, freshGame } from './helpers';
+import { cat, freshGame, toHeroActions } from './helpers';
 import { applyAction, type Action } from '../src/engine/actions';
 import {
   advance, heroMove, heroRest, heroExplore, endHeroActions, dismissReveal,
@@ -14,7 +14,7 @@ const json = (s: unknown) => JSON.stringify(s);
 /** Deterministic game advanced into the HeroActions phase (seed fixed). */
 function heroTurnGame(): ReturnType<typeof freshGame> {
   let s = freshGame();
-  for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+  s = toHeroActions(s);
   return s;
 }
 

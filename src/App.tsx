@@ -37,7 +37,8 @@ import ReportBugModal from './play/ReportBugModal';
 import { getUserArt, heroArt } from './data/art';
 import { pendingHeroTasks } from './engine/turnTasks';
 import { placementTargets } from './engine/influence';
-import { advanceHeroSide, missionAware, mulberry32 } from './engine/heroAI';
+import { advanceHeroSide, applyHeroAction, describeHeroAction, missionAware, mulberry32 } from './engine/heroAI';
+import type { HeroAction } from './engine/heroAI';
 import { useGameSession } from './net/session';
 import { emptyRoster, rolesOf, SAURON_ROLE, markDisconnected, markReconnected, type Roster } from './net/roles';
 import { applyRemoteAction, claimRole as hostClaimRole, dropPlayer } from './net/host';
@@ -89,6 +90,12 @@ export default function App() {
   const [sauronCommandSel, setSauronCommandSel] = useState<
     { kind: 'spawn'; monsterId: string } | { kind: 'deploy'; minionId: string } | null
   >(null);
+  // Human Sauron vs AI heroes: the heroes' turn is stepped one action at a time.
+  // `act` is what they are about to do; `results` recaps what the last action did.
+  const [heroPanel, setHeroPanel] = useState<
+    { heroId?: HeroId; act?: HeroAction; text?: string; results: string[] } | null
+  >(null);
+  const lastActLogLen = useRef(0);
 
   // ---- Multiplayer session (host-authoritative). Off by default (solo play). ----
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -201,10 +208,26 @@ export default function App() {
     // The interactive Setup influence placement precedes turn 1 entirely —
     // don't let the hero AI race ahead while a human Sauron is still laying
     // out the starting board.
-    if (state.setupInfluencePending) return;
+    if (state.setupInfluencePending || state.setupHandPending) return;
+    if (net.role !== 'host' && state.humanSide === 'Sauron') {
+      if (heroPanel?.act) return; // waiting for Sauron to press Continue
+      const peek: { heroId?: HeroId; act?: HeroAction } = {};
+      const next = advanceHeroSide(state, catalog, missionAware, heroRng.current, isAiHero, 5000, peek);
+      const results = next.log.slice(lastActLogLen.current)
+        .filter((e) => e.type !== 'phase' && e.type !== 'setup')
+        .map((e) => e.detail);
+      if (peek.act && peek.heroId) {
+        setState(next);
+        setHeroPanel({ heroId: peek.heroId, act: peek.act, text: describeHeroAction(next, catalog, peek.heroId, peek.act), results });
+      } else {
+        setState(next);
+        if (results.length && !heroPanel) setHeroPanel({ results });
+      }
+      return;
+    }
     const next = advanceHeroSide(state, catalog, missionAware, heroRng.current, isAiHero);
     setState(next);
-  }, [catalog, state, net.role, isAiHero]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [catalog, state, net.role, isAiHero, heroPanel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist the in-progress game on every change; archive it when it ends.
   useEffect(() => {
@@ -630,7 +653,7 @@ export default function App() {
   const travelModalOpen = !!(travelTo && inHeroActions && !ambush);
   const anyPending = !!(state.pendingCombat || state.pendingChoice || state.pendingEncounter
     || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction
-    || state.lastCombatSummary || travelModalOpen || state.setupInfluencePending);
+    || state.lastCombatSummary || travelModalOpen || state.setupInfluencePending || state.setupHandPending);
   const smartMode: 'endTurn' | 'advance' | null =
     state.winner || anyPending || iControlSauron ? null
       : inHeroActions ? 'endTurn'
@@ -776,6 +799,27 @@ export default function App() {
           </span>
         </div>
       )}
+      {heroPanel && iControlSauron && state.activeSide === 'Hero' && !state.pendingCombat && !state.pendingCombatOrPeril
+        && !state.pendingShadowReaction && !state.pendingTree && (
+        <div className="hero-step-panel">
+          {heroPanel.results.length > 0 && (
+            <div className="hero-step-results">
+              <b>What just happened</b>
+              <ul>{heroPanel.results.slice(-6).map((r, i) => <li key={i}>{r}</li>)}</ul>
+            </div>
+          )}
+          <div className="hero-step-next">
+            <span><b>Heroes:</b> {heroPanel.text ?? 'The heroes finished their turn.'}</span>
+            <button className="primary" onClick={() => {
+              if (!heroPanel.act || !heroPanel.heroId || !catalog) { setHeroPanel(null); return; }
+              lastActLogLen.current = state.log.length;
+              const ns = applyHeroAction(state, catalog, heroPanel.heroId, heroPanel.act);
+              setHeroPanel(null);
+              setState(ns);
+            }}>{heroPanel.act ? 'Continue ▶' : 'OK'}</button>
+          </div>
+        </div>
+      )}
       {state.setupInfluencePending && !iControlSauron && (
         <div className="banner setup-influence-banner">
           <span>Setup — waiting for Sauron to finish placing starting influence ({state.setupInfluencePending.remaining} left)…</span>
@@ -889,11 +933,11 @@ export default function App() {
 }
 
 const PHASE_STEPS: { label: string; phases: string[] }[] = [
+  { label: 'Sauron: Story', phases: ['SauronRefresh'] },
+  { label: 'Plot / Event', phases: ['SauronEvents'] },
+  { label: 'Sauron: Action', phases: ['SauronMinions'] },
   { label: 'Hero Refresh', phases: ['HeroRefresh'] },
   { label: 'Hero Actions', phases: ['HeroActions'] },
-  { label: 'Story', phases: ['SauronRefresh'] },
-  { label: 'Plot / Event', phases: ['SauronEvents'] },
-  { label: 'Action', phases: ['SauronMinions'] },
   { label: 'Advance', phases: ['StoryAdvance'] },
 ];
 
@@ -903,7 +947,7 @@ const PHASE_STEPS: { label: string; phases: string[] }[] = [
 const PHASE_DETAIL: Record<string, string> = {
   HeroRefresh: 'Each hero draws a card, then may Rest (recover Life) before acting — Rest must happen before Move.',
   HeroActions: 'Heroes act in any order: Move, Explore, Engage, Consult a favor/skill, or other actions, until all are spent.',
-  SauronRefresh: 'Story step: the Ring and (if any hero fled combat) War counters advance on the Story track.',
+  SauronRefresh: 'Sauron goes first each round: Story step (advances the story track; skipped on turn 1), then Plot, Event and Action steps.',
   SauronEvents: 'Sauron prepares a Plot (places influence toward it) and may trigger an Event card.',
   SauronMinions: "Sauron's minions and monsters act — Nazgûl and other threats move, engage, or place influence.",
   StoryAdvance: 'The Story track advances one space per Hero-Rally point banked this round.',

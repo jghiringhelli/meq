@@ -1,9 +1,10 @@
+import { toHeroActions } from './_util';
 // M4 acceptance test — layered encounter interpreter. Drives specific real
 // cards through their choice/condition trees and asserts the resulting state
 // deltas, then plays a full game exercising choice-driven encounters.
 // Run: npx tsx scripts/test-m4-encounter.ts
 import { loadCatalog } from '../src/data/loadAssets';
-import { newGame, advance, endHeroActions, resolveEncounter, encounterPlan, chooseEncounter } from '../src/engine/game';
+import { newGame, endHeroActions, resolveEncounter, encounterPlan, chooseEncounter } from '../src/engine/game';
 import { placeInfluenceAction } from '../src/engine/influence';
 import { planEncounter, applyAtoms } from '../src/engine/encounter';
 import type { GameState, HeroId } from '../src/engine/types';
@@ -102,8 +103,7 @@ function resolve(id: string, decisions: number[], setup?: (s: GameState, h: Hero
 // Explore action. We drive a hero turn to its end and assert the step fired.
 {
   let s: GameState = newGame(cat, 4);
-  let guard = 0;
-  while (s.phase !== 'HeroActions' && guard++ < 40) s = advance(s, cat);
+  s = toHeroActions(s, cat);
   // ensure the location is non-perilous (no influence) so the step is not skipped
   s.sauron.locationInfluence = {};
   const drawLogsBefore = s.log.filter((e) => e.type === 'encounter-draw').length;
@@ -124,8 +124,7 @@ function resolve(id: string, decisions: number[], setup?: (s: GameState, h: Hero
 // --- 8. perilous location skips the Encounter step ------------------------
 {
   let s: GameState = newGame(cat, 8);
-  let guard = 0;
-  while (s.phase !== 'HeroActions' && guard++ < 40) s = advance(s, cat);
+  s = toHeroActions(s, cat);
   const hero = s.heroes[s.activeHeroIndex];
   // flood the hero's location with influence so it exceeds wisdom (perilous)
   const wisdom = cat.heroes[hero.id].wisdom;

@@ -7,7 +7,7 @@
 // Combat should never be gated by the action budget (rulebook: engaging a foe
 // is part of Ambush/Travel, not a metered action).
 import { describe, it, expect } from 'vitest';
-import { cat } from './helpers';
+import { cat, toHeroActions } from './helpers';
 import { newGame } from '../src/engine/game';
 import { registerQuestCombat, locByName, questSubstituteMonster } from '../src/engine/quests';
 import { heroExplore, heroEngage, engageableMonsters, advance } from '../src/engine/game';
@@ -15,7 +15,7 @@ import { heroExplore, heroEngage, engageableMonsters, advance } from '../src/eng
 describe('quest encounter-substitution combat', () => {
   it('places a revealed foe on Explore and lets the hero fight it with 0 actions left', () => {
     let s = newGame(cat, 7, ['beravor', 'thalin']);
-    for (let i = 0; i < 50 && s.phase !== 'HeroActions'; i++) s = advance(s, cat);
+    s = toHeroActions(s);
     const hero = s.heroes.find((h) => h.id === 'beravor')!;
     const quest = cat.quests['quest-beravor-spies-in-mithlond'];
     const loc = locByName(cat, 'The Grey Havens')!;

@@ -571,9 +571,9 @@ export function endHeroActions(state: GameState, cat: Catalog): GameState {
     return runHeroRefresh(s, cat);
   }
   s.heroSecondTurnPending = false;
-  s.activeSide = 'Sauron';
-  s.phase = 'SauronRefresh';
-  return s;
+  // Last hero done: finale/win checks, then the next round opens with Sauron's turn.
+  s.phase = 'StoryAdvance';
+  return runStoryAdvance(s, cat);
 }
 
 /** Special Hero Rally step (manual, Sauron turn step 1 — also run between the
@@ -682,8 +682,6 @@ function runSauronRefresh(s: GameState, cat: Catalog): GameState {
         log(s, 'sauron', 'Sauron', `${p.name} advances the ${p.markerName ?? marker} marker`);
       }
     }
-  } else {
-    log(s, 'sauron', 'Sauron', 'Story Step skipped on the first game turn (no marker advance)');
   }
   // Stage minions (e.g. Gothmog at stage II, the Witch-king at stage III) deploy
   // automatically once the game reaches their stage — independent of the Eye's
@@ -704,7 +702,8 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   // === Plot Step === the Eye plays/advances a plot into an empty plot location,
   // chosen by the bot priority list. Skipped when a human controls Sauron — the
   // human already resolved their Plot Step interactively.
-  if (s.humanSide !== 'Sauron') {
+  // Skipped on the first game turn (rulebook p.10).
+  if (s.humanSide !== 'Sauron' && s.story.turn > 1) {
     advancePlots(s, cat, late, (msg) => log(s, 'sauron-ai', 'Sauron', msg));
   }
   // === Event Step === draw from the shuffled Event deck per dominance:
@@ -1148,8 +1147,16 @@ function runStoryAdvance(s: GameState, cat: Catalog): GameState {
     log(s, 'game-over', win.side, win.reason);
     return s;
   }
-  s.round += 1;
-  s.story.turn += 1;
+  // After the last hero: a new round begins with Sauron's turn (rulebook p.10:
+  // Sauron first, then each hero clockwise). After Sauron's turn: the heroes.
+  if (s.activeSide === 'Hero') {
+    s.round += 1;
+    s.story.turn += 1;
+    s.activeSide = 'Sauron';
+    s.phase = 'SauronRefresh';
+    log(s, 'phase', 'system', `round ${s.round} (story turn ${s.story.turn})`);
+    return s;
+  }
   s.activeSide = 'Hero';
   s.activeHeroIndex = 0;
   s.phase = 'HeroRefresh';
@@ -1394,6 +1401,7 @@ export function advance(state: GameState, cat: Catalog): GameState {
 /** Story Step: advance the dark story clock and move to the Plot/Event phase. */
 export function sauronStoryStep(state: GameState, cat: Catalog): GameState {
   if (state.phase !== 'SauronRefresh') return state;
+  if (state.setupInfluencePending || state.setupHandPending) return state;
   return runSauronRefresh(clone(state), cat);
 }
 
