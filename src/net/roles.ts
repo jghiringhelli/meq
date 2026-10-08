@@ -87,6 +87,7 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
         ? (state.pendingTree.heroId as RoleId)
         : SAURON_ROLE;
     case 'choice':
+      return state.pendingChoice?.seat === 'sauron' ? SAURON_ROLE : activeRole(state);
     case 'chooseEncounter':
     case 'revealEncounter':
     case 'dismissReveal':

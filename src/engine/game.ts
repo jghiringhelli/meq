@@ -1,6 +1,6 @@
 // Orchestrator: the public engine surface tying phases + combat + choices.
 import type { Catalog, GameState, HeroId, MonsterId } from './types';
-import { beginCombat, resolveCombatChoice, resolvePreparation } from './combat';
+import { beginCombat, resolveCombatChoice, resolveDefenderChoice, resolvePreparation } from './combat';
 import { spendActionForCombat } from './phases';
 import { resolveQuestRewardChoice } from './quests';
 import { resolveSurveyChoice } from './economy';
@@ -51,6 +51,8 @@ export function resolveChoice(state: GameState, cat: Catalog, optionId: string):
     }
     case 'combat-card':
       return resolveCombatChoice(cleared, cat, optionId);
+    case 'combat-defender':
+      return resolveDefenderChoice(cleared, cat, optionId);
     case 'quest-reward': {
       const s = clone(cleared);
       resolveQuestRewardChoice(s, cat, optionId);

@@ -836,7 +836,7 @@ export default function App() {
 
       {state.pendingCombat && (
         <CombatBoard state={state} cat={cat}
-          onChoose={state.pendingChoice ? doChoice : undefined} sauronView={iControlSauron} />
+          onChoose={state.pendingChoice && (state.pendingChoice.seat !== 'sauron' || iControlSauron) ? doChoice : undefined} sauronView={iControlSauron} />
       )}
 
       {state.lastCombatSummary && !state.pendingCombat && (

@@ -633,6 +633,8 @@ export interface CombatState {
   monsterOncePerBattle?: Record<string, boolean>;
   /** Balrog "Fear": the hero must play a random combat card next round. */
   forceHeroRandom?: boolean;
+  /** The hero's already-chosen card, held face-down while a human Sauron picks the foe's card. */
+  heroPick?: { card?: CardId };
 }
 
 // ---- Choices & log ----

@@ -911,6 +911,7 @@ export function advanceHeroSide(
     steps++;
     if (s.pendingChoice) {
       const seat = s.pendingChoice.seat;
+      if (seat === 'sauron') break; // a human Sauron picks the foe's card
       const heroId = typeof seat === 'number' ? s.heroes[seat]?.id : undefined;
       if (heroId && !isAiHero(heroId)) break; // that hero's own controller decides
       s = resolveChoice(s, cat, strat.combatOption(s, cat, s.pendingChoice.options, rng)); continue;

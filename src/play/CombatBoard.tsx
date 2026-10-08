@@ -359,7 +359,7 @@ export default function CombatBoard({ state, cat, onChoose, sauronView }: Props)
                 <div className="cb-options">
                   {ch.options.map((o, i) => {
                     const card = cat.combatCards[o.id];
-                    const img = card ? combatCardArt(card, hero.refId) : '';
+                    const img = card ? combatCardArt(card, ch.kind === 'combat-defender' ? combatantOwnerKey(cat, foe.refId) : hero.refId) : '';
                     const declare = o.id === '__exhaust__';
                     return (
                       <button key={`${o.id}-${i}`}

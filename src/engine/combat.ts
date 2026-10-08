@@ -185,16 +185,14 @@ function queueCombatChoice(s: GameState, cat: Catalog): GameState {
   // If the hero is exhausted (but the monster is not), the hero can make no
   // decision — auto-run bouts (hero passes 0/0) until the battle resolves.
   if (pc.attacker.exhausted) {
-    pc.reveal = { attacker: undefined, defender: pickDefenderCard(s, cat) ?? undefined };
-    return runBout(s, cat);
+    return defenderTurn(s, cat, undefined);
   }
   // Balrog "Fear": the hero must play a RANDOM card this round (no choice).
   if (pc.forceHeroRandom && pc.attacker.hand.length) {
     pc.forceHeroRandom = false;
     const cid = pc.attacker.hand[nextInt(s, pc.attacker.hand.length)];
     log(s, 'combat', pc.attacker.refId, `${pc.attacker.name} must play a random card (Fear): ${cat.combatCards[cid]?.name ?? cid}`);
-    pc.reveal = { attacker: cid, defender: pickDefenderCard(s, cat) ?? undefined };
-    return runBout(s, cat);
+    return defenderTurn(s, cat, cid);
   }
   const seat = s.heroes.find((h) => h.id === pc.attacker.refId)?.seat ?? 0;
   const budgetNote = `str ${pc.attacker.strengthSpent}/${pc.attacker.strength}`;
@@ -219,6 +217,49 @@ function pickDefenderCard(s: GameState, cat: Catalog): CardId | null {
   return chooseMonsterCard(s, cat) ?? autoPick(cat, pc.defender);
 }
 
+/** The foe's side of a bout. The Lidless Eye picks automatically; a human Sauron
+ *  chooses from the foe's drawn hand (or declares exhaustion), exactly like a hero. */
+function defenderTurn(s: GameState, cat: Catalog, aCard: CardId | undefined): GameState {
+  const pc = s.pendingCombat!;
+  if (sauronAuto(s) || pc.defender.exhausted || !pc.defender.hand.length) {
+    pc.reveal = { attacker: aCard, defender: pickDefenderCard(s, cat) ?? undefined };
+    return runBout(s, cat);
+  }
+  pc.heroPick = { card: aCard };
+  const monRef = pc.defender.kind === 'monster' && String(pc.defender.refId).startsWith('mon-')
+    ? String(pc.defender.refId) : undefined;
+  const bottom = (pc.stack?.defender.length ?? 0) === 0;
+  const options = pc.defender.hand.map((cid) => {
+    const raw = cat.combatCards[cid];
+    const c = (monRef ? monsterAdjustCard(monRef, raw) : raw) ?? raw;
+    const cost = monRef ? monsterCardCost(monRef, raw, bottom) : raw.strengthCost;
+    return { id: cid, label: `${raw.name} [${raw.type}] atk ${c.attack} / def ${c.defense} · cost ${cost}` };
+  });
+  options.push({ id: EXHAUST_OPT, label: 'Declare exhaustion (stop fighting)' });
+  return requestChoice(s, {
+    id: `combat-def-${pc.round}`, seat: 'sauron', kind: 'combat-defender',
+    prompt: `Combat round ${pc.round} — choose ${pc.defender.name}'s card vs ${pc.attacker.name} (str ${pc.defender.strengthSpent}/${pc.defender.strength}) or declare exhaustion`,
+    options,
+  });
+}
+
+/** Resolve a human Sauron's card for the foe, then run the bout. */
+export function resolveDefenderChoice(state: GameState, cat: Catalog, choice: CardId): GameState {
+  const s = clone(state);
+  const pc = s.pendingCombat!;
+  const aCard = pc.heroPick?.card;
+  pc.heroPick = undefined;
+  let dCard: CardId | undefined;
+  if (choice === EXHAUST_OPT || !pc.defender.hand.includes(choice)) {
+    pc.defender.exhausted = true;
+    log(s, 'combat', 'Sauron', `${pc.defender.name} declares exhaustion`);
+  } else {
+    dCard = choice;
+  }
+  pc.reveal = { attacker: aCard, defender: dCard };
+  return runBout(s, cat);
+}
+
 /** Resolve the attacker's choice (a card id, or the Declare-exhaustion option):
  *  the defender picks, then run one bout. Enforces the cumulative-strength budget. */
 export function resolveCombatChoice(state: GameState, cat: Catalog, attackerChoice: CardId): GameState {
@@ -231,9 +272,7 @@ export function resolveCombatChoice(state: GameState, cat: Catalog, attackerChoi
   } else {
     aCard = attackerChoice;
   }
-  const dCard = pickDefenderCard(s, cat) ?? undefined;
-  pc.reveal = { attacker: aCard, defender: dCard };
-  return runBout(s, cat);
+  return defenderTurn(s, cat, aCard);
 }
 
 /** Reveal a side's card into its stack and enforce the strength budget: if the
