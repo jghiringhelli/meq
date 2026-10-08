@@ -164,6 +164,15 @@ export default function CombatBoard({ state, cat, onChoose, sauronView }: Props)
     wasChoice.current = !!(ch && onChoose);
   }, [ch, onChoose]);
 
+  if (state.sauronCombatInfluence && sauronView) {
+    return (
+      <div className="cb-min" role="dialog" aria-label="Place combat influence">
+        <span className="cb-min-txt">
+          {state.sauronCombatInfluence.note}: click a glowing + location on the map ({state.sauronCombatInfluence.remaining} left)
+        </span>
+      </div>
+    );
+  }
   if (min) {
     return (
       <div className="cb-min" role="dialog" aria-label="Combat (minimized)">

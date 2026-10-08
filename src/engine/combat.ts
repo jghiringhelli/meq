@@ -15,7 +15,7 @@ import { chooseMonsterCard } from './ai';
 import { statValue, stepResolveTree, bestTreeOption } from './encounter';
 import { gainCorruption, corruptionCombatStartDiscard, grantFavor } from './corruption';
 import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
-import { bestPlacementToward, placeInfluenceAction } from './influence';
+import { bestPlacementToward, placeInfluenceAction, placementTargets, canPlaceInfluence, influenceAt } from './influence';
 import { tryCompleteQuestsOnDefeat } from './quests';
 import { syncLife, heroDefeated, dealHeroDamage } from './heroLife';
 import {
@@ -217,6 +217,54 @@ function pickDefenderCard(s: GameState, cat: Catalog): CardId | null {
   return chooseMonsterCard(s, cat) ?? autoPick(cat, pc.defender);
 }
 
+/** A human Sauron owes `n` extension-influence placements from combat; he
+ *  clicks the map for each. Skipped when there is nowhere legal to place. */
+function owePlacement(s: GameState, cat: Catalog, n: number, note: string): void {
+  if (n <= 0 || !placementTargets(s, cat).length) return;
+  s.sauronCombatInfluence = { remaining: (s.sauronCombatInfluence?.remaining ?? 0) + n, note };
+}
+
+/** After a bout: pause for Sauron's optional draw, then any owed influence,
+ *  then continue with the next round's card choice. */
+function resumeAfterBout(s: GameState, cat: Catalog): GameState {
+  const pc = s.pendingCombat!;
+  if (pc.mayDraw) {
+    return requestChoice(s, {
+      id: `combat-draw-${pc.round}`, seat: 'sauron', kind: 'combat-sauron-draw',
+      prompt: `${pc.defender.name} (Bloodfury): draw a Combat card?`,
+      options: [{ id: 'draw', label: 'Draw a Combat card' }, { id: 'skip', label: 'Do not draw' }],
+    });
+  }
+  if (s.sauronCombatInfluence) return s; // paused until Sauron places it
+  return queueCombatChoice(s, cat);
+}
+
+/** Answer the optional Bloodfury draw. */
+export function resolveSauronDraw(state: GameState, cat: Catalog, optionId: string): GameState {
+  const s = clone(state);
+  const pc = s.pendingCombat!;
+  pc.mayDraw = false;
+  if (optionId === 'draw') {
+    drawCombat(s, pc.defender, 1);
+    log(s, 'monster-ability', 'Sauron', `${pc.defender.name} Bloodfury: draws a combat card`);
+  }
+  return resumeAfterBout(s, cat);
+}
+
+/** Place one owed combat influence token on a legal extension location. */
+export function sauronCombatPlaceInfluence(state: GameState, cat: Catalog, loc: LocationId): GameState {
+  const p = state.sauronCombatInfluence;
+  if (!p || state.pendingChoice || p.remaining <= 0 || !canPlaceInfluence(state, cat, loc)) return state;
+  const s = clone(state);
+  if (placeInfluenceAction(s, cat, loc, 1) <= 0) return state;
+  log(s, 'combat', 'Sauron', `${p.note} — ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
+  const left = p.remaining - 1;
+  if (left <= 0 || !placementTargets(s, cat).length) s.sauronCombatInfluence = undefined;
+  else s.sauronCombatInfluence = { remaining: left, note: p.note };
+  if (!s.sauronCombatInfluence && s.pendingCombat && !s.pendingChoice) return resumeAfterBout(s, cat);
+  return s;
+}
+
 /** The foe's side of a bout. The Lidless Eye picks automatically; a human Sauron
  *  chooses from the foe's drawn hand (or declares exhaustion), exactly like a hero. */
 function defenderTurn(s: GameState, cat: Catalog, aCard: CardId | undefined): GameState {
@@ -340,8 +388,10 @@ function runBout(s: GameState, cat: Catalog): GameState {
     const monMax = cat.monsters[pc.defender.refId]?.fortitude ?? pc.defender.life;
     const post = applyMonsterPostBout(s, cat, {
       refId: monRef, attackerType: aType, defenderType: dType,
-      dmgToHero: dmgToAttacker, prevented, monsterMaxLife: monMax,
+      dmgToHero: dmgToAttacker, prevented, monsterMaxLife: monMax, manual: !sauronAuto(s),
     });
+    if (post.influenceOwed) owePlacement(s, cat, post.influenceOwed, `${pc.defender.name} Spy: place influence`);
+    if (post.offerDraw) pc.mayDraw = true;
     dmgToAttacker = post.dmgToHero;
     fromHand = post.fromHand;
     if (post.heal > 0 && pc.defender.life > 0) pc.defender.life += post.heal;
@@ -436,8 +486,9 @@ function runBout(s: GameState, cat: Catalog): GameState {
   if (pc.defender.life <= 0) return endCombat(s, cat, 'attacker', `${pc.defender.name} defeated`);
   if (heroDefeated(pc.attacker)) return endCombat(s, cat, 'defender', `${pc.attacker.name} defeated`);
   pc.round += 1;
-  return queueCombatChoice(s, cat);
+  return resumeAfterBout(s, cat);
 }
+
 
 function discardRandom(s: GameState, c: Combatant): void {
   if (!c.hand.length) return;
@@ -681,6 +732,10 @@ function firstAdjacent(cat: Catalog, from: LocationId): LocationId | null {
 function placeUndefeatedFoeInfluence(s: GameState, cat: Catalog, pc: CombatState): void {
   const foeWisdom = cat.monsters[pc.defender.refId]?.wisdom ?? cat.minions[pc.defender.refId]?.wisdom ?? 0;
   if (foeWisdom <= 0 || !pc.locationId) return;
+  if (!sauronAuto(s)) {
+    owePlacement(s, cat, foeWisdom, `undefeated ${pc.defender.name}: place influence`);
+    return;
+  }
   let placed = 0;
   for (let i = 0; i < foeWisdom; i++) {
     const loc = bestPlacementToward(s, cat, pc.locationId);

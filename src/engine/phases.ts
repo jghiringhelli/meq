@@ -1376,7 +1376,7 @@ export function checkWin(s: GameState, _cat: Catalog): WinResult | null {
 /** Advance the phase machine one step. Never advances through an interactive
  *  HeroActions step or while a choice/combat is pending. */
 export function advance(state: GameState, cat: Catalog): GameState {
-  if (state.pendingChoice || state.pendingCombat || state.pendingTree) return state;
+  if (state.pendingChoice || state.pendingCombat || state.pendingTree || state.sauronCombatInfluence) return state;
   // A human Sauron drives their own turn via the sauronPlay functions; the phase
   // machine must not auto-run the Lidless Eye on their behalf.
   if (state.humanSide === 'Sauron' && state.activeSide === 'Sauron' && state.phase !== 'GameOver') {

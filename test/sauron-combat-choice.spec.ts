@@ -51,3 +51,39 @@ describe('human Sauron plays the foe combat cards', () => {
     expect(s.pendingChoice?.kind).not.toBe('combat-defender');
   });
 });
+
+describe('combat influence and optional draws are the human Sauron\'s decisions', () => {
+  it('an undefeated foe owes wisdom-many placements that Sauron places by hand', async () => {
+    const { applyAction } = await import('../src/engine/actions');
+    const { placementTargets } = await import('../src/engine/influence');
+    let s = toSauronChoice('mon-snaga', true);
+    const before = JSON.stringify(s.sauron.locationInfluence);
+    s = resolveChoice(s, cat, '__exhaust__'); // hero stops fighting
+    s = resolveChoice(s, cat, '__exhaust__'); // Sauron stops too -> standoff
+    expect(s.pendingCombat).toBeNull();
+    expect(JSON.stringify(s.sauron.locationInfluence)).toBe(before); // nothing placed automatically
+    expect(s.sauronCombatInfluence?.remaining).toBe(cat.monsters['mon-snaga'].wisdom);
+    expect(() => applyAction(s, cat, { t: 'advance' })).toThrow();
+    while (s.sauronCombatInfluence) {
+      const loc = placementTargets(s, cat)[0];
+      s = applyAction(s, cat, { t: 'sauronCombatInfluence', loc });
+    }
+    expect(JSON.stringify(s.sauron.locationInfluence)).not.toBe(before);
+  });
+
+  it('the automa still places undefeated-foe influence by itself', () => {
+    let s = toSauronChoice('mon-snaga', false);
+    s = resolveChoice(s, cat, '__exhaust__');
+    expect(s.sauronCombatInfluence).toBeUndefined();
+  });
+
+  it('Bloodfury asks a human Sauron whether to draw', () => {
+    let s = toSauronChoice('mon-uruk-hai', true);
+    s.pendingCombat!.mayDraw = true;
+    s.pendingChoice = null;
+    const hand = s.pendingCombat!.defender.hand.length;
+    s = resolveChoice({ ...s, pendingChoice: { id: 'x', seat: 'sauron', kind: 'combat-sauron-draw', prompt: '', options: [] } }, cat, 'draw');
+    expect(s.pendingCombat!.mayDraw).toBe(false);
+    expect(s.pendingCombat!.defender.hand.length).toBeGreaterThanOrEqual(hand);
+  });
+});

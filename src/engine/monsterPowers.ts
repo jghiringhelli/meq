@@ -45,6 +45,8 @@ export interface PostBoutCtx {
   dmgToHero: number;          // damage the monster dealt the hero this round
   prevented: number;          // damage the monster's defense absorbed this round
   monsterMaxLife: number;
+  /** A human Sauron decides the optional/placement parts himself. */
+  manual?: boolean;
 }
 
 export interface PostBoutResult {
@@ -56,6 +58,10 @@ export interface PostBoutResult {
   heal: number;
   /** the hero must play a random card next round (Balrog Fear). */
   forceHeroRandom: boolean;
+  /** manual only: influence tokens Sauron must place (Crebain Spy). */
+  influenceOwed?: number;
+  /** manual only: Sauron may draw a combat card (Bloodfury). */
+  offerDraw?: boolean;
 }
 
 function drawMonster(s: GameState, c: Combatant, n: number): void {
@@ -95,7 +101,10 @@ export function applyMonsterPostBout(
     case 'mon-crebain': {
       // Spy: each point of Ranged damage becomes 1 influence in extension of a
       // Shadow Stronghold (toward the combat location) instead of hurting the hero.
-      if (dealtRanged) {
+      if (dealtRanged && ctx.manual) {
+        res.influenceOwed = ctx.dmgToHero;
+        res.dmgToHero = 0;
+      } else if (dealtRanged) {
         let placed = 0;
         for (let i = 0; i < ctx.dmgToHero; i++) {
           const loc = bestPlacementToward(s, cat, pc.locationId);
@@ -134,7 +143,8 @@ export function applyMonsterPostBout(
     }
     case 'mon-uruk-hai': {
       // Bloodfury: on dealing Melee damage, the monster draws a combat card.
-      if (dealtMelee) { drawMonster(s, pc.defender, 1); log(s, 'monster-ability', 'Sauron', 'Uruk-hai Bloodfury: draws a combat card'); }
+      if (dealtMelee && ctx.manual) res.offerDraw = true;
+      else if (dealtMelee) { drawMonster(s, pc.defender, 1); log(s, 'monster-ability', 'Sauron', 'Uruk-hai Bloodfury: draws a combat card'); }
       break;
     }
     case 'mon-giant-spider': {

@@ -909,6 +909,7 @@ export function advanceHeroSide(
   let steps = 0;
   while (!s.winner && s.activeSide === 'Hero' && steps < maxSteps) {
     steps++;
+    if (s.sauronCombatInfluence) break; // a human Sauron places combat influence first
     if (s.pendingChoice) {
       const seat = s.pendingChoice.seat;
       if (seat === 'sauron') break; // a human Sauron picks the foe's card

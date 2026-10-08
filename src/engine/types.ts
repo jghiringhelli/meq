@@ -635,6 +635,8 @@ export interface CombatState {
   forceHeroRandom?: boolean;
   /** The hero's already-chosen card, held face-down while a human Sauron picks the foe's card. */
   heroPick?: { card?: CardId };
+  /** A human Sauron may draw a combat card for the foe (Uruk-hai Bloodfury). */
+  mayDraw?: boolean;
 }
 
 // ---- Choices & log ----
@@ -809,4 +811,6 @@ export interface GameState {
    *  automatically (used by the AI drivers even when humanSide==='Sauron' is a
    *  self-play device). A real human Sauron leaves this unset. */
   sauronReactsAuto?: boolean;
+  /** Influence a human Sauron still owes from combat (Crebain Spy / undefeated foe), placed by map click. */
+  sauronCombatInfluence?: { remaining: number; note: string };
 }

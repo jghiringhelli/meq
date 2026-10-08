@@ -7,6 +7,7 @@
 // network/session layer should route ALL player intents through here.
 import type { Catalog, GameState, HeroId, MonsterId, MinionId, LocationId, CardId } from './types';
 import type { EyeTrack } from './sauronmech';
+import { sauronCombatPlaceInfluence } from './combat';
 import {
   advance, heroMove, heroRest, heroEngage, endHeroActions, resolveChoice,
   heroExplore, resolveEncounter, chooseEncounter, revealEncounter, dismissReveal,
@@ -52,6 +53,7 @@ export type Action =
   | { t: 'setupPlaceInfluence'; loc: LocationId }
   | { t: 'sauronKeepStartingHand'; shadow: string[]; plot: string[] }
   | { t: 'sauronFinishCommand' }
+  | { t: 'sauronCombatInfluence'; loc: string }
   | { t: 'sauronSpawnMonster'; monsterId: MonsterId; loc: LocationId }
   | { t: 'sauronDeployMinion'; minionId: MinionId; loc: LocationId }
   | { t: 'sauronMoveFigure'; kind: 'monster' | 'minion'; id: string; from: LocationId; to: LocationId }
@@ -74,6 +76,9 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
   // happened).
   if (state.pendingTree && action.t !== 'treeDecision') {
     throw new Error(`A pending decision ("${state.pendingTree.prompt}") must be resolved first`);
+  }
+  if (state.sauronCombatInfluence && !['sauronCombatInfluence', 'dismissCombatSummary', 'dismissReveal'].includes(action.t)) {
+    throw new Error('Sauron must place his combat influence first');
   }
   switch (action.t) {
     case 'advance': return advance(state, cat);
@@ -105,6 +110,7 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'sauronBeginAction': return sauronBeginAction(state, cat, action.track);
     case 'sauronPlaceInfluence': return sauronPlaceInfluence(state, cat, action.loc);
     case 'setupPlaceInfluence': return setupPlaceInfluence(state, cat, action.loc);
+    case 'sauronCombatInfluence': return sauronCombatPlaceInfluence(state, cat, action.loc);
     case 'sauronFinishCommand': return sauronFinishCommand(state);
     case 'sauronKeepStartingHand': return sauronKeepStartingHand(state, cat, action.shadow, action.plot);
     case 'sauronSpawnMonster': return sauronSpawnMonster(state, cat, action.monsterId, action.loc);

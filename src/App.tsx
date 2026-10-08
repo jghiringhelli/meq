@@ -456,9 +456,10 @@ export default function App() {
   // share the same extension-rule legality (engine/influence.ts).
   const placingSetup = iControlSauron && !!state.setupInfluencePending;
   const placingAction = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'influence';
-  const placeInfluenceTargets = placingSetup || placingAction ? placementTargets(state, cat) : undefined;
+  const placingCombat = iControlSauron && !!state.sauronCombatInfluence && !state.pendingChoice;
+  const placeInfluenceTargets = placingSetup || placingAction || placingCombat ? placementTargets(state, cat) : undefined;
   const doPlaceInfluence = (loc: string) =>
-    dispatch({ t: placingSetup ? 'setupPlaceInfluence' : 'sauronPlaceInfluence', loc } as Action);
+    dispatch({ t: placingCombat ? 'sauronCombatInfluence' : placingSetup ? 'setupPlaceInfluence' : 'sauronPlaceInfluence', loc } as Action);
   // Sauron's Move-figure Command sub-action — same on-map pattern as influence
   // placement, just its own colour/badge so the two click-modes are never
   // visually ambiguous. (sauronMoveFigureSel's useState is hoisted above the
@@ -654,7 +655,7 @@ export default function App() {
   // is guided by the SauronPanel instead). It ends the hero turn or advances the
   // dark side's AI step, glowing when nothing is left and warning otherwise.
   const travelModalOpen = !!(travelTo && inHeroActions && !ambush);
-  const anyPending = !!(state.pendingCombat || state.pendingChoice || state.pendingEncounter
+  const anyPending = !!(state.sauronCombatInfluence || state.pendingCombat || state.pendingChoice || state.pendingEncounter
     || state.pendingReveal || state.pendingTree || state.pendingCombatOrPeril || state.pendingShadowReaction
     || state.lastCombatSummary || travelModalOpen || state.setupInfluencePending || state.setupHandPending);
   const smartMode: 'endTurn' | 'advance' | null =
@@ -800,6 +801,11 @@ export default function App() {
             token{state.setupInfluencePending.remaining === 1 ? '' : 's'} by clicking a glowing{' '}
             <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.
           </span>
+        </div>
+      )}
+      {state.sauronCombatInfluence && iControlSauron && !state.pendingCombat && !state.lastCombatSummary && (
+        <div className="banner setup-influence-banner">
+          <span>{state.sauronCombatInfluence.note}: click a glowing + location on the map ({state.sauronCombatInfluence.remaining} left).</span>
         </div>
       )}
       {state.winner && (
