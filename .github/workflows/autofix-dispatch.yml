@@ -22,5 +22,12 @@ jobs:
           ISSUE: ${{ github.event.issue.number }}
           REPO: ${{ github.repository }}
         run: |
+          # One agent task at a time: skip if a Copilot PR is already open.
+          OPEN=$(gh pr list --repo "$REPO" --state open --author "app/copilot-swe-agent" --json number --jq 'length')
+          if [ "$OPEN" -gt 0 ]; then
+            gh issue comment "$ISSUE" --repo "$REPO" --body "Another autofix is in progress. Re-apply the \`autofix\` label once its PR is merged or closed."
+            gh issue edit "$ISSUE" --repo "$REPO" --remove-label autofix
+            exit 0
+          fi
           gh issue comment "$ISSUE" --repo "$REPO" --body-file .github/autofix-instructions.md
           gh issue edit "$ISSUE" --repo "$REPO" --add-assignee "copilot-swe-agent[bot]"

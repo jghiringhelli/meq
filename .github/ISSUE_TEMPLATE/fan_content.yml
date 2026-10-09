@@ -1,0 +1,19 @@
+name: Fan content (optional)
+description: Optional fan-made extras (house variants, extra heroes, art packs). Never part of the official rules mode.
+labels: [fan-content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fan content is always **opt-in** and kept separate from the faithful base game.
+        Please do not attach copyrighted scans; describe the content or link to where you host it.
+  - type: textarea
+    id: content
+    attributes:
+      label: What is it?
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source / credit / license

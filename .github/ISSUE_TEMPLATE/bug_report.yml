@@ -25,6 +25,16 @@ body:
         it downloads `meq-report-seed....json`. Drag that file into this box.
         It only contains the game state/log + your browser's user-agent string —
         nothing about you personally.
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (optional but very helpful)
+      description: Paste or drag an image here.
+  - type: dropdown
+    id: role
+    attributes:
+      label: Which side were you playing?
+      options: [A hero, Sauron, Both / hotseat]
   - type: input
     id: seed
     attributes:

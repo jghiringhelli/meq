@@ -1,0 +1,27 @@
+name: Suggestion (QoL / usability)
+description: Something that would make the app easier or nicer to use. Rules changes are out of scope.
+labels: [enhancement, player-report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This port stays 100% faithful to the official rules, so suggestions about **rules or balance** will be closed.
+        Interface, clarity, accessibility, mobile and quality-of-life ideas are very welcome.
+        You can paste screenshots straight into the boxes below.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+      description: What were you trying to do, and what got in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or mock-up (optional)
+      description: Paste or drag an image here.
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options: [Desktop, Tablet, Phone]
