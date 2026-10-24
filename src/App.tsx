@@ -813,7 +813,7 @@ export default function App() {
           <b>Game over — {state.winner} wins.</b> Use ☰ Main menu to start a new game.
         </div>
       )}
-      {heroPanel && iControlSauron && state.activeSide === 'Hero' && !state.pendingCombat && !state.pendingCombatOrPeril
+      {heroPanel && iControlSauron && state.activeSide === 'Hero' && !state.pendingCombat && !state.pendingCombatOrPeril && !state.lastCombatSummary
         && !state.pendingShadowReaction && !state.pendingTree && (
         <div className="hero-step-panel">
           {heroPanel.results.length > 0 && (
