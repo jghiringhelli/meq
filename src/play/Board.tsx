@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Catalog, GameState } from '../engine/types';
 import { STORY_FINALE } from '../engine/types';
 import { reserveMinions } from '../engine/sauronPlay';
-import { characterArt, minionArt, heroArt, token, plotArt, monsterArt, shadowPoolArt } from '../data/art';
+import { characterArt, minionArt, heroArt, token, plotArt, monsterArt, shadowPoolArt, boardArt } from '../data/art';
 import { useInspect, type InspectPayload } from './CardInspector';
 
 interface Props {
@@ -96,7 +96,9 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
   const drag = useRef<{ x: number; y: number; ox: number; oy: number; moved: boolean } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const locs = Object.values(cat.locations);
-  const { width: w, height: h, image } = cat.board;
+  const { width: w, height: h } = cat.board;
+  // Resolve through the BYO-art index so a user-loaded .vmod supplies the map (the raw path 404s on static hosting).
+  const image = boardArt() || cat.board.image;
   const targetSet = new Set(moveTargets);
   const placeSet = new Set(placeInfluenceTargets ?? []);
   const moveFigSet = new Set(moveFigureTargets ?? []);
