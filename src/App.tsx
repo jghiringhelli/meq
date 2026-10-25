@@ -962,8 +962,8 @@ const PHASE_DETAIL: Record<string, string> = {
   HeroRefresh: 'Each hero draws a card, then may Rest (recover Life) before acting — Rest must happen before Move.',
   HeroActions: 'Heroes act in any order: Move, Explore, Engage, Consult a favor/skill, or other actions, until all are spent.',
   SauronRefresh: 'Sauron goes first each round: Story step (advances the story track; skipped on turn 1), then Plot, Event and Action steps.',
-  SauronEvents: 'Sauron prepares a Plot (places influence toward it) and may trigger an Event card.',
-  SauronMinions: "Sauron's minions and monsters act — Nazgûl and other threats move, engage, or place influence.",
+  SauronEvents: 'Sauron plays at most one Plot card, then resolves the Event step.',
+  SauronMinions: "Sauron's Action step: spend your actions on Place Influence, Draw Cards or Command (spawn, deploy, move, heal), or play a Shadow card.",
   StoryAdvance: 'The Story track advances one space per Hero-Rally point banked this round.',
   GameOver: 'The game has ended.',
 };
