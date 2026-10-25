@@ -20,3 +20,16 @@ test('loads art directly from the .vmod module', async ({ page }) => {
   expect(matched).toBeGreaterThan(300);
 });
 
+
+test('the loaded .vmod art persists across a page reload', async ({ page }) => {
+  test.setTimeout(90_000);
+  const vmod = path.resolve(process.cwd(), 'Middle_Earth_Quest_1.6.vmod');
+  test.skip(!fs.existsSync(vmod), 'Middle_Earth_Quest_1.6.vmod not present (BYO copyrighted module)');
+  await page.goto('/');
+  await page.setInputFiles('input[accept=".vmod,.zip"]', vmod);
+  await expect(page.locator('.art-status--on')).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(1500); // let the IndexedDB write finish
+  await page.reload();
+  await expect(page.locator('.art-status--on')).toBeVisible({ timeout: 15_000 });
+  expect(await page.locator('.art-status--on').textContent()).toMatch(/3\d\d \/ \d+ images matched/);
+});

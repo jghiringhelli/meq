@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildArtIndex, matchExpected } from '../data/artMatch';
 import { setUserArt, getUserArt, expectedArtNames } from '../data/art';
+import { saveArt, clearStoredArt } from '../data/artStore';
 
 interface Props {
   /** Called after a load or clear with (matched, totalExpected). */
@@ -70,7 +71,8 @@ export default function ArtLoader({ onLoaded }: Props) {
   };
 
   /** Index a freshly-collected {name, url} set and report the match count. */
-  const applyFiles = (files: { name: string; url: string }[]) => {
+  const applyFiles = (files: { name: string; url: string; blob?: Blob }[]) => {
+    void saveArt(files.filter((f) => f.blob).map((f) => ({ name: f.name, blob: f.blob! })));
     const index = buildArtIndex(files);
     setUserArt(index);
     const expected = expectedArtNames();
@@ -83,13 +85,13 @@ export default function ArtLoader({ onLoaded }: Props) {
     if (!fileList || fileList.length === 0) return;
     setError(null);
     dropOldUrls();
-    const files: { name: string; url: string }[] = [];
+    const files: { name: string; url: string; blob?: Blob }[] = [];
     for (const file of Array.from(fileList)) {
       const name = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
       if (!IMAGE_RE.test(name)) continue;
       const url = URL.createObjectURL(file);
       urlsRef.current.push(url);
-      files.push({ name, url });
+      files.push({ name, url, blob: file });
     }
     applyFiles(files);
   };
@@ -103,7 +105,7 @@ export default function ArtLoader({ onLoaded }: Props) {
       const { default: JSZip } = await import('jszip');
       const zip = await JSZip.loadAsync(await file.arrayBuffer());
       dropOldUrls();
-      const files: { name: string; url: string }[] = [];
+      const files: { name: string; url: string; blob?: Blob }[] = [];
       for (const entry of Object.values(zip.files)) {
         if (entry.dir) continue;
         const base = entry.name.replace(/^.*[\\/]/, '');
@@ -111,7 +113,7 @@ export default function ArtLoader({ onLoaded }: Props) {
         const blob = await entry.async('blob');
         const url = URL.createObjectURL(blob);
         urlsRef.current.push(url);
-        files.push({ name: base, url });
+        files.push({ name: base, url, blob });
       }
       if (!files.length) {
         setError('No images found inside that file — is it the Middle-earth Quest .vmod module?');
@@ -127,6 +129,7 @@ export default function ArtLoader({ onLoaded }: Props) {
   };
 
   const clear = () => {
+    void clearStoredArt();
     dropOldUrls();
     setUserArt(null);
     setSummary(null);
@@ -140,7 +143,7 @@ export default function ArtLoader({ onLoaded }: Props) {
     <div className="art-loader">
       <p className={`art-status ${summary ? 'art-status--on' : 'art-status--off'}`}>
         {summary
-          ? <>✅ Art loaded{summary.fromEarlier ? ' (from earlier this session)' : ''} — {summary.matched} / {summary.total} images matched</>
+          ? <>✅ Art loaded{summary.fromEarlier ? ' (saved in this browser)' : ''} — {summary.matched} / {summary.total} images matched</>
           : <>⬜ Not loaded — the game will show text/placeholder cards</>}
       </p>
       <div className="art-loader__actions">
@@ -164,7 +167,7 @@ export default function ArtLoader({ onLoaded }: Props) {
           Bring your own art: pick the Middle-earth Quest VASSAL module{' '}
           (<a href={VMOD_URL} target="_blank" rel="noreferrer"><code>.vmod</code> download</a>) —
           no need to unzip it; the app reads the images inside and matches them to the cards.
-          Selections last for this browser tab only (cleared on a full page reload).
+          It is saved in this browser (never uploaded), so you only need to do this once.
         </p>
       )}
     </div>
