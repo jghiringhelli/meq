@@ -163,6 +163,10 @@ export default function CombatBoard({ state, cat, onChoose, sauronView }: Props)
     if (ch && onChoose && !wasChoice.current) setMin(false);
     wasChoice.current = !!(ch && onChoose);
   }, [ch, onChoose]);
+  // Keep a new card choice visible inside the scrollable centre column.
+  useEffect(() => {
+    if (ch && onChoose) document.querySelector('.cb-choice')?.scrollIntoView({ block: 'nearest' });
+  }, [ch?.prompt, onChoose, pc.round]);
 
   if (state.sauronCombatInfluence && sauronView) {
     return (
