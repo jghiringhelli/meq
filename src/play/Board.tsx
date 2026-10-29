@@ -280,6 +280,13 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
   };
   const endDrag = () => { setTimeout(() => { drag.current = null; }, 0); };
   const reset = () => setView({ z: 1, x: 0, y: 0 });
+  const activeHero = state.heroes[state.activeHeroIndex];
+  const activeLoc = activeHero && activeHero.status === 'active' ? cat.locations[activeHero.location] : undefined;
+  const centerOnHero = () => {
+    if (!activeLoc) return;
+    const z = Math.max(view.z, 1.8);
+    setView({ z, ...clampPan(z, -z * (activeLoc.coords.x - w / 2), -z * (activeLoc.coords.y - h / 2)) });
+  };
 
   // One chip (figure token) rendered as a rounded art tile with a colored border.
   const renderChip = (c: Chip, cx: number, cy: number, T: number, s: number) => (
@@ -310,6 +317,7 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
         <button onClick={() => setView((v) => ({ z: Math.min(MAX_ZOOM, v.z * 1.2), ...clampPan(Math.min(MAX_ZOOM, v.z * 1.2), v.x, v.y) }))}>＋</button>
         <button onClick={() => setView((v) => ({ z: Math.max(MIN_ZOOM, v.z / 1.2), ...clampPan(Math.max(MIN_ZOOM, v.z / 1.2), v.x, v.y) }))}>－</button>
         <button onClick={reset} title="Reset view">⟲</button>
+        <button onClick={centerOnHero} disabled={!activeLoc} title="Center on the active hero" data-testid="center-hero">◎</button>
       </div>
       <svg ref={svgRef} className="board" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet"
         onPointerDown={onPointerDown} onPointerMove={onPointerMove}
@@ -342,8 +350,15 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           );
         })}
 
+        {activeLoc && (
+          <g pointerEvents="none" transform={`translate(${activeLoc.coords.x},${activeLoc.coords.y})`}>
+            <circle className="hero-glow" r={95} fill="none" stroke={heroColor(activeHero.id)} strokeWidth={10} />
+            <circle className="hero-glow hero-glow--2" r={95} fill="none" stroke="#fff3c4" strokeWidth={5} />
+          </g>
+        )}
+
         {locs.map((l) => {
-          const favor = state.map.favorAt?.[l.id] ?? 0;
+          const favor =  state.map.favorAt?.[l.id] ?? 0;
           const influence = state.sauron.locationInfluence?.[l.id] ?? 0;
           // Influence intensity: 4 red bands — 1 lightest … 4 (values 4–6+)
           // super-intense, almost black. White number on the red badge.

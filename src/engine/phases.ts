@@ -694,6 +694,7 @@ function runSauronRefresh(s: GameState, cat: Catalog): GameState {
     log(s, 'sauron', 'Sauron', `stage minion deploys: ${cat.minions[id]?.name ?? id}`);
   }
   s.phase = 'SauronEvents';
+  if (s.story.turn <= 1) log(s, 'phase', 'Sauron', 'First turn: the Story Step and Plot Step are skipped, so no marker advances (rulebook p.10)');
   log(s, 'phase', 'Sauron', `story step: hero marker ${s.story.sauronProgress}/${s.story.length}, Sauron ${s.story.sauron ? `Y${s.story.sauron.yellow} R${s.story.sauron.red} B${s.story.sauron.black}` : ''}`);
   return s;
 }
