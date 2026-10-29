@@ -3,7 +3,7 @@
 A free, fan-made digital adaptation of *Middle-earth Quest* (Fantasy Flight
 Games, 2009). Built for playtesting with friends online or solo against an AI.
 
-**▶ Play here:** https://middle-earth-quest-board-game.netlify.app
+**▶ Play here:** https://jghiringhelli.github.io/meq/
 
 > **This is an unofficial, non-commercial fan project.** Middle-earth Quest,
 > its setting, art, and all associated trademarks belong to Fantasy Flight
@@ -24,6 +24,14 @@ Games, 2009). Built for playtesting with friends online or solo against an AI.
   and (as far as we know) rules-accurate, but this is a fan project made in
   spare time, not a polished commercial release — expect occasional rough
   edges, especially in newer/less-tested corners of the rules.
+
+## First run: load the art (once)
+
+This project ships **no artwork**. Download the free community VASSAL module (Middle_Earth_Quest_1.6.vmod, https://obj.vassalengine.org/images/0/05/Middle_Earth_Quest_1.6.vmod) and pick it with **Load VASSAL module (.vmod)** on the start screen. It is read in your browser, never uploaded, and saved in the browser's local storage, so you only do it once per browser. Without it the map is blank.
+
+## Beta status
+
+This is a beta made in spare time. Rules follow the official rulebook (no balance changes). Known limits: the hero AI is passive, mobile layout is experimental, online play and the Finale are lightly tested. Bugs and quality-of-life suggestions are welcome via GitHub issues (templates include screenshots); fan content is optional. No timelines promised.
 
 ## Reporting a bug
 

@@ -144,7 +144,7 @@ export default function ArtLoader({ onLoaded }: Props) {
       <p className={`art-status ${summary ? 'art-status--on' : 'art-status--off'}`}>
         {summary
           ? <>✅ Art loaded{summary.fromEarlier ? ' (saved in this browser)' : ''} — {summary.matched} / {summary.total} images matched</>
-          : <>⬜ Not loaded — the game will show text/placeholder cards</>}
+          : <>⚠️ No art loaded — the map will be blank and cards will be plain text. Load the .vmod below first.</>}
       </p>
       <div className="art-loader__actions">
         <button type="button" className="secondary" onClick={() => vmodRef.current?.click()} disabled={busy}>
