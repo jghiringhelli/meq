@@ -31,7 +31,6 @@ export default function LogPane({ state, revealSide = 'both' }: {
   return (
     <div className="log-pane">
       <div className="log-title">
-        Log
         <span className="log-filters">
           {Object.keys(GROUPS).map((g) => (
             <button key={g} className={`log-filter${filter === g ? ' active' : ''}`}

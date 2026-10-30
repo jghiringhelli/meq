@@ -16,7 +16,6 @@ export default function TurnCycle({ state, cat }: Props) {
     const turnNo = state.heroSecondTurnPending ? 2 : 1;
     return (
       <div className="turn-cycle" data-testid="turn-cycle">
-        <span className="tc-title">Turn</span>
         <div className="tc-seat active">
           <HeroFace state={state} cat={cat} id={h.id} />
           <span className="tc-name">{cat.heroes[h.id]?.name ?? h.id}</span>
@@ -31,7 +30,6 @@ export default function TurnCycle({ state, cat }: Props) {
 
   return (
     <div className="turn-cycle" data-testid="turn-cycle">
-      <span className="tc-title">Turn order</span>
       {state.heroes.map((h, i) => {
         const cls = !heroSide ? 'played'
           : i === state.activeHeroIndex ? 'active'

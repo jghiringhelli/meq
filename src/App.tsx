@@ -684,8 +684,6 @@ export default function App() {
         <h1>Middle-earth Quest</h1>
         <span className="subtitle">Turn {state.story.turn} · {PHASE_STEPS.find((s) => s.phases.includes(state.phase))?.label ?? state.phase}
           {state.winner ? ` · WINNER: ${state.winner}` : ''}</span>
-        <PhaseTrack phase={state.phase} />
-        {!state.winner && <PhaseToast phase={state.phase} />}
         <div style={{ flex: 1 }} />
         {!state.winner && state.phase !== 'HeroActions' && !state.pendingChoice && !state.pendingCombat
           && !state.pendingReveal && !state.pendingTree && !state.setupInfluencePending
@@ -958,39 +956,6 @@ const PHASE_STEPS: { label: string; phases: string[] }[] = [
   { label: 'Advance', phases: ['StoryAdvance'] },
 ];
 
-// Short "what happens now" blurb for the phase-detail toast (rulebook step
-// order, see rules-digest.md) — shown briefly whenever the phase changes so a
-// new player can follow along without memorizing the turn structure.
-const PHASE_DETAIL: Record<string, string> = {
-  HeroRefresh: 'Each hero draws a card, then may Rest (recover Life) before acting — Rest must happen before Move.',
-  HeroActions: 'Heroes act in any order: Move, Explore, Engage, Consult a favor/skill, or other actions, until all are spent.',
-  SauronRefresh: 'Sauron goes first each round: Story step (advances the story track; skipped on turn 1), then Plot, Event and Action steps.',
-  SauronEvents: 'Sauron plays at most one Plot card, then resolves the Event step.',
-  SauronMinions: "Sauron's Action step: spend your actions on Place Influence, Draw Cards or Command (spawn, deploy, move, heal), or play a Shadow card.",
-  StoryAdvance: 'The Story track advances one space per Hero-Rally point banked this round.',
-  GameOver: 'The game has ended.',
-};
-
-function PhaseToast({ phase }: { phase: string }) {
-  const [visible, setVisible] = useState(false);
-  const [shown, setShown] = useState(phase);
-  useEffect(() => {
-    setShown(phase);
-    setVisible(true);
-    const hide = setTimeout(() => setVisible(false), 4200);
-    return () => clearTimeout(hide);
-  }, [phase]);
-  const label = PHASE_STEPS.find((s) => s.phases.includes(shown))?.label ?? shown;
-  const detail = PHASE_DETAIL[shown];
-  if (!detail) return null;
-  return (
-    <div className={`phase-toast${visible ? ' phase-toast--in' : ' phase-toast--out'}`} aria-live="polite">
-      <strong>{label}</strong>
-      <span>{detail}</span>
-    </div>
-  );
-}
-
 // Friendly caption for the smart button when it advances the (AI) dark side —
 // it names the step the click is about to run.
 const SMART_ADVANCE_LABELS: Record<string, string> = {
@@ -1000,15 +965,3 @@ const SMART_ADVANCE_LABELS: Record<string, string> = {
   SauronMinions: 'Sauron: dark actions ▶',
   StoryAdvance: 'Advance the story ▶',
 };
-
-function PhaseTrack({ phase }: { phase: string }) {
-  return (
-    <div className="phase-track">
-      {PHASE_STEPS.map((s) => (
-        <span key={s.label} className={`phase-step${s.phases.includes(phase) ? ' active' : ''}`}>
-          {s.label}
-        </span>
-      ))}
-    </div>
-  );
-}

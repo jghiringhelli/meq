@@ -222,22 +222,6 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .log-filter.active { opacity: 1; background: var(--accent); color: #201a10; border-color: var(--accent); }
 .log-empty { opacity: 0.5; font-style: italic; }
 
-/* M12 phase tracker */
-.phase-track { display: flex; gap: 2px; align-items: center; margin-left: 0.75rem; }
-.phase-step { font-size: 0.68rem; padding: 0.12rem 0.45rem; border-radius: 3px; background: #2f261a; border: 1px solid #4a3d2c; opacity: 0.6; white-space: nowrap; }
-.phase-step.active { opacity: 1; background: var(--accent); color: #201a10; border-color: var(--accent); font-weight: 700; }
-.phase-toast {
-  position: fixed; top: 58px; left: 50%; transform: translate(-50%, -8px);
-  display: flex; align-items: baseline; gap: 0.5rem; max-width: 560px;
-  background: rgba(20,16,10,0.94); border: 1px solid var(--accent); border-radius: 8px;
-  padding: 0.45rem 0.9rem; font-size: 0.82rem; color: #e6d9b8; box-shadow: 0 6px 18px rgba(0,0,0,0.4);
-  opacity: 0; pointer-events: none; z-index: 40;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-.phase-toast strong { color: var(--accent); white-space: nowrap; }
-.phase-toast--in { opacity: 1; transform: translate(-50%, 0); }
-.phase-toast--out { opacity: 0; transform: translate(-50%, -8px); }
-
 .counter-bar { display: flex; gap: 0.6rem; padding: 0.5rem 1rem; background: #201a12; border-bottom: 1px solid #3a2f22; flex-wrap: wrap; }
 .counter { display: flex; flex-direction: column; padding: 0.35rem 0.7rem; background: var(--panel); border: 1px solid #3a2f22; border-radius: 5px; min-width: 110px; }
 .counter.active { border-color: var(--accent); }

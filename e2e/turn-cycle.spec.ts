@@ -10,8 +10,7 @@ test('turn-cycle indicator is visible and shows the active hero', async ({ page 
   const turnCycle = page.getByTestId('turn-cycle');
   await expect(turnCycle).toBeVisible();
 
-  // It labels the turn order and names at least one hero seat.
-  await expect(turnCycle.getByText(/Turn/)).toBeVisible();
+  // It names at least one hero seat (the panel header supplies the "Turn order" label).
   await expect(turnCycle.locator('.tc-name').first()).toBeVisible();
 
   expect(errors, `unexpected runtime errors:\n${errors.join('\n')}`).toEqual([]);
