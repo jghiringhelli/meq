@@ -9,6 +9,9 @@ interface Props {
   state: GameState; cat: Catalog;
   moveTargets: string[];
   onMove?: (to: string) => void;
+  /** Cost/terrain of each legal Travel step from the active hero's location;
+   *  drawn as arrows on the map (the obvious payment is named on each arrow). */
+  moveHints?: { to: string; terrain: string; water: boolean; payable: boolean; cost: number }[];
   /** Characters at the active hero's location who can be consulted this turn
    *  (matches econ.characters in App.tsx) — clicking their board token opens a
    *  favor/ability choice instead of just showing info. */
@@ -89,7 +92,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence, moveFigureTargets, onMoveFigureTarget, commandTargets, onCommandTarget }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, moveHints, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence, moveFigureTargets, onMoveFigureTarget, commandTargets, onCommandTarget }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -357,8 +360,37 @@ export default function Board({ state, cat, moveTargets, onMove, consultable, co
           </g>
         )}
 
+        {activeLoc && (moveHints ?? []).map((m) => {
+          const to = cat.locations[m.to];
+          if (!to || !onMove) return null;
+          const a = activeLoc.coords, b = to.coords;
+          const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+          const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len;
+          const R0 = 96, R1 = 104;
+          if (len < R0 + R1 + 40) return null;
+          const x1 = a.x + ux * R0, y1 = a.y + uy * R0, x2 = b.x - ux * R1, y2 = b.y - uy * R1;
+          const col = TERRAIN_COLOR[m.terrain] ?? '#aaa';
+          const hx = x2 - ux * 60, hy = y2 - uy * 60, px = -uy * 38, py = ux * 38;
+          const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+          const text = `${m.water ? '🌊 ' : ''}${m.terrain || 'any'} · ${m.payable ? `✓ have card` : `${m.cost} card${m.cost === 1 ? '' : 's'}`}`;
+          const go = (e: React.MouseEvent) => { e.stopPropagation(); if (!drag.current?.moved) onMove(m.to); };
+          return (
+            <g key={'mv' + m.to} className={`move-arrow${m.payable ? ' move-arrow--easy' : ''}`} style={{ cursor: 'pointer' }} onClick={go}>
+              <title>{`Travel to ${to.name}: ${text}`}</title>
+              <line x1={x1} y1={y1} x2={hx} y2={hy} stroke="transparent" strokeWidth={90} />
+              <line x1={x1} y1={y1} x2={hx} y2={hy} stroke="#000" strokeOpacity={0.55} strokeWidth={m.payable ? 30 : 22} strokeLinecap="round" />
+              <line x1={x1} y1={y1} x2={hx} y2={hy} stroke={col} strokeWidth={m.payable ? 18 : 11} strokeLinecap="round" strokeDasharray={m.payable ? undefined : '28 20'} />
+              <polygon points={`${x2},${y2} ${hx + px},${hy + py} ${hx - px},${hy - py}`} fill={col} stroke="#000" strokeOpacity={0.6} strokeWidth={4} />
+              <g transform={`translate(${mx},${my})`}>
+                <rect x={-text.length * 12.5} y={-31} width={text.length * 25} height={62} rx={31} fill="#14100a" fillOpacity={0.88} stroke={col} strokeWidth={m.payable ? 4 : 2} />
+                <text textAnchor="middle" y={13} fontSize={38} fontWeight={m.payable ? 700 : 500} fill="#f0e2c0">{text}</text>
+              </g>
+            </g>
+          );
+        })}
+
         {locs.map((l) => {
-          const favor =  state.map.favorAt?.[l.id] ?? 0;
+          const favor =   state.map.favorAt?.[l.id] ?? 0;
           const influence = state.sauron.locationInfluence?.[l.id] ?? 0;
           // Influence intensity: 4 red bands — 1 lightest … 4 (values 4–6+)
           // super-intense, almost black. White number on the red badge.

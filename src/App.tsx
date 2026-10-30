@@ -5,7 +5,7 @@ import {
   newGame, legalMoves, engageableMonsters, canExplore,
   favorHere, charactersHere, plotHere, canCleanse, canDarkPath, canCompleteQuest, otherHeroesHere,
   canDiscardPlot, plotCounterCost,
-  canSurvey, moveTargets as moveTargetsFor, sauronCommandTargets,
+  canSurvey, moveTargets as moveTargetsFor, sauronCommandTargets, moveOptions,
 } from './engine/game';
 import { applyAction, type Action } from './engine/actions';
 import Board from './play/Board';
@@ -75,7 +75,7 @@ export default function App() {
   // toggle acts as a bulk collapse/expand while each chip stays individually
   // clickable to peek at just that one thing.
   const [panelOpen, setPanelOpen] = useState<Record<string, boolean>>({});
-  const isPanelOpen = (key: string) => panelOpen[key] ?? !focusMap;
+  const isPanelOpen = (key: string) => panelOpen[key] ?? ((key === 'mission' || key === 'net') && !focusMap);
   const togglePanel = (key: string) => setPanelOpen((m) => ({ ...m, [key]: !isPanelOpen(key) }));
   const toggleFocusMap = () => { setFocusMap((v) => !v); setPanelOpen({}); };
   const heroRng = useRef(mulberry32(0));
@@ -559,6 +559,11 @@ export default function App() {
   const moves = inHeroActions && activeHero.status === 'active' && activeHero.actionsRemaining > 0
     ? legalMoves(cat, activeHero) : [];
   const engageable = inHeroActions ? engageableMonsters(state, activeHero.id) : [];
+  const moveSet = new Set(moves.map((m) => m.to));
+  const moveHints = moves.length
+    ? moveOptions(cat, activeHero).filter((o) => moveSet.has(o.to))
+      .map((o) => ({ to: o.to, terrain: o.terrain, water: o.water, payable: o.terrainPayable, cost: o.anyCardCost }))
+    : undefined;
   const ambush = inHeroActions && engageable.length > 0;
   const exploreHere = inHeroActions && !ambush && canExplore(state, cat, activeHero.id);
   // A card effect (e.g. "A Path Through the Mountains") sometimes asks the hero
@@ -718,6 +723,7 @@ export default function App() {
           state={state} cat={cat}
           moveTargets={pendingMoveTree ? pendingMoveTargets.map((x) => x.loc) : (ambush ? [] : moves.map((m) => m.to))}
           onMove={pendingMoveTree ? doPendingMove : (inHeroActions && !ambush ? doMove : undefined)}
+          moveHints={pendingMoveTree || ambush || !seesHeroMission ? undefined : moveHints}
           consultable={econ.characters} consultDisabled={!inHeroActions || activeHero.actionsRemaining <= 0 || ambush}
           onConsult={doConsult}
           sauronView={iControlSauron}

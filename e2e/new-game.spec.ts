@@ -9,6 +9,7 @@ test('starting a new game renders the board and HUD without runtime errors', asy
 
   // The board/map and the CounterBar HUD must render after starting.
   await expect(page.getByTestId('board')).toBeVisible();
+  await page.locator('.rail-chip', { hasText: 'Track' }).click();
   await expect(page.getByTestId('hud')).toBeVisible();
 
   // Sanity-check the HUD shows the Story Track / Sauron counters.

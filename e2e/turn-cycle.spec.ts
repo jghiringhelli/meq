@@ -7,6 +7,7 @@ test('turn-cycle indicator is visible and shows the active hero', async ({ page 
   await page.goto('/');
   await startNewGame(page);
 
+  await page.locator('.rail-chip', { hasText: 'Turn order' }).click();
   const turnCycle = page.getByTestId('turn-cycle');
   await expect(turnCycle).toBeVisible();
 

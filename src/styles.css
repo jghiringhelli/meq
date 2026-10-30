@@ -352,6 +352,15 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .node.target circle { filter: drop-shadow(0 0 6px var(--accent)); }
 .side { width: 360px; display: flex; flex-direction: column; gap: 0.8rem; }
 .side-compact { width: 220px; }
+/* Desktop: the map fills the viewport height; the side column scrolls on its own so neither pushes the other off-screen. */
+@media (min-width: 961px) {
+  .board-wrap { height: calc(100vh - 190px); min-height: 440px; }
+  .board { height: 100%; }
+  .side { position: sticky; top: 8px; max-height: calc(100vh - 190px); min-height: 440px; overflow-y: auto; padding-right: 2px; }
+}
+.move-arrow { filter: drop-shadow(0 0 6px rgba(0,0,0,.7)); }
+.move-arrow:hover line:nth-of-type(3) { stroke-width: 14; }
+.move-arrow--easy polygon { filter: drop-shadow(0 0 8px #fff8); }
 
 /* Mobile responsiveness: stack vertically, make sidebar full-width on small screens. */
 @media (max-width: 960px) {
