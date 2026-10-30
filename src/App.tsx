@@ -17,6 +17,7 @@ import HeroPanel from './play/HeroPanel';
 import CombatBoard from './play/CombatBoard';
 import ChoiceModal from './play/ChoiceModal';
 import CombatSummaryModal from './play/CombatSummaryModal';
+import PhaseTracker from './play/PhaseTracker';
 import EncounterPanel from './play/EncounterPanel';
 import RevealTray from './play/RevealTray';
 import LogPane from './play/LogPane';
@@ -839,6 +840,8 @@ export default function App() {
           <span>Setup — waiting for Sauron to finish placing starting influence ({state.setupInfluencePending.remaining} left)…</span>
         </div>
       )}
+
+      {!state.pendingCombat && <PhaseTracker state={state} cat={cat} />}
 
       {state.pendingCombat && (
         <CombatBoard state={state} cat={cat}
