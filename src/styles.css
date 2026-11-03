@@ -210,7 +210,7 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .pt-block ul { list-style: none; margin: 0.15rem 0 0; padding: 0; }
 .pt-block li { padding: 0.1rem 0.4rem; border-radius: 3px; cursor: help; }
 .pt-block.active li.current { background: var(--tint); color: #fff; font-weight: 700; box-shadow: 0 0 8px color-mix(in srgb, var(--tint) 80%, transparent); }
-@media (max-width: 768px) { .phase-tracker { width: 170px; font-size: 0.7rem; } .phase-tracker:not(.collapsed) .pt-body { max-height: 30vh; } }
+@media (max-width: 768px) { .phase-tracker { bottom: 84px; width: 170px; font-size: 0.7rem; } .phase-tracker:not(.collapsed) .pt-body { max-height: 30vh; } }
 @keyframes hero-pulse { 0% { transform: scale(0.8); opacity: 0.95; } 100% { transform: scale(1.35); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hero-glow { animation: none; opacity: 0.7; } }
 .board { touch-action: none; }
