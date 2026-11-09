@@ -264,7 +264,13 @@ export function planEncounter(
         if (decision === undefined || decision < 0 || decision >= options.length) {
           pending = {
             prompt: node.k === 'optional' ? 'You may choose:' : node.prompt,
-            options: options.map((o) => ({ label: o.label, enabled: canAfford(s, cat, heroId, o.cost) })),
+            // An option whose only effect is spending something the hero lacks
+            // (e.g. "spend 1 favor" with 0 favor) is not a real choice.
+            options: options.map((o) => ({
+              label: o.label,
+              enabled: canAfford(s, cat, heroId, o.cost)
+                && (o.eff.k !== 'op' || canAfford(s, cat, heroId, o.eff.atom)),
+            })),
           };
           return;
         }

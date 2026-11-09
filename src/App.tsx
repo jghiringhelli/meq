@@ -717,6 +717,7 @@ export default function App() {
         </Collapsible>
       </div>
       <RefTabs state={state} cat={cat} sauronView={iControlSauron} />
+      <PhaseTracker state={state} cat={cat} />
 
       <main className="app-main play-layout">
         <Board
@@ -845,7 +846,6 @@ export default function App() {
         </div>
       )}
 
-      {!state.pendingCombat && <PhaseTracker state={state} cat={cat} />}
 
       {state.pendingCombat && (
         <CombatBoard state={state} cat={cat}

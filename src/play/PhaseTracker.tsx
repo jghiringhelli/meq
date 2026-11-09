@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Catalog, GameState } from '../engine/types';
 
 interface Step { label: string; tip: string; current?: boolean }
@@ -54,38 +53,28 @@ function buildBlocks(state: GameState): Block[] {
 }
 
 export default function PhaseTracker({ state, cat }: { state: GameState; cat: Catalog }) {
-  const [open, setOpen] = useState(() => typeof window === 'undefined' || window.innerHeight >= 900);
   if (state.phase === 'GameOver') return null;
   const blocks = buildBlocks(state);
+  // The engine moves to SauronMinions before the event\u0027s effect is acknowledged, so keep the Event step lit until then.
+  const eventPending = state.pendingReveal?.kind === 'event' || (state.pendingTree?.sourceKind === 'event');
+  const livePhase = eventPending ? 'SauronEvents' : state.phase;
   const hero = state.heroes[state.activeHeroIndex];
   const heroName = hero ? cat.heroes[hero.id]?.name ?? hero.id : '';
   const who = state.activeSide === 'Sauron' ? 'Sauron' : heroName;
 
   return (
-    <aside className={`phase-tracker ${open ? '' : 'collapsed'}`} data-testid="phase-tracker" aria-label="Turn tracker">
-      <button className="pt-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}
-        title={open ? 'Hide the turn tracker' : 'Show the turn tracker'}>
-        <span>📖 Turn {state.story.turn}/{state.story.length} · {who}</span>
-        <span className="pt-caret">{open ? '▾' : '▴'}</span>
-      </button>
-      {open && (
-        <div className="pt-body">
-          {blocks.map((b) => {
-            const active = b.phase.includes(state.phase);
-            return (
-              <div key={b.title} className={`pt-block pt-${b.side} ${active ? 'active' : ''}`}>
-                <div className="pt-title">{b.side === 'sauron' ? '👁' : '🛡'} {b.title}</div>
-                <ul>
-                  {b.steps.map((st) => (
-                    <li key={st.label} title={st.tip}
-                      className={active && (st.current ?? true) ? 'current' : ''}>{st.label}</li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </aside>
+    <nav className="phase-strip" data-testid="phase-tracker" aria-label="Turn tracker">
+      <span className="ps-turn">📖 Turn {state.story.turn}/{state.story.length} · {who}</span>
+      {blocks.map((b) => {
+        const active = b.phase.includes(livePhase);
+        return (
+          <span key={b.title} className={`ps-chip pt-${b.side} ${active ? 'active' : ''}`}
+            title={b.steps.map((st) => `${st.label}: ${st.tip}`).join('\n')}>
+            {b.side === 'sauron' ? '👁' : '🛡'} {b.title}
+            {active && <em>{b.steps.filter((st) => st.current !== false).map((st) => st.label).join(' · ')}</em>}
+          </span>
+        );
+      })}
+    </nav>
   );
 }
