@@ -118,6 +118,24 @@ function CardFace({ cat, card, ownerRef, kind }: { cat: Catalog; card?: CardId; 
   );
 }
 
+/** Human-readable list of the effects a card played last round carries into this one. */
+function carryText(mods: import('../engine/types').NextMod[]): string[] {
+  const out: string[] = [];
+  for (const m of mods) {
+    const t = m.ifOwnType ? ` if you play ${m.ifOwnType}` : '';
+    if (m.atk) out.push(`+${m.atk} attack${t}`);
+    if (m.def) out.push(`+${m.def} defense${t}`);
+    if (m.cancelOppType) out.push(`cancels the opponent's ${m.cancelOppType} card`);
+    if (m.cancelOppUnlessType) out.push(`cancels the opponent's card unless it is ${m.cancelOppUnlessType}`);
+    if (m.reduceOppDef !== undefined) out.push(`opponent's defense becomes ${m.reduceOppDef}`);
+    if (m.dmgToOpp) out.push(`${m.dmgToOpp} damage to the opponent${m.dmgToOppIfOppType ? ` if they play ${m.dmgToOppIfOppType}` : ''}`);
+    if (m.cancelOppIfPrintedDefGE !== undefined) out.push(`cancels opponent card with defense ≥ ${m.cancelOppIfPrintedDefGE}`);
+    if (m.cancelOppIfCostGE !== undefined) out.push(`cancels opponent card with cost ≥ ${m.cancelOppIfCostGE}`);
+    if (m.freeIfType) out.push(`a ${m.freeIfType} card costs 0 strength`);
+  }
+  return out;
+}
+
 export default function CombatBoard({ state, cat, onChoose, sauronView }: Props) {
   const pc = state.pendingCombat!;
   const ch = state.pendingChoice;
@@ -222,7 +240,11 @@ export default function CombatBoard({ state, cat, onChoose, sauronView }: Props)
             </>
           ) : null}
         </div>
-        <div className="cb-str">Combat strength <b>{c.strengthSpent}/{c.strength}</b></div>
+        <div className="cb-str" title="Strength budget for this fight: each card played costs strength; going over exhausts you">
+          Strength left <b>{Math.max(0, c.strength - c.strengthSpent)}</b> of {c.strength}
+          <span className="cb-strbar"><i style={{ width: `${c.strength ? Math.max(0, 100 - (c.strengthSpent / c.strength) * 100) : 0}%` }} /></span>
+        </div>
+        {carryText(pc.carry?.[isHero ? 'attacker' : 'defender'] ?? []).map((t, i) => <div key={i} className="cb-effect" title="Effect carried into this round by a card played last round">✦ {t}</div>)}
         {isHero ? (
           <div className="cb-life">
             <span title="Life pool — the hero's deck of cards">🂠 deck <b>{c.deck.length}</b></span>
@@ -231,7 +253,7 @@ export default function CombatBoard({ state, cat, onChoose, sauronView }: Props)
           </div>
         ) : (
           <div className="cb-life">
-            <span className="foe-hp" title="Monster / minion health">♥ HP <b>{c.life}</b>{foeMaxLife ? <i>/{foeMaxLife}</i> : null}</span>
+            <span className="foe-hp" title="Monster / minion health">♥ HP <b>{c.life}</b>{foeMaxLife ? <i>/{foeMaxLife}</i> : null}{foeMaxLife ? <span className="cb-hpbar"><i style={{ width: `${Math.max(0, Math.min(100, (c.life / foeMaxLife) * 100))}%` }} /></span> : null}</span>
             <span title="Cards remaining in the foe's combat hand">✋ hand <b>{c.hand.length}</b></span>
           </div>
         )}

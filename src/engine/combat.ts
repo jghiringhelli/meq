@@ -16,7 +16,7 @@ import { statValue, stepResolveTree, bestTreeOption } from './encounter';
 import { gainCorruption, corruptionCombatStartDiscard, grantFavor } from './corruption';
 import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
 import { bestPlacementToward, placeInfluenceAction, placementTargets, canPlaceInfluence, influenceAt } from './influence';
-import { tryCompleteQuestsOnDefeat } from './quests';
+import { tryCompleteQuestsOnDefeat, questSubstituteMonster } from './quests';
 import { syncLife, heroDefeated, dealHeroDamage } from './heroLife';
 import {
   monsterAdjustCard, monsterCardCost, monsterCancelsHeroCard, applyMonsterPostBout,
@@ -353,6 +353,7 @@ function runBout(s: GameState, cat: Catalog): GameState {
   const stk0 = pc.stack ?? { attacker: [], defender: [] };
   const monRef = pc.defender.kind === 'monster' && String(pc.defender.refId).startsWith('mon-')
     ? String(pc.defender.refId) : undefined;
+  const aSpent0 = pc.attacker.strengthSpent, dSpent0 = pc.defender.strengthSpent;
   const aRes = revealWithBudget(s, cat, pc.attacker, aCid, carry.attacker);
   const dRes = revealWithBudget(s, cat, pc.defender, dCid, carry.defender, monRef, stk0.defender.length === 0);
   const aCard = aRes.card;
@@ -438,6 +439,9 @@ function runBout(s: GameState, cat: Catalog): GameState {
   pc.report.push({
     round: pc.round, attackerCard: aCid, defenderCard: dCid,
     damageToAttacker: dmgToAttacker, damageToDefender: dmgToDefender,
+    attackerStr: { cost: pc.attacker.strengthSpent - aSpent0, spent: pc.attacker.strengthSpent, total: pc.attacker.strength },
+    defenderStr: { cost: pc.defender.strengthSpent - dSpent0, spent: pc.defender.strengthSpent, total: pc.defender.strength },
+    attackerLife: pc.attacker.life, defenderLife: pc.defender.life,
     note: `${aName} vs ${dName}${parts.length ? ` (${parts.join(', ')})` : ''}`,
   });
   log(s, 'combat-bout', pc.attacker.refId,
@@ -601,6 +605,17 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
       playShadowReaction(s, cat, 'hero-defeated', { heroId: hero.id }, (m) => log(s, 'sauron', 'Sauron', m));
     }
   }
+  // A quest's "combat a <Monster> instead of drawing Encounters" foe exists only
+  // for that Explore: if the hero did not defeat it, it does not stay on the board
+  // (he must Explore there again on a later turn to face it).
+  if (result !== 'attacker' && questSubstituteMonster(hero, pc.locationId) === pc.defender.refId) {
+    const here = s.map.monstersAt[pc.locationId];
+    const i = here ? here.indexOf(pc.defender.refId as MonsterId) : -1;
+    if (here && i >= 0) {
+      here.splice(i, 1);
+      log(s, 'combat', hero.id, `${pc.defender.name} (quest foe) leaves the board — Explore ${cat.locations[pc.locationId]?.name ?? pc.locationId} again to face it`);
+    }
+  }
   // A surviving minion keeps the damage it took: persist its remaining health so
   // the next hero continues wearing it down.
   if (result !== 'attacker' && cat.minions[pc.defender.refId]) {
@@ -639,7 +654,7 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
   s.lastCombatSummary = {
     result, heroId: hero.id, heroName: cat.heroes[hero.id]?.name ?? hero.id,
     foeName: pc.defender.name, foeKind: isMinion ? 'minion' : 'monster',
-    rounds: pc.round, damageTaken: hero.damagePool.length - damageTakenBefore,
+    rounds: Math.max(1, pc.report.length), damageTaken: hero.damagePool.length - damageTakenBefore,
     notes: s.log.slice(logStart + 1).map((e) => e.detail),
     report: pc.report.slice(),
     seq: s.log.length ? s.log[s.log.length - 1].seq : 0,

@@ -37,8 +37,8 @@ export default function CombatSummaryModal({ summary, cat, onContinue, readOnly 
               {report.map((r, i) => (
                 <div key={i} className="cb-report-row">
                   <span>r{r.round}</span>
-                  <span>{r.attackerCard ? cat.combatCards[r.attackerCard]?.name ?? '—' : '—'}</span>
-                  <span>{r.defenderCard ? cat.combatCards[r.defenderCard]?.name ?? '—' : '—'}</span>
+                  <span>{r.attackerCard ? cat.combatCards[r.attackerCard]?.name ?? '—' : '—'}{r.attackerStr && <small> ✊{r.attackerStr.cost} ({Math.max(0, r.attackerStr.total - r.attackerStr.spent)}/{r.attackerStr.total} left)</small>}</span>
+                  <span>{r.defenderCard ? cat.combatCards[r.defenderCard]?.name ?? '—' : '—'}{r.defenderStr && <small> ✊{r.defenderStr.cost} ({Math.max(0, r.defenderStr.total - r.defenderStr.spent)}/{r.defenderStr.total} left)</small>}{r.defenderLife !== undefined && <small> ♥{Math.max(0, r.defenderLife)}</small>}</span>
                   <span className="cb-report-dmg">{r.damageToDefender > 0 && <em className="d-foe">foe −{r.damageToDefender}</em>}{r.damageToAttacker > 0 && <em className="d-hero">you −{r.damageToAttacker}</em>}{r.damageToDefender === 0 && r.damageToAttacker === 0 && '·'}</span>
                 </div>
               ))}

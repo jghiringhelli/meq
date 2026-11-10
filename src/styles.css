@@ -455,9 +455,9 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .travel-modal .terrain-chip.terrain-hill { background: #c07c3a; }
 .travel-modal .water-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px; margin-right: 0.4rem; font-size: 0.8rem; background: #3a6ea5; color: #eef; font-weight: 700; }
 .travel-hand { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; max-height: 46vh; overflow-y: auto; }
-.travel-card { cursor: pointer; opacity: 0.72; transition: opacity 0.1s, box-shadow 0.1s, transform 0.1s; }
-.travel-card.match { opacity: 0.92; }
-.travel-card.selected { opacity: 1; box-shadow: 0 0 0 2px var(--accent), 0 0 8px rgba(224,192,120,0.6); transform: translateY(-2px); }
+.travel-card { cursor: pointer; opacity: 0.55; filter: saturate(0.6) brightness(0.8); transition: opacity 0.1s, box-shadow 0.1s, transform 0.1s; }
+.travel-card.match { opacity: 0.85; filter: none; box-shadow: 0 0 0 1px #6aa84f; }
+.travel-card.selected { opacity: 1; filter: brightness(1.15); box-shadow: 0 0 0 3px #ffd970, 0 0 22px 6px rgba(255,217,112,0.85); transform: translateY(-6px) scale(1.04); position: relative; z-index: 1; }
 .travel-actions { display: flex; align-items: center; gap: 0.6rem; justify-content: flex-end; }
 .travel-actions .travel-count { margin-right: auto; color: #a89870; font-size: 0.85rem; }
 .travel-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -779,3 +779,8 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .choice-modal:has(.choice-btn-card) .choice-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.6rem; }
 .choice-btn-card { grid-template-columns: 150px 1fr !important; }
 .choice-card-art { width: 150px !important; height: auto !important; object-fit: contain !important; }
+.cb-strbar, .cb-hpbar { display: block; height: 5px; margin-top: 3px; background: #2a2016; border-radius: 3px; overflow: hidden; }
+.cb-strbar i { display: block; height: 100%; background: #6aa0d8; }
+.cb-hpbar i { display: block; height: 100%; background: #d85a4a; }
+.cb-effect { font-size: 0.72rem; color: #ffd970; margin-top: 2px; }
+.cb-report-row small { display: block; color: #a89a78; font-size: 0.68rem; }

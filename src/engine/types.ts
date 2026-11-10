@@ -599,6 +599,11 @@ export interface CombatBoutLog {
   attackerCard?: CardId; defenderCard?: CardId;
   damageToAttacker: number; damageToDefender: number;
   note: string;
+  /** strength accounting for this round: cost of the card, cumulative spent, budget */
+  attackerStr?: { cost: number; spent: number; total: number };
+  defenderStr?: { cost: number; spent: number; total: number };
+  /** life remaining after the round */
+  attackerLife?: number; defenderLife?: number;
 }
 /** A modifier a combat card schedules onto its own owner for the NEXT round. */
 export interface NextMod {
