@@ -195,7 +195,7 @@ function queueCombatChoice(s: GameState, cat: Catalog): GameState {
     return defenderTurn(s, cat, cid);
   }
   const seat = s.heroes.find((h) => h.id === pc.attacker.refId)?.seat ?? 0;
-  const budgetNote = `str ${pc.attacker.strengthSpent}/${pc.attacker.strength}`;
+  const budgetNote = `strength left ${pc.attacker.strength - pc.attacker.strengthSpent} of ${pc.attacker.strength}`;
   const options = pc.attacker.hand.map((cid) => {
     const c = cat.combatCards[cid];
     return { id: cid, label: `${c.name} [${c.type}] atk ${c.attack} / def ${c.defense} · cost ${c.strengthCost}` };

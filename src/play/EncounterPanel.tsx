@@ -9,6 +9,12 @@ interface Props {
   onReveal: (cardId?: CardId) => void;
 }
 
+// camelCase engine op -> "Camel case" player-facing label
+function opLabel(op: string): string {
+  const s = op.replace(/([A-Z])/g, ' $1').toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export default function EncounterPanel({ state, cat, onResolve, onChoose, onReveal }: Props) {
   const pe = state.pendingEncounter!;
   const loc = cat.locations[pe.locationId];
@@ -107,7 +113,7 @@ export default function EncounterPanel({ state, cat, onResolve, onChoose, onReve
                 {plan && plan.atoms.length ? (
                   <ul className="enc-ops">
                     {plan.atoms.map((a, i) => (
-                      <li key={i}>{a.op}{'n' in a ? ` ${a.n}` : ''}{'item' in a ? ` ${a.item}` : ''}</li>
+                      <li key={i}>{opLabel(a.op)}{'n' in a ? ` ${a.n}` : ''}{'item' in a ? ` ${a.item}` : ''}</li>
                     ))}
                   </ul>
                 ) : (
