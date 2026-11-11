@@ -95,7 +95,7 @@ async function step(page: Page, allowMove: boolean): Promise<string> {
   };
 
   // 1. Interactive card decision (hero's Dark Promises / Peril / Event choice).
-  const treeBtn = page.locator('.banner.tree-decision button:not([disabled])');
+  const treeBtn = page.locator('.tree-decision-overlay button:not([disabled]), .tree-decision-float button:not([disabled])');
   let r = await clickFirst(treeBtn, 'tree');
   if (r) return r;
 
@@ -175,6 +175,7 @@ test('a full UI-driven game stays legal at every action', async ({ page }) => {
   let prevLogLen = -1;
   let idleStreak = 0;
   let moveStreak = 0;
+  let trayStreak = 0;
   let finished = false;
   const actionTally: Record<string, number> = {};
 
@@ -193,6 +194,12 @@ test('a full UI-driven game stays legal at every action', async ({ page }) => {
     const tag = await step(page, moveStreak < 3);
     actionTally[tag] = (actionTally[tag] ?? 0) + 1;
     moveStreak = tag === 'move' ? moveStreak + 1 : 0;
+    trayStreak = tag === 'tray-ok' ? trayStreak + 1 : 0;
+    if (trayStreak === 15) {
+      const st = await readState(page);
+      const html = await page.locator('.enc-tray, .reveal-tray').first().evaluate((el) => (el as HTMLElement).innerText.slice(0, 600)).catch(() => '(none)');
+      console.log(`[full-game] tray-ok stuck: phase=${st?.phase} turn=${st?.turn} pend=[${st?.pend}]\n${html}`);
+    }
     if (tag === 'idle') {
       idleStreak++;
       await page.waitForTimeout(120);

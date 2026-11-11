@@ -122,7 +122,8 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .hero-card-info { width: 100%; border: 2px solid #3a4a3a; border-top: none; border-radius: 0 0 6px 6px; background: #12160f; color: #9c8f6b; font-size: 0.75rem; padding: 0.25rem 0; cursor: pointer; }
 .hero-card-info:hover { color: var(--accent); background: #1a201a; }
 .setup-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
-.sauron-panel { background: #17110f; border: 1px solid #6b2b2b; border-radius: 6px; padding: 0.7rem 0.9rem; max-height: 70vh; overflow-y: auto; box-shadow: 0 0 16px rgba(120,20,20,0.25); }
+.sauron-panel { background: #17110f; border: 1px solid #6b2b2b; border-radius: 6px; padding: 0.7rem 0.9rem; max-height: 75vh; overflow-y: auto; box-shadow: 0 0 16px rgba(120,20,20,0.25); }
+.sauron-step > button.primary { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -8px 10px -4px #17110f; }
 .sauron-panel h2 { color: #d9534f; margin: 0 0 0.5rem; }
 .sauron-status { display: flex; gap: 1rem; font-size: 0.82rem; color: #c9b47a; margin-bottom: 0.7rem; border-bottom: 1px solid #3a2a2a; padding-bottom: 0.5rem; }
 .sauron-step .prompt { font-weight: 600; color: #e0c088; margin: 0.3rem 0 0.6rem; }

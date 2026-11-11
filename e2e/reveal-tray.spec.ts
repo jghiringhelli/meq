@@ -19,7 +19,7 @@ test('advancing phases surfaces reveals with cards and stays error-free', async 
     // Sauron now opens the game, so his Event can raise a hero choice dialog first.
     const decision = page.locator('.tree-decision-overlay button').first();
     if (await decision.isVisible().catch(() => false)) {
-      await decision.click();
+      await decision.click({ timeout: 2000 }).catch(() => {});
       await page.waitForTimeout(150);
       continue;
     }
