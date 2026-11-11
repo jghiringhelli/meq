@@ -195,6 +195,13 @@ test('a full UI-driven game stays legal at every action', async ({ page }) => {
     actionTally[tag] = (actionTally[tag] ?? 0) + 1;
     moveStreak = tag === 'move' ? moveStreak + 1 : 0;
     trayStreak = tag === 'tray-ok' ? trayStreak + 1 : 0;
+    if (tag === 'engage' && actionTally.engage === 30) {
+      const tail = await page.evaluate(() => {
+        const s = (window as any).__MEQ_STATE__;
+        return (s?.log ?? []).slice(-14).map((e: any) => `${e.type}: ${e.detail}`);
+      });
+      console.log(`[full-game] engage loop log tail:\n${tail.join('\n')}`);
+    }
     if (trayStreak === 15) {
       const st = await readState(page);
       const html = await page.locator('.enc-tray, .reveal-tray').first().evaluate((el) => (el as HTMLElement).innerText.slice(0, 600)).catch(() => '(none)');
