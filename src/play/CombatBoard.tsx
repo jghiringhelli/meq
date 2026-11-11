@@ -151,7 +151,9 @@ export default function CombatBoard({ state, cat, onChoose, sauronView }: Props)
   const foeArt = monsterArt(foe.refId) || minionArt(cat.minions[foe.refId]?.image ?? '');
   const heroImg = heroArt(hero.refId).portrait || heroArt(hero.refId).figure;
   const bg = battleBoardArt();
-  const foeMaxLife: number | undefined = cat.minions[foe.refId]?.health;
+  const baseLife: number | undefined = cat.minions[foe.refId]?.health;
+  // Scaled minions (Finale / dominance) can start above the printed health.
+  const foeMaxLife: number | undefined = baseLife ? Math.max(baseLife, foe.life) : undefined;
   // Its physical combat deck id — monsters use `deck`, minions `combatDeck`.
   const foeDeckId = cat.monsters[foe.refId]?.deck ?? cat.minions[foe.refId]?.combatDeck;
   const foeDeckBreak = foeDeckBreakdown(cat, foeDeckId, pc.stack?.defender ?? []);

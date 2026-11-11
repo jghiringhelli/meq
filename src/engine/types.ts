@@ -747,6 +747,9 @@ export interface GameState {
     prompt: string;
     options: { label: string; enabled: boolean }[];
   } | null;
+  /** "Each hero…" event trees still owed to the remaining heroes (human hero
+   *  decides for each in turn once the previous decision completes). */
+  eventTreeQueue?: { cardId: string; name: string; tree: EffTree; heroIds: HeroId[] }[];
   /** locations whose encounter has already been resolved this game. */
   explored: Record<LocationId, boolean>;
   /** #10: per-region Encounter decks + discard piles (keyed by regionGroup,

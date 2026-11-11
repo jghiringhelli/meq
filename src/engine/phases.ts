@@ -9,7 +9,7 @@ import { drawFromLifePool, restHero, healHero, prepareHeroForFinale } from './he
 import { log } from './log';
 import { shuffle } from './rng';
 import { applyOps } from './noncombat';
-import { planEncounter, applyAtoms, autoResolveTree, stepResolveTree, treeActorIsHuman, statValue, revealMonsters, type PlanResult } from './encounter';
+import { planEncounter, applyAtoms, autoResolveTree, treeActorIsHuman, statValue, revealMonsters, drainEventTreeQueue, type PlanResult } from './encounter';
 import { eyePlaceInfluenceOnce, eyeSpawnMonsterOnce } from './ai';
 import { evalMission, minionsInPlay } from './missions';
 import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, raiseShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield } from './sauronmech';
@@ -773,14 +773,15 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   for (const e of chosen) {
     if (eventDeckPlotFor(cat, e)) continue; // a lasting plot, no one-shot effect
     if (e.tree && (e.tree as any).k && (e.tree as any).k !== 'none') {
-      const target = s.heroes.find((x) => x.status === 'active');
-      if (target) {
+      const active = s.heroes.filter((x) => x.status === 'active');
+      const targets = /\beach hero\b/i.test(e.text ?? '') ? active : active.slice(0, 1);
+      if (targets.length) {
         if (treeActorIsHuman(s, 'hero')) {
-          stepResolveTree(s, cat, e.tree, {
-            sourceKind: 'event', cardId: e.id, source: `event ${e.name}`, heroId: target.id, actor: 'hero',
+          (s.eventTreeQueue ||= []).push({
+            cardId: e.id, name: e.name, tree: e.tree as any, heroIds: targets.map((h) => h.id),
           });
         } else {
-          autoResolveTree(s, cat, target.id, e.tree, `event ${e.name}`, 'hero');
+          for (const target of targets) autoResolveTree(s, cat, target.id, e.tree, `event ${e.name}`, 'hero');
         }
       }
       continue;
@@ -791,6 +792,7 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
     if (globalOps.length) applyOps(s, cat, null, globalOps, `event ${e.name}`);
     if (heroOps.length) for (const h of s.heroes.filter((x) => x.status === 'active')) applyOps(s, cat, h.id, heroOps, `event ${e.name}`);
   }
+  drainEventTreeQueue(s, cat);
   // Surface the event's actual mechanical outcome (e.g. "no favor to bank")
   // in the reveal tray itself, not just the game log — a hero should see
   // right away whether/how the card affected them, including a clear

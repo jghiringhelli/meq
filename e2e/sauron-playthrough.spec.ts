@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import path from 'node:path';
 
 // Manual-style full game as human Sauron, UI clicks only. Run with:
 //   SAURON_PLAYTHROUGH=1 npx playwright test e2e/sauron-playthrough.spec.ts
@@ -20,7 +21,10 @@ test('full Sauron game from the UI', async ({ page }) => {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
   page.on('dialog', (d) => d.accept().catch(() => {}));
 
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  await page.setInputFiles('input[accept=".vmod,.zip"]', path.resolve(process.cwd(), 'Middle_Earth_Quest_1.6.vmod'));
+  await expect(page.locator('.art-status--on')).toBeVisible({ timeout: 30_000 });
   await page.getByRole('button', { name: 'New game' }).click();
   await page.getByRole('button', { name: /Sauron/ }).first().click();
   await page.getByRole('button', { name: 'Command Sauron' }).click();

@@ -64,7 +64,7 @@ Outcome: foe removed if defeated (quest foes also removed on loss); hero damage 
 | Actions | End turn | Hero phase begins |
 | Reaction | defender choice in combat / peril | Shadow card reaction |
 
-## Known gaps
+## Notes
 
-- "Each hero…" tree events resolve only for the first active hero (`runSauronEvents`).
-- Sauron stage details above come from the engine source; no screenshot playthrough was run for Sauron yet.
+- "Each hero…" event trees now resolve for every active hero (queued per-hero decisions, ventTreeQueue).
+- Sauron stages were verified with a UI playthrough (SAURON_PLAYTHROUGH=1).

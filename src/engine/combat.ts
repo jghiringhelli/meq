@@ -12,7 +12,7 @@ import { log } from './log';
 import { requestChoice } from './choices';
 import { resolveBout } from './effects';
 import { chooseMonsterCard } from './ai';
-import { statValue, stepResolveTree, bestTreeOption } from './encounter';
+import { statValue, stepResolveTree, bestTreeOption, drainEventTreeQueue } from './encounter';
 import { gainCorruption, corruptionCombatStartDiscard, grantFavor } from './corruption';
 import { playShadowReaction, playSpecificShadow, raiseShadowReaction, sauronAuto } from './sauronmech';
 import { bestPlacementToward, placeInfluenceAction, placementTargets, canPlaceInfluence, influenceAt } from './influence';
@@ -707,6 +707,7 @@ export function resolveTreeDecision(state: GameState, cat: Catalog, optionIndex:
     heroId: p.heroId, actor: p.actor, resumeCombat: p.resumeCombat,
   }, [...p.decisions, optionIndex]);
   if (paused) return s;
+  if (p.sourceKind === 'event') drainEventTreeQueue(s, cat);
   if (p.resumeCombat && s.pendingCombat) return queuePreparation(s, cat);
   if (p.resumeEnterWindow) {
     // The hero's Peril decision is done — run the owed "after entering a

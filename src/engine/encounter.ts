@@ -863,6 +863,21 @@ export function treeActorIsHuman(s: GameState, actor: 'hero' | 'sauron'): boolea
     : s.humanSide === 'Hero';
 }
 
+/** Start the next queued "Each hero…" event tree for a human hero. Runs each
+ *  hero's tree to completion until one pauses for a decision. */
+export function drainEventTreeQueue(s: GameState, cat: Catalog): void {
+  const q = s.eventTreeQueue;
+  while (q && q.length && !s.pendingTree) {
+    const head = q[0];
+    const heroId = head.heroIds.shift();
+    if (!heroId) { q.shift(); continue; }
+    stepResolveTree(s, cat, head.tree, {
+      sourceKind: 'event', cardId: head.cardId, source: `event ${head.name}`, heroId, actor: 'hero',
+    });
+  }
+  if (q && !q.length) s.eventTreeQueue = undefined;
+}
+
 /** Context describing a card `tree` being resolved interactively. */
 export interface TreeCtx {
   sourceKind: TreeSource;
