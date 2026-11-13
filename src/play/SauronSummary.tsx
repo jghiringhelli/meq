@@ -38,7 +38,7 @@ export default function SauronSummary({ state }: { state: GameState }) {
   // Show the one-time setup recap expanded by default at the very start of the
   // game (before Sauron has taken a turn) so the player sees what the Eye set up;
   // once Sauron has played, it collapses to keep the panel compact.
-  const [showSetup, setShowSetup] = useState(lastTurn.length === 0);
+  const [showSetup, setShowSetup] = useState(true);
 
   if (setup.length === 0 && lastTurn.length === 0) return null;
 
@@ -46,9 +46,9 @@ export default function SauronSummary({ state }: { state: GameState }) {
     <div className="sauron-summary">
       <div className="ss-title">
         <span>🛡 Sauron</span>
-        {setup.length > 0 && (
+        {(
           <button className="ss-toggle" onClick={() => setShowSetup((v) => !v)}>
-            {showSetup ? 'Hide setup' : 'Show setup'}
+            {showSetup ? 'Hide' : 'Show'}
           </button>
         )}
       </div>
@@ -58,7 +58,7 @@ export default function SauronSummary({ state }: { state: GameState }) {
           {setup.map((e, i) => <Line key={`s${i}`} e={e} />)}
         </div>
       )}
-      {lastTurn.length > 0 ? (
+      {!showSetup ? null : lastTurn.length > 0 ? (
         <div className="ss-block">
           <div className="ss-sub">Sauron's last turn{round ? ` · round ${round}` : ''}</div>
           {lastTurn.map((e, i) => <Line key={`t${i}`} e={e} />)}

@@ -147,7 +147,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
     for (const mid of state.map.minionsAt?.[lid] ?? []) {
       const m = cat.minions[mid];
       const hp = state.map.minionHealth?.[mid] ?? m?.health;
-      figs.push({ key: 'min' + mid, art: m ? minionArt(m.image) : '', border: MINION_BORDER, count: 1,
+      figs.push({ key: 'min' + mid, art: m ? minionArt(m.image) : '', border: MINION_BORDER, count: 1, fit: 'meet',
         label: m?.name ?? mid, fill: '#7a2020', init: (m?.name ?? '?')[0],
         tip: m ? `${m.name} (elite minion)\nHealth ${hp}/${m.health} · Fortitude ${m.fortitude} · Strength ${m.strength} · Wisdom ${m.wisdom}\n${m.ability}` : undefined,
         inspect: m ? { title: m.name, img: minionArt(m.image),
@@ -1047,7 +1047,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                     <title>{`${m?.name ?? mid} — in reserve (not on the board)`}</title>
                     <circle r={rC + 3} fill="#140f0a" stroke={MINION_BORDER} strokeWidth={5} opacity={0.97} />
                     {art
-                      ? <image href={art} x={-rC} y={-rC} width={rC * 2} height={rC * 2} preserveAspectRatio="xMidYMid slice" style={{ clipPath: 'inset(0 round 50%)' }} />
+                      ? <image href={art} x={-rC} y={-rC} width={rC * 2} height={rC * 2} preserveAspectRatio="xMidYMid meet" style={{ clipPath: 'inset(0 round 50%)' }} />
                       : <text y={9} textAnchor="middle" fontSize={34} fontWeight={700} fill="#e8c0b0">{(m?.name ?? '?')[0]}</text>}
                   </g>
                 );
