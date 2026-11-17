@@ -56,5 +56,12 @@ const b3 = runSauronEvents(b2, cat);
 const ids = (b3.sauron.activeEventPlots ?? []).map((m) => m.eventId);
 check(ids.length === 1 && ids[0] === gandalf.id, 'a new quest replaces the previous one');
 
+// Owner-verified list of cards that carry the green event-marker flag.
+const FLAGGED: Record<string, number[]> = { '1': [9, 10, 11, 12, 13, 14], '2': [1, 2, 5, 6, 10, 11, 13], '3': [1, 2, 6, 7, 10, 12, 13, 14] };
+for (const [turn, nums] of Object.entries(FLAGGED)) {
+  const got = cat.events.filter((e) => e.turn === turn && e.questLocation).map((e) => Number(e.cardNo)).sort((x, y) => x - y);
+  check(JSON.stringify(got) === JSON.stringify(nums), `stage ${turn} flagged cards = ${nums.join(',')} (got ${got.join(',')})`);
+}
+
 if (fails) { console.log(`\n${fails} FAILED`); process.exit(1); }
 console.log('\nevent quests: PASS');

@@ -753,10 +753,16 @@ def build_events():
         txt = clean(df.iat[i, 8])
         ops, kind = classify_row(txt)
         tree, partial = compile_tree(_to_2p(txt)) if isinstance(txt, str) and txt else ({"k": "none"}, False)
+        # Owner-verified against the physical cards: which cards carry the green
+        # event-marker flag (a quest location) differs from the spreadsheet here.
+        qloc = clean(df.iat[i, 7])
+        key = (str(clean(df.iat[i, 0])), str(clean(df.iat[i, 1])))
+        if key == ("2", "6"): qloc = "TROLLSHAWS"   # The Foe-Hammer: flagged, marker with Gandalf
+        if key == ("3", "8"): qloc = ""             # Arnor, That Was of Old: no flag
         out.append({"id": f"event-t{clean(df.iat[i,0])}-{slug(nm)}", "turn": clean(df.iat[i, 0]),
                     "cardNo": clean(df.iat[i, 1]), "name": nm, "favor1": clean(df.iat[i, 3]),
                     "favor2": clean(df.iat[i, 4]), "character": clean(df.iat[i, 5]),
-                    "characterLocation": clean(df.iat[i, 6]), "questLocation": clean(df.iat[i, 7]),
+                    "characterLocation": clean(df.iat[i, 6]), "questLocation": qloc,
                     "text": txt, "effectKey": "", "ops": ops, "effectKind": kind,
                     "tree": tree, "partial": partial})
     write("events.json", {"_meta": meta("events-v1", "Sauron event/plot deck, organized by turn."), "events": out})
