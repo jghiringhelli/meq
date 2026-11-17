@@ -415,6 +415,8 @@ export function heroExplore(state: GameState, cat: Catalog, heroId: HeroId): Gam
   const ep = (s.sauron.activeEventPlots ?? []).find((m) => m.location === hero.location);
   if (ep) {
     hero.encounterStepDone = true;
+    const quest = cat.events.find((e) => e.id === ep.eventId);
+    if (quest) resolveEventQuest(s, cat, hero.id, quest);
     discardEventPlot(s, cat, ep.eventId);
     hero.actionsRemaining = 0; // the Encounter step is the final step of the turn
     return s;
@@ -428,13 +430,39 @@ export function heroExplore(state: GameState, cat: Catalog, heroId: HeroId): Gam
   return s;
 }
 
+/** Apply an event quest's printed effect to the hero who Explored its location
+ *  (a human hero is prompted for any "Choose one"; the AI picks greedily). */
+function resolveEventQuest(s: GameState, cat: Catalog, heroId: HeroId, e: EventCard): void {
+  if (e.tree && (e.tree as any).k && (e.tree as any).k !== 'none') {
+    if (treeActorIsHuman(s, 'hero')) {
+      (s.eventTreeQueue ||= []).push({ cardId: e.id, name: e.name, tree: e.tree as any, heroIds: [heroId] });
+      drainEventTreeQueue(s, cat);
+    } else {
+      autoResolveTree(s, cat, heroId, e.tree, `event ${e.name}`, 'hero');
+    }
+    return;
+  }
+  if (!e.ops?.length) return;
+  const globalOps = e.ops.filter((o) => o.op === 'addInfluence' || o.op === 'removeInfluence');
+  const heroOps = e.ops.filter((o) => o.op !== 'addInfluence' && o.op !== 'removeInfluence');
+  if (globalOps.length) applyOps(s, cat, null, globalOps, `event ${e.name}`);
+  if (heroOps.length) applyOps(s, cat, heroId, heroOps, `event ${e.name}`);
+}
+
 /** Remove an event-deck plot from play: drop its board token, send the event
  *  card to the Event discard, and clear its character marker. */
-function discardEventPlot(s: GameState, cat: Catalog, plotId: CardId): void {
+function discardEventPlot(s: GameState, cat: Catalog, plotId: CardId, explored = true): void {
   const list = s.sauron.activeEventPlots ?? [];
   const i = list.findIndex((m) => m.eventId === plotId);
   if (i < 0) return;
   const [removed] = list.splice(i, 1);
+  const questEv = cat.events.find((e) => e.id === plotId);
+  if (questEv) {
+    (s.sauron.eventDiscard ||= []).push(questEv.id);
+    if (questEv.character) removeCharacter(s, questEv.character);
+    log(s, 'event-discard', explored ? 'Hero' : 'Sauron', `${questEv.name} ${explored ? 'resolved' : 'replaced'} at ${cat.locations[removed.location!]?.name ?? removed.location}`, { cardId: plotId });
+    return;
+  }
   const plot = cat.plots.find((p) => p.id === plotId);
   // Return the matching event card to the Event discard pile.
   const ev = plot ? cat.events.find((e) => normName(e.name) === normName(plot.name)) : undefined;
@@ -746,11 +774,11 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   // mechanical effect (favor/Character tokens land per the card text), so doing
   // it up front lets the effect below PAUSE for a human hero's printed choice
   // without stranding the placement or the phase transition.
-  for (const e of chosen) if (eventDeckPlotFor(cat, e)) registerEventPlot(s, cat, e);
+  for (const e of chosen) if (eventDeckPlotFor(cat, e) || eventQuestLocation(cat, e)) registerEventPlot(s, cat, e);
   for (const e of chosen) placeEventTokens(s, cat, e);
   // Discard the resolved cards — EXCEPT event-deck plots, which are held in play
   // (out of the deck) until a hero Explores them.
-  for (const e of chosen) if (!eventDeckPlotFor(cat, e)) s.sauron.eventDiscard!.push(e.id);
+  for (const e of chosen) if (!eventDeckPlotFor(cat, e) && !eventQuestLocation(cat, e)) s.sauron.eventDiscard!.push(e.id);
   s.phase = 'SauronMinions';
   log(s, 'phase', 'Sauron', `event step for turn ${turn}: ${chosen.length} card(s) resolved`);
   // === Action Step setup === for a human Sauron, set the action budget (2, or 3
@@ -771,7 +799,7 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   // (see treeActor); the AI picks the hero's best option.
   const effectLogStart = s.log.length;
   for (const e of chosen) {
-    if (eventDeckPlotFor(cat, e)) continue; // a lasting plot, no one-shot effect
+    if (eventDeckPlotFor(cat, e) || eventQuestLocation(cat, e)) continue; // lasting plot / event quest: resolved when a hero Explores its location
     if (e.tree && (e.tree as any).k && (e.tree as any).k !== 'none') {
       const active = s.heroes.filter((x) => x.status === 'active');
       const targets = /\beach hero\b/i.test(e.text ?? '') ? active : active.slice(0, 1);
@@ -802,7 +830,10 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
     const notes = s.log.slice(effectLogStart)
       .filter((ev) => ev.type === 'effect' && [...eventNames].some((n) => ev.detail.startsWith(`event ${n}:`)))
       .map((ev) => ev.detail);
-    s.pendingReveal.resultNote = notes.length ? notes.join(' · ') : 'No mechanical effect on any hero this time.';
+    const questEv = chosen.find((e) => eventQuestLocation(cat, e));
+    s.pendingReveal.resultNote = questEv
+      ? `Event quest: a hero must Explore ${cat.locations[eventQuestLocation(cat, questEv)!]?.name ?? 'its location'} to resolve it.`
+      : notes.length ? notes.join(' · ') : 'No mechanical effect on any hero this time.';
   }
   return s;
 }
@@ -837,20 +868,29 @@ function eventDeckPlotFor(cat: Catalog, e: { name?: string }): Plot | null {
  *  on the board — an already-active event-deck plot remains in play only "until
  *  their requirements are met OR the card is replaced by another Event card", so
  *  a newly resolved eventDeckPlot bumps out (discards) whichever one is active. */
-function registerEventPlot(s: GameState, cat: Catalog, e: { name?: string; questLocation?: string }): void {
+function registerEventPlot(s: GameState, cat: Catalog, e: EventCard): void {
   const plot = eventDeckPlotFor(cat, e);
-  if (!plot) return;
-  const loc = locByName(cat, e.questLocation) ?? locByName(cat, plot.affectsText);
+  const loc = plot ? (locByName(cat, e.questLocation) ?? locByName(cat, plot.affectsText)) : eventQuestLocation(cat, e);
   if (!loc) return;
+  const id = plot ? plot.id : e.id;
+  const name = plot ? plot.name : e.name;
   const list = (s.sauron.activeEventPlots ||= []);
-  if (list.some((m) => m.eventId === plot.id)) return; // already in play
+  if (list.some((m) => m.eventId === id)) return; // already in play
   for (const prev of [...list]) {
-    const prevPlot = cat.plots.find((p) => p.id === prev.eventId);
-    discardEventPlot(s, cat, prev.eventId);
-    log(s, 'event-place', 'Sauron', `${prevPlot?.name ?? prev.eventId} is replaced by ${plot.name} on the Current Event Card space`);
+    const prevName = cat.plots.find((p) => p.id === prev.eventId)?.name ?? cat.events.find((x) => x.id === prev.eventId)?.name;
+    discardEventPlot(s, cat, prev.eventId, false);
+    log(s, 'event-place', 'Sauron', `${prevName ?? prev.eventId} is replaced by ${name} on the Current Event Card space`);
   }
-  list.push({ eventId: plot.id, step: 0, location: loc });
-  log(s, 'event-place', 'Sauron', `${plot.name} enters play at ${cat.locations[loc]?.name ?? loc} — Explore to discard`, { cardId: plot.id });
+  list.push({ eventId: id, step: 0, location: loc });
+  log(s, 'event-place', 'Sauron', `${name} enters play at ${cat.locations[loc]?.name ?? loc} — Explore to ${plot ? 'discard' : 'resolve'}`, { cardId: id });
+}
+
+/** An Event card with a printed quest location (and no Plot-catalog twin) is an
+ *  "event quest": it sits on the single Current Event Card space and resolves
+ *  only when a hero Explores that location. Returns the location id, or null. */
+function eventQuestLocation(cat: Catalog, e: { name?: string; questLocation?: string }): string | null {
+  if (!e.questLocation || eventDeckPlotFor(cat, e)) return null;
+  return locByName(cat, e.questLocation);
 }
 
 /** Place an event card's board tokens: favor at favor1/favor2 and the named

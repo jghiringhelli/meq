@@ -51,23 +51,26 @@ export default function PlotRow({ state, cat }: { state: GameState; cat: Catalog
           <span className="plot-title plot-title--missions">Active Missions</span>
           {activeMissions.map((pm) => {
             const p = cat.plots.find((x) => x.id === pm.eventId);
+            const ev = p ? undefined : cat.events.find((x) => x.id === pm.eventId);
             const img = p ? plotArt(p.image) : undefined;
             const locName = pm.location ? (cat.locations[pm.location]?.name ?? pm.location) : '?';
+            const title = p?.name ?? ev?.name ?? pm.eventId;
+            const body = p?.effect ?? ev?.text ?? '';
             return (
               <div
                 key={'mission-' + pm.eventId}
                 className="plot-card plot-card--mission"
                 onClick={() => inspect({
-                  title: p?.name ?? pm.eventId,
+                  title,
                   img,
                   subtitle: `Active mission · at ${locName}`,
                   lines: [p?.affectsText ? `Affects: ${p.affectsText}` : ''].filter(Boolean),
-                  text: p?.effect ?? '',
+                  text: body,
                 })}
-                title={`${p?.name ?? pm.eventId}\nAt: ${locName}\n${p?.effect ?? ''}\n(Explore here to discard)`}
+                title={`${title}\nAt: ${locName}\n${body}\n(Explore here to ${p ? 'discard' : 'resolve'})`}
               >
-                {img && <img className="plot-art" src={img} alt={p?.name ?? pm.eventId} />}
-                <span className="plot-name">{p?.name ?? pm.eventId}</span>
+                {img && <img className="plot-art" src={img} alt={title} />}
+                <span className="plot-name">{title}</span>
                 <span className="plot-meta">
                   <span className="plot-counter" title="location">@ {locName}</span>
                 </span>

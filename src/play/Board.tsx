@@ -557,9 +557,10 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
               {eventPlotsHere.length > 0 && (() => {
                 const ex = rr - 2, ey = rr - 2, r = 13 * s;
                 const plot = cat.plots.find((p) => p.id === eventPlotsHere[0].eventId);
+                const ev = plot ? undefined : cat.events.find((x) => x.id === eventPlotsHere[0].eventId);
                 return (
                   <g transform={`translate(${ex},${ey})`}>
-                    <title>{`Active event: ${plot?.name ?? eventPlotsHere[0].eventId}\n${plot?.effect ?? ''}\n(Explore here to discard)`}</title>
+                    <title>{`Active event: ${plot?.name ?? ev?.name ?? eventPlotsHere[0].eventId}\n${plot?.effect ?? ev?.text ?? ''}\n(Explore here to ${plot ? 'discard' : 'resolve'})`}</title>
                     <rect x={-r} y={-r} width={r * 2} height={r * 2} rx={3 * s} transform="rotate(45)"
                       fill="#1e6b2e" stroke="#8fe6a0" strokeWidth={3 * s} />
                     <text y={5 * s} textAnchor="middle" fontSize={15 * s} fontWeight={700} fill="#eafaea">!</text>
@@ -759,7 +760,8 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
             const lines = missions.length
               ? missions.map((m) => {
                   const p = cat.plots.find((x) => x.id === m.eventId);
-                  return `${p?.name ?? m.eventId} — at ${cat.locations[m.location!]?.name ?? m.location}`;
+                  const ev = p ? undefined : cat.events.find((x) => x.id === m.eventId);
+                  return `${p?.name ?? ev?.name ?? m.eventId} — at ${cat.locations[m.location!]?.name ?? m.location}`;
                 })
               : ['No Event-deck missions currently in play.'];
             inspect({
