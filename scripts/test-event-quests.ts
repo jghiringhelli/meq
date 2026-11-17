@@ -6,6 +6,8 @@ import { loadCatalog } from '../src/data/loadAssets';
 import { newGame } from '../src/engine/setup';
 import { sauronResolveEvents as runSauronEvents, heroExplore } from '../src/engine/phases';
 import { moveHero } from '../src/engine/mechanics';
+import { applyAtoms } from '../src/engine/encounter';
+import { adjacentLocations } from '../src/engine/sauronPlay';
 
 const cat = loadCatalog();
 let fails = 0;
@@ -61,6 +63,30 @@ const FLAGGED: Record<string, number[]> = { '1': [9, 10, 11, 12, 13, 14], '2': [
 for (const [turn, nums] of Object.entries(FLAGGED)) {
   const got = cat.events.filter((e) => e.turn === turn && e.questLocation).map((e) => Number(e.cardNo)).sort((x, y) => x - y);
   check(JSON.stringify(got) === JSON.stringify(nums), `stage ${turn} flagged cards = ${nums.join(',')} (got ${got.join(',')})`);
+}
+
+// Arnor, That Was of Old: choose (a) clear influence + monsters within 1 of Fornost, or (b) a favor token on Fornost.
+{
+  const arnor = cat.events.find((e) => /ARNOR, THAT WAS OF OLD/i.test(e.name))!;
+  const opts = (arnor.tree as any).options as { eff: { atom: any } }[];
+  const mk = () => {
+    const s = newGame(cat, 5, ['beravor']);
+    const near = adjacentLocations(cat, 'fornost')[0];
+    return { s, near };
+  };
+  const { s: s1, near } = mk();
+  if (near) {
+    s1.sauron.locationInfluence = { ...(s1.sauron.locationInfluence ?? {}), fornost: 2, [near]: 3 };
+    (s1.map.monstersAt[near] ||= []).push(Object.keys(cat.monsters)[0]);
+  }
+  applyAtoms(s1, cat, 'beravor', [opts[0].eff.atom], 'test');
+  check(!!near && !(s1.sauron.locationInfluence?.fornost) && !(s1.sauron.locationInfluence?.[near!]) && !(s1.map.monstersAt[near!]?.length),
+    'Arnor option 1 clears influence and monsters within 1 space of Fornost');
+  const { s: s2 } = mk();
+  const before = s2.map.favorAt?.fornost ?? 0;
+  const favHero = s2.heroes[0].favor;
+  applyAtoms(s2, cat, 'beravor', [opts[1].eff.atom], 'test');
+  check((s2.map.favorAt?.fornost ?? 0) === before + 1 && s2.heroes[0].favor === favHero, 'Arnor option 2 places a favor token on Fornost (not on the hero)');
 }
 
 if (fails) { console.log(`\n${fails} FAILED`); process.exit(1); }

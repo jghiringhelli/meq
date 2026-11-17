@@ -28,7 +28,7 @@ test('advancing phases surfaces reveals with cards and stays error-free', async 
       sawReveal = true;
       // A reveal tray must show at least one drawn card.
       await expect(tray.locator('.enc-tray-card').first()).toBeVisible();
-      const ok = tray.getByRole('button', { name: 'OK' });
+      const ok = tray.getByRole('button', { name: 'OK', exact: true });
       if (await ok.isVisible().catch(() => false)) {
         await ok.click();
         await expect(tray).toBeHidden();

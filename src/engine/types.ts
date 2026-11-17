@@ -243,7 +243,7 @@ export type Atom =
   | { op: 'moveAnywhere' }                          // hero may move to any location (player choice)
   | { op: 'sauronMoveCharacter'; location: string } // Sauron banishes a chosen Character to `location`
   | { op: 'clearMonstersAt'; location: string }     // remove all monster tokens from a named location
-  | { op: 'clearAdjacent' }                          // remove all influence + monster tokens within 1 space of the hero
+  | { op: 'clearAdjacent'; location?: string }       // remove all influence + monster tokens within 1 space of location (default: the hero)
   | { op: 'handToLife' }                             // shuffle the hero's whole hand into his life pool
   | { op: 'placeFavorToken'; location: string; n: number } // place N favor tokens on a named location
   | { op: 'removeCharacter'; region: string }       // Sauron discards one Character token from a region

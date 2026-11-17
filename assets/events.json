@@ -1285,23 +1285,24 @@
         "prompt": "Choose one",
         "options": [
           {
-            "label": "Heroes may remove all influence and monster token within\n1 space of fornost,",
+            "label": "Remove all influence and monster tokens within 1 space of Fornost",
             "cost": null,
             "eff": {
               "k": "op",
               "atom": {
-                "op": "discardRegionInfluence",
-                "n": 99
+                "op": "clearAdjacent",
+                "location": "fornost"
               }
             }
           },
           {
-            "label": "Place 1 favor in fornost",
+            "label": "Place 1 favor in Fornost",
             "cost": null,
             "eff": {
               "k": "op",
               "atom": {
-                "op": "gainFavor",
+                "op": "placeFavorToken",
+                "location": "fornost",
                 "n": 1
               }
             }

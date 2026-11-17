@@ -634,7 +634,8 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       return had ? `removed ${had} monster token(s) from ${cat.locations[loc]?.name ?? loc}` : '';
     }
     case 'clearAdjacent': {
-      const scope = [hero.location, ...adjacentLocations(cat, hero.location)];
+      const center = (atom.location && findLocation(cat, atom.location)) || hero.location;
+      const scope = [center, ...adjacentLocations(cat, center)];
       let inf = 0, mon = 0;
       for (const loc of scope) {
         inf += removeInfluenceAt(s, loc, Number.MAX_SAFE_INTEGER);

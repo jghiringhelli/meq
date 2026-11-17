@@ -758,7 +758,13 @@ def build_events():
         qloc = clean(df.iat[i, 7])
         key = (str(clean(df.iat[i, 0])), str(clean(df.iat[i, 1])))
         if key == ("2", "6"): qloc = "TROLLSHAWS"   # The Foe-Hammer: flagged, marker with Gandalf
-        if key == ("3", "8"): qloc = ""             # Arnor, That Was of Old: no flag
+        if key == ("3", "8"):                       # Arnor, That Was of Old: no flag; heroes choose one
+            qloc = ""
+            tree, partial = ({"k": "choice", "prompt": "Choose one", "options": [
+                {"label": "Remove all influence and monster tokens within 1 space of Fornost", "cost": None,
+                 "eff": {"k": "op", "atom": {"op": "clearAdjacent", "location": "fornost"}}},
+                {"label": "Place 1 favor in Fornost", "cost": None,
+                 "eff": {"k": "op", "atom": {"op": "placeFavorToken", "location": "fornost", "n": 1}}}]}, False)
         out.append({"id": f"event-t{clean(df.iat[i,0])}-{slug(nm)}", "turn": clean(df.iat[i, 0]),
                     "cardNo": clean(df.iat[i, 1]), "name": nm, "favor1": clean(df.iat[i, 3]),
                     "favor2": clean(df.iat[i, 4]), "character": clean(df.iat[i, 5]),
