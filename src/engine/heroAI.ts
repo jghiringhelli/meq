@@ -254,6 +254,8 @@ function nodePenalty(s: GameState, cat: Catalog, loc: LocationId, hero: HeroStat
   const known = (s.map.revealedMonstersAt ?? []).includes(loc);
   const bluff = (s.map.rumorsAt?.[loc] ?? 0) > 0 && !known;
   if (realMon || bluff) p += MONSTER_W;
+  // A minion is a far deadlier fight: a hero with a thin life pool routes around it.
+  if ((s.map.minionsAt?.[loc]?.length ?? 0) > 0) p += hero.life <= 3 ? 6 * MONSTER_W : hero.life <= 6 ? MONSTER_W : 0;
   return p;
 }
 
