@@ -89,7 +89,7 @@ export default function App() {
   // actually starts and the component's render path reaches further down.
   const [sauronMoveFigureSel, setSauronMoveFigureSel] = useState<{ kind: 'monster' | 'minion'; id: string; loc: string } | null>(null);
   const [sauronCommandSel, setSauronCommandSel] = useState<
-    { kind: 'spawn'; monsterId: string } | { kind: 'deploy'; minionId: string } | null
+    { kind: 'deploy'; minionId: string } | null
   >(null);
   // Human Sauron vs AI heroes: the heroes' turn is stepped one action at a time.
   // `act` is what they are about to do; `results` recaps what the last action did.
@@ -477,12 +477,14 @@ export default function App() {
   // monster/minion, then the destination is clicked on the map.
   // (sauronCommandSel's useState is hoisted above the early returns near the
   // top of this component — see comment there.)
+  const heldToken = state.sauronPending?.heldToken;
   const commandTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
-    && sauronCommandSel ? sauronCommandTargets(state, cat, sauronCommandSel.kind) : undefined;
+    ? (heldToken ? sauronCommandTargets(state, cat, 'spawn')
+      : sauronCommandSel ? sauronCommandTargets(state, cat, 'deploy') : undefined)
+    : undefined;
   const doCommandTarget = (loc: string) => {
-    if (!sauronCommandSel) return;
-    if (sauronCommandSel.kind === 'spawn') dispatch({ t: 'sauronSpawnMonster', monsterId: sauronCommandSel.monsterId, loc } as Action);
-    else dispatch({ t: 'sauronDeployMinion', minionId: sauronCommandSel.minionId, loc } as Action);
+    if (heldToken) dispatch({ t: 'sauronSpawnMonster', loc } as Action);
+    else if (sauronCommandSel) dispatch({ t: 'sauronDeployMinion', minionId: sauronCommandSel.minionId, loc } as Action);
     setSauronCommandSel(null);
   };
   // Do I control the specific hero a pending tree-decision affects? Per-hero

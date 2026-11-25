@@ -797,7 +797,11 @@ export interface GameState {
    *  yield several board tokens and a Command action several commands; the human
    *  resolves them one at a time. `remaining` counts the sub-effects still owed
    *  by the current action. Cleared when spent or when the turn ends. */
-  sauronPending?: { track: 'influence' | 'command' | 'draw'; remaining: number; drawnPlots?: string[] };
+  sauronPending?: { track: 'influence' | 'command' | 'draw'; remaining: number; drawnPlots?: string[];
+    /** Command: a monster token drawn from a pile and awaiting placement ('blank' = false rumor). */
+    heldToken?: { regionId: string; token: string };
+    /** Command: the one monster token allowed per Command action has been used. */
+    monsterDone?: boolean };
   /** Interactive Setup: a human-controlled Sauron places the starting plot's
    *  "extension" influence himself (clicking the map), instead of the engine
    *  auto-distributing it via BFS. Set by newGame when `interactiveSetup` is

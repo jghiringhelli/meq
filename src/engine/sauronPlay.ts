@@ -4,8 +4,9 @@
 // three heroes), each a Place-influence / Deploy / Move / Heal / Play-shadow /
 // Spawn command. The automatic Story, Event, Hero-Draw and Story-Advance steps
 // are handled by the phase machine (see phases.ts sauron* wrappers).
-import type { Catalog, GameState, LocationId, MinionId, MonsterId, Plot } from './types';
+import type { Catalog, GameState, LocationId, MinionId, Plot } from './types';
 import { clone, gameStage } from './mechanics';
+import { drawMonsterToken } from './ai';
 import { log } from './log';
 import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman } from './encounter';
 import { applyPlotCard, drawShadow, takePlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
@@ -60,6 +61,10 @@ function spend(s: GameState): void {
 /** A Command action is mid-flight with commands still owed. */
 function canCommand(s: GameState): boolean {
   return s.phase === 'SauronMinions' && s.sauronPending?.track === 'command' && s.sauronPending.remaining > 0;
+}
+/** Like canCommand, but not while a drawn monster token still awaits placement. */
+function canCommandFree(s: GameState): boolean {
+  return canCommand(s) && !s.sauronPending?.heldToken;
 }
 function spendCommand(s: GameState): void {
   if (s.sauronPending?.track === 'command') {
@@ -154,7 +159,10 @@ export function reserveMinions(s: GameState, cat: Catalog): MinionId[] {
  *  and Board's on-map click targets so both always agree. */
 export function sauronCommandTargets(s: GameState, cat: Catalog, kind?: 'spawn' | 'deploy'): LocationId[] {
   // Monster tokens may only go where the engine will accept them: an influenced location with no hero.
-  if (kind === 'spawn') return (Object.keys(cat.locations) as LocationId[]).filter((l) => monsterPlaceable(s, l));
+  if (kind === 'spawn') {
+    const held = s.sauronPending?.heldToken;
+    return held ? monsterTargetsIn(s, cat, held.regionId) : [];
+  }
   const heroLocs = s.heroes.filter((h) => h.status === 'active').map((h) => h.location);
   const near = new Set<LocationId>([s.sauron.location, ...heroLocs]);
   for (const l of heroLocs) for (const n of adjacentLocations(cat, l)) near.add(n);
@@ -275,21 +283,52 @@ export function sauronKeepStartingHand(state: GameState, cat: Catalog, shadow: s
 
 /** Spawn command: field a monster from the reserve at a legal location. Costs one
  *  command of the current Command action (rulebook p.18 — NOT Shadow-Pool influence). */
-export function sauronSpawnMonster(state: GameState, cat: Catalog, monsterId: MonsterId, loc: LocationId): GameState {
+export function sauronSpawnMonster(state: GameState, cat: Catalog, loc: LocationId): GameState {
   if (!canCommand(state)) return state;
-  if (!cat.monsters[monsterId]) return state;
-  // Monster tokens may only be placed on an influenced location without a hero.
-  if (!monsterPlaceable(state, loc)) return state;
+  const held = state.sauronPending?.heldToken;
+  if (!held) return state;
+  // Monster tokens may only be placed on an influenced location without a hero,
+  // in the region (colour pair) the token was drawn from.
+  if (!monsterPlaceable(state, loc) || cat.locations[loc]?.regionId !== held.regionId) return state;
   const s = clone(state);
-  (s.map.monstersAt[loc] ||= []).push(monsterId);
+  if (held.token === 'blank') {
+    (s.map.rumorsAt ||= {})[loc] = (s.map.rumorsAt[loc] ?? 0) + 1;
+    log(s, 'sauron', 'Sauron', `plants a face-down token at ${loc}`);
+  } else {
+    (s.map.monstersAt[loc] ||= []).push(held.token);
+    log(s, 'sauron', 'Sauron', `plants a face-down token at ${loc}`);
+  }
+  s.sauronPending!.heldToken = undefined;
+  s.sauronPending!.monsterDone = true;
   spendCommand(s);
-  log(s, 'sauron', 'Sauron', `fields ${cat.monsters[monsterId].name} at ${loc}`);
+  return s;
+}
+
+/** Locations in `regionId` where a monster token may be placed now. */
+export function monsterTargetsIn(s: GameState, cat: Catalog, regionId: string): LocationId[] {
+  return (Object.keys(cat.locations) as LocationId[])
+    .filter((l) => cat.locations[l].regionId === regionId && monsterPlaceable(s, l));
+}
+
+/** Place Monster Token, step 1: Sauron picks one of the five piles and draws a
+ *  random token (rulebook p.18); only Sauron may look at it, then it must be
+ *  placed. One monster token per Command action. */
+export function sauronDrawMonsterToken(state: GameState, cat: Catalog, regionId: string): GameState {
+  if (!canCommand(state)) return state;
+  const p = state.sauronPending!;
+  if (p.heldToken || p.monsterDone || !cat.monsterBags[regionId]) return state;
+  if (monsterTargetsIn(state, cat, regionId).length === 0) return state;
+  const s = clone(state);
+  const token = drawMonsterToken(s, cat, regionId);
+  if (token === null) return state;
+  s.sauronPending!.heldToken = { regionId, token };
+  log(s, 'sauron', 'Sauron', `draws a monster token from the ${cat.monsterBags[regionId].name} pile`);
   return s;
 }
 
 /** Command is "up to N": the player may stop issuing commands early. */
 export function sauronFinishCommand(state: GameState): GameState {
-  if (state.sauronPending?.track !== 'command') return state;
+  if (state.sauronPending?.track !== 'command' || state.sauronPending.heldToken) return state;
   const s = clone(state);
   s.sauronPending = undefined;
   return s;
@@ -297,7 +336,7 @@ export function sauronFinishCommand(state: GameState): GameState {
 
 /** Deploy command: bring a reserve minion into play at a location. */
 export function sauronDeployMinion(state: GameState, cat: Catalog, minionId: MinionId, loc: LocationId): GameState {
-  if (!canCommand(state)) return state;
+  if (!canCommandFree(state)) return state;
   if (!cat.minions[minionId]) return state;
   if (!reserveMinions(state, cat).includes(minionId)) return state;
   const s = clone(state);
@@ -312,7 +351,7 @@ export function sauronDeployMinion(state: GameState, cat: Catalog, minionId: Min
 export function sauronMoveFigure(
   state: GameState, cat: Catalog, kind: 'monster' | 'minion', id: string, from: LocationId, to: LocationId,
 ): GameState {
-  if (!canCommand(state)) return state;
+  if (!canCommandFree(state)) return state;
   if (!moveTargets(state, cat, kind, from, id).includes(to)) return state;
   const s = clone(state);
   const map = kind === 'monster' ? (s.map.monstersAt ||= {}) : (s.map.minionsAt ||= {});
@@ -337,7 +376,7 @@ export function woundedMinions(s: GameState, cat: Catalog): MinionId[] {
 
 /** Heal command: fully restore a wounded minion (clears its carried damage). */
 export function sauronHealMinion(state: GameState, cat: Catalog, minionId: MinionId): GameState {
-  if (!canCommand(state)) return state;
+  if (!canCommandFree(state)) return state;
   const s = clone(state);
   if (!s.map.minionHealth || s.map.minionHealth[minionId] === undefined) return state;
   delete s.map.minionHealth[minionId];

@@ -17,7 +17,7 @@ import {
   resolveShadowReaction, resolveTreeDecision,
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
   sauronPlayPlot, sauronBeginAction, sauronPlaceInfluence,
-  sauronSpawnMonster, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
+  sauronSpawnMonster, sauronDrawMonsterToken, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
 } from './game';
 
 /** A serializable player intent. `t` is the discriminant tag. */
@@ -57,7 +57,8 @@ export type Action =
   | { t: 'sauronKeepStartingHand'; shadow: string[]; plot: string[] }
   | { t: 'sauronFinishCommand' }
   | { t: 'sauronCombatInfluence'; loc: string }
-  | { t: 'sauronSpawnMonster'; monsterId: MonsterId; loc: LocationId }
+  | { t: 'sauronSpawnMonster'; loc: LocationId }
+  | { t: 'sauronDrawMonsterToken'; regionId: string }
   | { t: 'sauronDeployMinion'; minionId: MinionId; loc: LocationId }
   | { t: 'sauronMoveFigure'; kind: 'monster' | 'minion'; id: string; from: LocationId; to: LocationId }
   | { t: 'sauronHealMinion'; minionId: MinionId }
@@ -119,7 +120,8 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'sauronCombatInfluence': return sauronCombatPlaceInfluence(state, cat, action.loc);
     case 'sauronFinishCommand': return sauronFinishCommand(state);
     case 'sauronKeepStartingHand': return sauronKeepStartingHand(state, cat, action.shadow, action.plot);
-    case 'sauronSpawnMonster': return sauronSpawnMonster(state, cat, action.monsterId, action.loc);
+    case 'sauronSpawnMonster': return sauronSpawnMonster(state, cat, action.loc);
+    case 'sauronDrawMonsterToken': return sauronDrawMonsterToken(state, cat, action.regionId);
     case 'sauronDeployMinion': return sauronDeployMinion(state, cat, action.minionId, action.loc);
     case 'sauronMoveFigure': return sauronMoveFigure(state, cat, action.kind, action.id, action.from, action.to);
     case 'sauronHealMinion': return sauronHealMinion(state, cat, action.minionId);

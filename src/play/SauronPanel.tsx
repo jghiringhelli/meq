@@ -3,7 +3,7 @@ import type { Catalog, GameState, LocationId } from '../engine/types';
 import type { Action } from '../engine/actions';
 import {
   sauronActionYields,
-  playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
+  playablePlots, playableShadow, reserveMinions, monsterTargetsIn, woundedMinions, boardFigures,
   moveTargets,
 } from '../engine/game';
 import { placementTargets } from '../engine/influence';
@@ -27,8 +27,8 @@ interface Props {
   /** Spawn/deploy destination picking ALSO happens on the map (same reason as
    *  moveFigureSel above): once a monster/minion is picked in this panel's
    *  sidebar list, its board destination is clicked on the map. */
-  commandSel?: { kind: 'spawn'; monsterId: string } | { kind: 'deploy'; minionId: string } | null;
-  onSelectCommand?: (sel: { kind: 'spawn'; monsterId: string } | { kind: 'deploy'; minionId: string } | null) => void;
+  commandSel?: { kind: 'deploy'; minionId: string } | null;
+  onSelectCommand?: (sel: { kind: 'deploy'; minionId: string } | null) => void;
 }
 
 const locName = (cat: Catalog, id: LocationId) => cat.locations[id]?.name ?? id;
@@ -301,18 +301,29 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
 
                 {mode === 'spawn' && (
                   <div className="sauron-picker">
-                    {Object.values(cat.monsters).map((m) => (
-                      <button key={m.id}
-                        className={commandSel?.kind === 'spawn' && commandSel.monsterId === m.id ? 'active' : ''}
-                        onClick={() => onSelectCommand?.({ kind: 'spawn', monsterId: m.id })}>
-                        {m.name}
-                      </button>
-                    ))}
-                    {commandSel?.kind === 'spawn' && (
+                    {s.sauronPending.heldToken ? (
                       <p className="prompt">
-                        Click a glowing <span style={{ color: '#3ab86a', fontWeight: 700 }}>◉</span> location on the
-                        map to spawn {cat.monsters[commandSel.monsterId]?.name ?? commandSel.monsterId} there.
+                        You drew {s.sauronPending.heldToken.token === 'blank' ? 'a blank (false rumor)'
+                          : cat.monsters[s.sauronPending.heldToken.token]?.name ?? s.sauronPending.heldToken.token} (only you can see it).
+                        Click a glowing <span style={{ color: '#3ab86a', fontWeight: 700 }}>◉</span> location in the{' '}
+                        {cat.monsterBags[s.sauronPending.heldToken.regionId]?.name} region to place it face-down.
                       </p>
+                    ) : s.sauronPending.monsterDone ? (
+                      <p className="muted">Only one monster token per Command action.</p>
+                    ) : (
+                      <>
+                        <p className="muted">Choose a monster pile; a random token is drawn.</p>
+                        {Object.values(cat.monsterBags).map((b) => {
+                          const left = s.sauron.monsterBagPiles?.[b.id]?.length ?? b.blanks + b.tokens.reduce((n, t) => n + t.count, 0);
+                          const ok = left > 0 && monsterTargetsIn(s, cat, b.id).length > 0;
+                          return (
+                            <button key={b.id} disabled={!ok}
+                              onClick={() => apply({ t: 'sauronDrawMonsterToken', regionId: b.id })}>
+                              {b.name} ({left} left)
+                            </button>
+                          );
+                        })}
+                      </>
                     )}
                   </div>
                 )}
