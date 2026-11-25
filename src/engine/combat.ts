@@ -124,6 +124,9 @@ export function beginCombat(
 function queuePreparation(s: GameState, cat: Catalog): GameState {
   const pc = s.pendingCombat!;
   const heroId = pc.attacker.refId as HeroId;
+  // A start-of-combat Shadow card (The Black Breath) may have changed the hero's
+  // Strength since the combatant was built; refresh it before Preparation adds to it.
+  pc.attacker.strength = statValue(s, cat, heroId, 'strength');
   const agility = Math.max(0, statValue(s, cat, heroId, 'agility'));
   if (agility <= 0) return queueCombatChoice(s, cat); // nothing to allocate
   const seat = s.heroes.find((h) => h.id === heroId)?.seat ?? 0;
