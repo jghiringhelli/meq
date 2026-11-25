@@ -724,6 +724,15 @@ export const STRATEGIES: Record<string, HeroStrategy> = {
   'random-walk': randomWalk, heuristic, cautious,
 };
 
+/** Whether stepping onto `loc` means a fight: a minion, monster token or
+ *  unrevealed rumor (indistinguishable from a monster to the hero) sits there. */
+function fightAhead(s: GameState, _hero: HeroState, loc: LocationId): boolean {
+  const known = (s.map.revealedMonstersAt ?? []).includes(loc);
+  return (s.map.monstersAt[loc]?.length ?? 0) > 0
+    || (s.map.minionsAt?.[loc]?.length ?? 0) > 0
+    || ((s.map.rumorsAt?.[loc] ?? 0) > 0 && !known);
+}
+
 /** Mission-aware play: reads the scenario's hero win condition and biases the
  *  heuristic toward it. For a corruption-cap mission (e.g. Noble Blood) it
  *  avoids needless combat and cleanses aggressively; for monster/minion-cap
@@ -749,6 +758,20 @@ export const missionAware: HeroStrategy = {
     // fight against a weak foe standing here (user tactic) to stock the cards the
     // march needs.
     if (plot && (plot.kind === 'counter-plot' || plot.kind === 'trade-favor')) return plot;
+    // Heroes avoid fights, but a plot march often meets a minion/monster token on
+    // the way. If so and the hero is hurt, heal first (rest in a haven, or head
+    // for one) instead of walking into the fight on a thin life pool. Thalin the
+    // dwarf keeps fighting on even without killing his foe, so he tolerates more.
+    if (plot && plot.kind === 'move' && fightAhead(s, hero, plot.to)) {
+      const hurtBar = hero.id === 'thalin' ? 3 : 1;
+      if (hero.life <= 4 || hero.damagePool.length > hurtBar) {
+        if (inHaven && !hero.hasMovedThisTurn && !hero.restedThisTurn) return { kind: 'rest' };
+        if (!inHaven && !hero.hasMovedThisTurn) {
+          const back = legalStepToward(s, cat, hero, nearestHavens(cat));
+          if (back) return { kind: 'move', to: back };
+        }
+      }
+    }
     // Fund the plot race: consulting a co-located Character for favor (the classic
     // "ask the characters for favours" tactic) is the heroes' best favor source —
     // do it before marching or fighting when favor is the bottleneck.
