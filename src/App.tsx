@@ -466,7 +466,7 @@ export default function App() {
   // visually ambiguous. (sauronMoveFigureSel's useState is hoisted above the
   // early returns near the top of this component — see comment there.)
   const moveFigureTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
-    && sauronMoveFigureSel ? moveTargetsFor(state, cat, sauronMoveFigureSel.kind, sauronMoveFigureSel.loc) : undefined;
+    && sauronMoveFigureSel ? moveTargetsFor(state, cat, sauronMoveFigureSel.kind, sauronMoveFigureSel.loc, sauronMoveFigureSel.id) : undefined;
   const doMoveFigure = (to: string) => {
     if (!sauronMoveFigureSel) return;
     dispatch({ t: 'sauronMoveFigure', kind: sauronMoveFigureSel.kind, id: sauronMoveFigureSel.id, from: sauronMoveFigureSel.loc, to } as Action);

@@ -347,7 +347,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                       ))}
                     </select>
                     {selected && (
-                      moveTargets(s, cat, selected.kind, selected.loc).length > 0 ? (
+                      moveTargets(s, cat, selected.kind, selected.loc, selected.id).length > 0 ? (
                         <p className="prompt">
                           Click a glowing <span style={{ color: '#4a7ee0', fontWeight: 700 }}>→</span> location on the
                           map to move {selected.kind === 'monster' ? cat.monsters[selected.id]?.name : cat.minions[selected.id]?.name} there.

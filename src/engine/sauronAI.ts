@@ -105,7 +105,7 @@ export function legalSauronActions(s: GameState, cat: Catalog): SauronAction[] {
   if (canSpawn(s, cat)) acts.push({ kind: 'spawn' });
   for (const mid of woundedMinions(s, cat)) acts.push({ kind: 'heal', minionId: mid });
   for (const fig of boardFigures(s)) {
-    for (const to of moveTargets(s, cat, fig.kind, fig.loc)) {
+    for (const to of moveTargets(s, cat, fig.kind, fig.loc, fig.id)) {
       acts.push({ kind: 'move', figKind: fig.kind, id: fig.id, from: fig.loc, to });
     }
   }

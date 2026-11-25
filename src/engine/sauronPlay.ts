@@ -177,9 +177,16 @@ export function boardFigures(s: GameState): { kind: 'monster' | 'minion'; id: st
 /** Legal one-step move targets for a figure. Monsters may only move onto
  *  locations whose region carries Sauron influence; minions move freely (they
  *  may enter havens). */
-export function moveTargets(s: GameState, cat: Catalog, kind: 'monster' | 'minion', from: LocationId): LocationId[] {
+export function moveTargets(s: GameState, cat: Catalog, kind: 'monster' | 'minion', from: LocationId, id?: string): LocationId[] {
   const nbrs = adjacentLocations(cat, from);
-  if (kind === 'minion') return nbrs;
+  if (kind === 'minion') {
+    // The Black Serpent and the Ringwraiths may move up to two locations per command.
+    if (id !== 'minion-black-serpent' && id !== 'minion-ringwraiths') return nbrs;
+    const out = new Set<LocationId>(nbrs);
+    for (const n of nbrs) for (const m of adjacentLocations(cat, n)) out.add(m);
+    out.delete(from);
+    return [...out];
+  }
   // Monster tokens may only move onto locations that hold influence.
   return nbrs.filter((loc) => influenceAt(s, loc) > 0);
 }
@@ -306,7 +313,7 @@ export function sauronMoveFigure(
   state: GameState, cat: Catalog, kind: 'monster' | 'minion', id: string, from: LocationId, to: LocationId,
 ): GameState {
   if (!canCommand(state)) return state;
-  if (!moveTargets(state, cat, kind, from).includes(to)) return state;
+  if (!moveTargets(state, cat, kind, from, id).includes(to)) return state;
   const s = clone(state);
   const map = kind === 'monster' ? (s.map.monstersAt ||= {}) : (s.map.minionsAt ||= {});
   const at = map[from];
