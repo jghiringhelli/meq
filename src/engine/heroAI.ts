@@ -593,6 +593,40 @@ function planEarnFavor(s: GameState, cat: Catalog, hero: HeroState): HeroAction 
   return step ? { kind: 'move', to: step } : null;
 }
 
+/** Proactive play while no plot demands a response (e.g. the first turns): work
+ *  the hero's Starting/Advanced quest, bank favor tokens, consult Characters for
+ *  favor, and otherwise stage toward the locations plots are fixed on, instead of
+ *  shuttling between havens. Returns null when there is nothing productive. */
+function planPrepare(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): HeroAction | null {
+  const inHaven = cat.locations[hero.location].kind === 'haven';
+  if (inHaven && !hero.hasMovedThisTurn && !hero.restedThisTurn && (hero.corruption > 1 || hero.damagePool.length > 1)) return null;
+  const social = !corruptionBlocksSocial(cat, hero);
+  if (social && hero.favor < 4) {
+    for (const c of charactersHere(s, hero.id)) {
+      if (!consultWouldCorrupt(s, c)) return { kind: 'consult', character: c, choice: pickConsultChoice(s, cat, hero, c, rng) };
+    }
+  }
+  const questLocs = Object.entries(s.map.questAt ?? {})
+    .filter(([, ids]) => ids.includes(hero.id)).map(([l]) => l as LocationId);
+  if (questLocs.includes(hero.location) && canExplore(s, cat, hero.id)) return { kind: 'explore' };
+  const goals = new Set<LocationId>(questLocs);
+  for (const [l, n] of Object.entries(s.map.favorAt ?? {})) if ((n ?? 0) > 0) goals.add(l as LocationId);
+  if (social && hero.favor < 4) {
+    for (const [l, cs] of Object.entries(s.map.charactersAt ?? {})) {
+      if (cs.some((c) => !consultWouldCorrupt(s, c))) goals.add(l as LocationId);
+    }
+  }
+  goals.delete(hero.location);
+  const toGoal = goals.size ? legalStepToward(s, cat, hero, goals) : null;
+  if (toGoal) return { kind: 'move', to: toGoal };
+  // Nothing to collect: approach the places Sauron's plots are tied to.
+  const plotZones = new Set<LocationId>(
+    cat.plots.map((p) => p.affects as LocationId).filter((l) => !!l && !!cat.locations[l] && l !== hero.location),
+  );
+  const toZone = plotZones.size ? legalStepToward(s, cat, hero, plotZones) : null;
+  return toZone ? { kind: 'move', to: toZone } : null;
+}
+
 // ---- strategies --------------------------------------------------------
 /** Pure random walk: legal but unguided — the noise-floor baseline. */
 export const randomWalk: HeroStrategy = {
@@ -723,6 +757,8 @@ export const missionAware: HeroStrategy = {
     if (plot) return plot;
     const earn = planEarnFavor(s, cat, hero);
     if (earn) return earn;
+    const prep = planPrepare(s, cat, hero, rng);
+    if (prep) return prep;
     // Card-conserving haven-hopping (user tactic): with nothing productive to
     // chase, and already hopped to a haven this turn, bank the remaining cards
     // and END here (hand is additive/no discard; havens are safe from shadow and
