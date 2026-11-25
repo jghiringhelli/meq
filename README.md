@@ -59,6 +59,10 @@ npm run dev       # http://localhost:5173
 npm run test:all  # full test suite (unit + integration)
 ```
 
+Contributions are open to everyone: read [CONTRIBUTING.md](CONTRIBUTING.md)
+first (ground rules, where things live, how to test). Code is MIT-licensed
+(see `LICENSE`; game content and art are not).
+
 See `src/engine/` for the rules engine (pure functions, no UI dependencies),
 `src/play/` for the React UI, and `src/net/` for the peer-to-peer multiplayer
 layer. Issues and PRs welcome — this is a hobby project, so response time
