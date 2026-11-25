@@ -959,12 +959,15 @@ function eyeTakeBestAction(s: GameState, cat: Catalog, frac: number, logMsg: (m:
   const flush = s.sauron.influence >= 6;
   const commandUrgency = wounded ? 100
     : (frac > 1 / 3 && (hasPlot || flush) && minions < 4) ? 70
-    : monsters < Math.max(1, activeHeroes) ? 48
+    : monsters < Math.max(1, activeHeroes) ? 58
     : 50;
 
   // Score each Action Track; skip a full track (yield null). Higher = better.
+  // Drawing is only worth it while the hand has room: a hand clogged with
+  // unplayable Plot (or Shadow) cards means influence/command do more good.
+  const clog = 10 * Math.max(0, (s.sauron.plotHand?.length ?? 0) - 2) + 6 * Math.max(0, s.sauron.shadowHand.length - 4);
   const tracks: { track: 'influence' | 'draw' | 'command'; score: number }[] = [
-    { track: 'draw' as const, score: (frac < 0.5 ? 62 : 34) + (s.sauron.shadowHand.length < 2 ? 20 : 0) },
+    { track: 'draw' as const, score: (frac < 0.5 ? 62 : 34) + (s.sauron.shadowHand.length < 2 ? 20 : 0) - clog },
     { track: 'influence' as const, score: (frac < 2 / 3 ? 56 : 40) },
     { track: 'command' as const, score: commandUrgency },
   ].filter((t) => eyeTrackYield(s, t.track) !== null);
