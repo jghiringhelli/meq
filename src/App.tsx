@@ -789,7 +789,7 @@ export default function App() {
           {/* Sauron's action UI lives in the sidebar (not a full-screen modal)
            *  so the map stays fully visible/illuminated at all times, and only
            *  renders during Sauron's own turn/phases. */}
-          {iControlSauron && state.activeSide === 'Sauron'
+          {iControlSauron && (state.activeSide === 'Sauron' || state.activeSide === 'Hero')
             && !state.winner && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
             <SauronPanel state={state} cat={cat} dispatch={dispatch}
               moveFigureSel={sauronMoveFigureSel} onSelectMoveFigure={setSauronMoveFigureSel}
@@ -891,7 +891,7 @@ export default function App() {
             {' '}— Sauron may play one Shadow card:
           </span>
           {state.pendingShadowReaction.options.map((o) => (
-            <button key={o.id} onClick={() => doShadowReaction(o.id)}>
+            <button key={o.id} title={cat.shadow[o.id]?.effect} onClick={() => doShadowReaction(o.id)}>
               {cat.shadow[o.id]?.name ?? o.label} (pool {cat.shadow[o.id]?.poolRequirement ?? '?'})
             </button>
           ))}

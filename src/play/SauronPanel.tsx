@@ -164,7 +164,6 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   return (
     <div className="sauron-panel">
       <h2>Sauron — the Lidless Eye</h2>
-      {handView}
         <div className="sauron-status">
           <span>War chest: <strong>{s.sauron.influence}</strong></span>
           <span>Shadow hand: <strong>{s.sauron.shadowHand.length}</strong></span>
@@ -180,6 +179,14 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
             </span>
           )}
         </div>
+
+        {phase !== 'SauronRefresh' && phase !== 'SauronEvents' && phase !== 'SauronMinions' && (
+          <p className="muted">
+            Heroes are acting. You will be asked when a Shadow card can be played (one per hero turn): at the start of a
+            hero's turn, after a hero enters a non-Haven location, at the start of a combat (some only vs a minion),
+            or after a hero is defeated. Cards marked “Action step” are only playable on your own turn.
+          </p>
+        )}
 
         {phase === 'SauronRefresh' && (
           <div className="sauron-step">
@@ -388,6 +395,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
             </button>
           </div>
         )}
+      {handView}
     </div>
   );
 }

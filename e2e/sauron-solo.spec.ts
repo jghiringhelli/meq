@@ -64,7 +64,8 @@ test('playing Sauron: choose starting hand, then step through the heroes', async
   await expect(step).toBeVisible({ timeout: 10_000 });
   await expect(step).toContainText('Heroes:');
   await step.getByRole('button', { name: /Continue/ }).click();
-  await expect(step.locator('.hero-step-results')).toBeVisible({ timeout: 5_000 });
+  // Either the step's result, or a Shadow-card reaction window for the human Sauron.
+  await expect(step.locator('.hero-step-results').or(page.locator('.banner.shadow-reaction'))).toBeVisible({ timeout: 5_000 });
 
   expect(errors, errors.join('\n')).toEqual([]);
 });
