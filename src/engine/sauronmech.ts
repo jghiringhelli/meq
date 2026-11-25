@@ -252,8 +252,19 @@ export function keepBestPlots(cat: Catalog, ids: string[], k: number): string[] 
  *  the discard into the deck when it runs dry (local rng — never the shared
  *  gameplay stream). */
 export function drawPlots(s: GameState, cat: Catalog, n: number, log?: Logger): void {
+  const drawn = takePlots(s, n);
+  if (!drawn.length) return;
+  const keep = keepBestPlots(cat, drawn, 1);
+  s.sauron.plotHand!.push(...keep);
+  s.sauron.plotDeck!.push(...drawn.filter((id) => !keep.includes(id)));
+  log?.(`draws ${drawn.length} Plot card(s), keeps ${keep.length}`);
+}
+
+/** Take the top `n` plots off the deck (recycling the discard when it runs dry)
+ *  without deciding which to keep — a human Sauron makes that choice. */
+export function takePlots(s: GameState, n: number): string[] {
   const deck = (s.sauron.plotDeck ??= []);
-  const hand = (s.sauron.plotHand ??= []);
+  s.sauron.plotHand ??= [];
   const disc = (s.sauron.plotDiscard ??= []);
   const drawn: string[] = [];
   for (let i = 0; i < n; i++) {
@@ -264,11 +275,7 @@ export function drawPlots(s: GameState, cat: Catalog, n: number, log?: Logger): 
     if (!deck.length) break;
     drawn.push(deck.shift()!);
   }
-  if (!drawn.length) return;
-  const keep = keepBestPlots(cat, drawn, 1);
-  hand.push(...keep);
-  deck.push(...drawn.filter((id) => !keep.includes(id)));
-  log?.(`draws ${drawn.length} Plot card(s), keeps ${keep.length}`);
+  return drawn;
 }
 
 /** Place a plot card on the Active Plot Track: mark its position and add it to

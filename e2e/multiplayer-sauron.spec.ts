@@ -169,6 +169,8 @@ test('a remote client can claim and play Sauron over the network', async ({ brow
     const endBtn = client.getByRole('button', { name: 'End Sauron turn' });
     for (let i = 0; i < 8 && await endBtn.isDisabled(); i++) {
       await client.getByRole('button', { name: /Draw cards/ }).click();
+      const keep = client.getByRole('button', { name: 'Keep this Plot' }).first();
+      await keep.waitFor({ timeout: 5_000 }).then(() => keep.click()).catch(() => {});
       await client.waitForTimeout(150);
     }
     await expect(endBtn).toBeEnabled();

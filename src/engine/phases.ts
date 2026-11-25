@@ -789,7 +789,7 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   if (s.humanSide === 'Sauron') {
     const activeHeroes = s.heroes.filter((h) => h.status === 'active').length;
     s.sauronActionsLeft = activeHeroes >= 3 ? 3 : 2;
-    s.sauronPending = undefined;
+    s.sauronActionsMax = s.sauronActionsLeft;
     s.shadowPlayedThisSauronTurn = false;
     log(s, 'phase', 'Sauron', `action step: ${s.sauronActionsLeft} actions (chest ${s.sauron.influence})`);
   }
@@ -1462,6 +1462,7 @@ export function sauronEndActionStep(state: GameState, cat: Catalog): GameState {
   if (state.phase !== 'SauronMinions') return state;
   const s = clone(state);
   s.sauronActionsLeft = undefined;
+  s.sauronActionsMax = undefined;
   s.sauronPending = undefined;
   s.phase = 'StoryAdvance';
   return runStoryAdvance(s, cat);

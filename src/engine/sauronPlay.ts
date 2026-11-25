@@ -8,8 +8,8 @@ import type { Catalog, GameState, LocationId, MinionId, MonsterId, Plot } from '
 import { clone, gameStage } from './mechanics';
 import { log } from './log';
 import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman } from './encounter';
-import { applyPlotCard, drawShadow, drawPlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
-import { influenceAt, canPlaceInfluence, placeInfluenceAction, monsterPlaceable } from './influence';
+import { applyPlotCard, drawShadow, takePlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
+import { influenceAt, canPlaceInfluence, placeInfluenceAction, removeInfluenceAt, monsterPlaceable } from './influence';
 
 const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v) || 0);
 
@@ -88,9 +88,17 @@ export function sauronBeginAction(state: GameState, cat: Catalog, track: EyeTrac
   const yld = eyePlaceToken(s, track, (m) => log(s, 'sauron', 'Sauron', m))!;
   spend(s);
   if (track === 'draw') {
-    drawShadow(s, cat, yld);
-    drawPlots(s, cat, yld);
-    log(s, 'sauron', 'Sauron', `Draw action (space ${yld}): drew ${yld} Shadow & ${yld} Plot card(s)`);
+    // Rulebook p.17: draw N Shadow (all kept) and N Plot cards (keep ONE — the
+    // human's choice, so it is left pending for the player).
+    drawShadow(s, cat, s.sauron.shadowHand.length + yld);
+    const drawn = takePlots(s, yld);
+    if (drawn.length > 1) {
+      s.sauronPending = { track: 'draw', remaining: 1, drawnPlots: drawn };
+      log(s, 'sauron', 'Sauron', `Draw action (space ${yld}): drew ${yld} Shadow & ${drawn.length} Plot cards — choose one Plot to keep`);
+    } else {
+      s.sauron.plotHand!.push(...drawn);
+      log(s, 'sauron', 'Sauron', `Draw action (space ${yld}): drew ${yld} Shadow & ${drawn.length} Plot card(s)`);
+    }
     return s;
   }
   if (track === 'influence') {
@@ -106,6 +114,19 @@ export function sauronBeginAction(state: GameState, cat: Catalog, track: EyeTrac
   }
   s.sauronPending = { track: 'command', remaining: yld };
   log(s, 'sauron', 'Sauron', `Command action (space ${yld}): issue up to ${yld} command(s)`);
+  return s;
+}
+
+/** Human Draw action: keep one of the drawn Plot cards; the rest go to the
+ *  bottom of the Plot deck (with at most 2 drawn there is no order to choose). */
+export function sauronKeepDrawnPlot(state: GameState, cat: Catalog, plotId: string): GameState {
+  const p = state.sauronPending;
+  if (state.phase !== 'SauronMinions' || p?.track !== 'draw' || !p.drawnPlots?.includes(plotId)) return state;
+  const s = clone(state);
+  s.sauron.plotHand!.push(plotId);
+  s.sauron.plotDeck!.push(...p.drawnPlots.filter((id) => id !== plotId));
+  s.sauronPending = undefined;
+  log(s, 'sauron', 'Sauron', `keeps ${cat.plots.find((x) => x.id === plotId)?.name ?? plotId} and returns the other drawn Plot card(s) to the bottom of the deck`);
   return s;
 }
 
@@ -191,9 +212,37 @@ export function setupPlaceInfluence(state: GameState, cat: Catalog, loc: Locatio
   const s = clone(state);
   const placed = placeInfluenceAction(s, cat, loc, 1);
   if (placed <= 0) return state;
+  // Stays pending at 0 remaining until Sauron confirms, so tokens can still be extracted.
   s.setupInfluencePending!.remaining -= 1;
-  if (s.setupInfluencePending!.remaining <= 0) s.setupInfluencePending = undefined;
+  (s.setupInfluencePending!.placed ||= []).push(loc);
   log(s, 'setup', 'Sauron', `extends influence to ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
+  return s;
+}
+
+/** Interactive Setup: take back one token placed during this setup. Rejected if
+ *  a later-placed token would no longer satisfy the extension rule. */
+export function setupExtractInfluence(state: GameState, cat: Catalog, loc: LocationId): GameState {
+  const p = state.setupInfluencePending;
+  if (!p?.placed?.includes(loc)) return state;
+  const remainingPlaced = [...p.placed];
+  remainingPlaced.splice(remainingPlaced.indexOf(loc), 1);
+  const s = clone(state);
+  for (const l of p.placed) removeInfluenceAt(s, l, 1);
+  for (const l of remainingPlaced) {
+    if (!canPlaceInfluence(s, cat, l) || placeInfluenceAction(s, cat, l, 1) <= 0) return state;
+  }
+  s.setupInfluencePending = { remaining: p.remaining + 1, placed: remainingPlaced };
+  log(s, 'setup', 'Sauron', `extracts influence from ${cat.locations[loc]?.name ?? loc}`);
+  return s;
+}
+
+/** Interactive Setup: approve the placement once every token is down. */
+export function setupConfirmInfluence(state: GameState): GameState {
+  const p = state.setupInfluencePending;
+  if (!p || p.remaining > 0) return state;
+  const s = clone(state);
+  s.setupInfluencePending = undefined;
+  log(s, 'setup', 'Sauron', 'confirms starting influence');
   return s;
 }
 

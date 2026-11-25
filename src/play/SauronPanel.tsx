@@ -7,6 +7,7 @@ import {
   moveTargets,
 } from '../engine/game';
 import { placementTargets } from '../engine/influence';
+import { plotArt, shadowArt } from '../data/art';
 
 type Mode = 'spawn' | 'deploy' | 'move' | 'heal' | 'shadow' | null;
 export type { Mode };
@@ -71,23 +72,62 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
     const c = cat.shadow[id];
     return c ? `${c.name} (pool ${c.poolRequirement}, ${c.timing})` : id;
   };
+  const plotTile = (id: string, action?: React.ReactNode) => {
+    const p = cat.plots.find((x) => x.id === id);
+    if (!p) return <div key={id} className="card-tile">{id}</div>;
+    const img = plotArt(p.image);
+    return (
+      <div key={id} className="card-tile">
+        {img && <img src={img} alt={p.name} />}
+        <div className="card-tile-name">{p.name}</div>
+        <div className="card-tile-meta">{p.marker ?? 'red'} +{p.advance ?? p.track.length} · cost {p.influenceCost ?? 0} · counter {p.favorToCounter ?? '—'} favor</div>
+        <div className="card-tile-meta"><b>Affects:</b> {p.affectsText || '—'}</div>
+        <div className="card-tile-text">{p.effect}</div>
+        {action}
+      </div>
+    );
+  };
+  const shadowTile = (id: string) => {
+    const c = cat.shadow[id];
+    const img = shadowArt(id);
+    return (
+      <div key={id} className="card-tile">
+        {img && <img src={img} alt={c?.name ?? id} />}
+        <div className="card-tile-name">{c?.name ?? id}</div>
+        <div className="card-tile-meta">pool {c?.poolRequirement} · {c?.timing}</div>
+        <div className="card-tile-text">{c?.effect}</div>
+      </div>
+    );
+  };
   const handView = (
     <div className="sauron-hand">
       <b>Your hand</b>
       <div><u>Shadow</u>{s.sauron.shadowHand.length === 0 && <span className="muted"> none</span>}
-        <ul>{s.sauron.shadowHand.map((id) => (
-          <li key={id} title={cat.shadow[id]?.effect}>{shadowCard(id)}</li>))}</ul></div>
+        <div className="card-tiles">{s.sauron.shadowHand.map((id) => shadowTile(id))}</div></div>
       <div><u>Plot</u>{(s.sauron.plotHand ?? []).length === 0 && <span className="muted"> none</span>}
-        <ul>{(s.sauron.plotHand ?? []).map((id) => (
-          <li key={id}>{plotCard(id)}</li>))}</ul></div>
+        <div className="card-tiles">{(s.sauron.plotHand ?? []).map((id) => plotTile(id))}</div></div>
     </div>
   );
 
   if (s.setupInfluencePending) {
+    const sp = s.setupInfluencePending;
+    const placedCounts = new Map<string, number>();
+    for (const l of sp.placed ?? []) placedCounts.set(l, (placedCounts.get(l) ?? 0) + 1);
     return (
       <div className="sauron-panel">
         <h2>Sauron — setup</h2>
-        <p className="prompt">Place your remaining starting influence on the map first; then you will choose your starting hand.</p>
+        <p className="prompt">Influence left to place: <strong>{sp.remaining}</strong>
+          {sp.remaining > 0 ? ' — click glowing + locations on the map.' : ' — all placed.'}</p>
+        {placedCounts.size > 0 && (<>
+          <p className="prompt">Placed this setup (extract to move one):</p>
+          <ul>{[...placedCounts].map(([loc, n]) => (
+            <li key={loc}>{cat.locations[loc]?.name ?? loc} ×{n}{' '}
+              <button onClick={() => dispatch({ t: 'setupExtractInfluence', loc })}>Extract</button></li>
+          ))}</ul>
+        </>)}
+        <button className="primary" disabled={sp.remaining > 0}
+          onClick={() => dispatch({ t: 'setupConfirmInfluence' })}>Approve locations</button>
+        <p className="prompt">Then you will choose your starting hand.</p>
       </div>
     );
   }
@@ -224,6 +264,19 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                 {placementTargets(s, cat).length === 0 && (
                   <span className="muted">No legal locations (extend from a stronghold).</span>
                 )}
+              </div>
+            )}
+
+            {/* Draw action in progress: the player (never the AI) picks the one
+                Plot card to keep from those drawn (rulebook p.17). */}
+            {s.sauronPending?.track === 'draw' && (
+              <div className="sauron-picker">
+                <p className="prompt">Draw — choose the ONE Plot card to keep; the rest go to the bottom of the Plot deck.</p>
+                <div className="card-tiles">
+                  {(s.sauronPending.drawnPlots ?? []).map((id) => plotTile(id, (
+                    <button className="primary" onClick={() => apply({ t: 'sauronKeepDrawnPlot', id })}>Keep this Plot</button>
+                  )))}
+                </div>
               </div>
             )}
 

@@ -16,7 +16,7 @@ export {
 export {
   sauronPlayPlot, sauronBeginAction, sauronActionYields,
   sauronPlaceInfluence, sauronSpawnMonster, sauronDeployMinion,
-  sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepStartingHand, sauronFinishCommand,
+  sauronMoveFigure, sauronHealMinion, sauronPlayShadow,   setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
   playablePlots, playableShadow, reserveMinions, woundedMinions, boardFigures,
   moveTargets, adjacentLocations, sauronCommandTargets,
 } from './sauronPlay';

@@ -455,7 +455,7 @@ export default function App() {
   // token — either the mid-game Place Influence sub-action (sauronPending), or
   // the interactive Setup extension placement (setupInfluencePending); both
   // share the same extension-rule legality (engine/influence.ts).
-  const placingSetup = iControlSauron && !!state.setupInfluencePending;
+  const placingSetup = iControlSauron && !!state.setupInfluencePending && state.setupInfluencePending.remaining > 0;
   const placingAction = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'influence';
   const placingCombat = iControlSauron && !!state.sauronCombatInfluence && !state.pendingChoice;
   const placeInfluenceTargets = placingSetup || placingAction || placingCombat ? placementTargets(state, cat) : undefined;
@@ -803,9 +803,10 @@ export default function App() {
       {state.setupInfluencePending && iControlSauron && (
         <div className="banner setup-influence-banner">
           <span>
-            Setup — extend your starting influence: place <b>{state.setupInfluencePending.remaining}</b> more
-            token{state.setupInfluencePending.remaining === 1 ? '' : 's'} by clicking a glowing{' '}
-            <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.
+            {state.setupInfluencePending.remaining > 0 ? (<>
+              Setup — influence left to place: <b>{state.setupInfluencePending.remaining}</b>. Click a glowing{' '}
+              <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.</>)
+              : 'Setup — all influence placed. Extract any token you want to move, then confirm in the Sauron panel.'}
           </span>
         </div>
       )}

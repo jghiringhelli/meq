@@ -12,14 +12,15 @@ test('playing Sauron: choose starting hand, then step through the heroes', async
   await page.getByRole('button', { name: /Sauron/ }).first().click();
   await page.getByRole('button', { name: 'Command Sauron' }).click();
 
-  // 1. Influence placement first.
-  await expect(page.getByText(/extend your starting influence/)).toBeVisible();
-  for (let i = 0; i < 12 && await page.getByText(/extend your starting influence/).isVisible(); i++) {
+  // 1. Influence placement first, then approve.
+  await expect(page.getByText(/influence left to place/).first()).toBeVisible();
+  for (let i = 0; i < 12; i++) {
     const spot = page.locator('svg circle:has(title)').filter({ has: page.locator('title', { hasText: /Place influence at/ }) }).first();
     if (!await spot.isVisible().catch(() => false)) break;
     await spot.click({ force: true });
     await page.waitForTimeout(100);
   }
+  await page.getByRole('button', { name: 'Approve locations' }).click();
 
   // 2. Then the starting-hand choice.
   await expect(page.getByText('choose your starting hand')).toBeVisible({ timeout: 10_000 });
@@ -52,6 +53,8 @@ test('playing Sauron: choose starting hand, then step through the heroes', async
   const endBtn = page.getByRole('button', { name: 'End Sauron turn' });
   for (let i = 0; i < 8 && await endBtn.isDisabled(); i++) {
     await page.getByRole('button', { name: /Draw cards/ }).click();
+    const keep = page.getByRole('button', { name: 'Keep this Plot' }).first();
+    if (await keep.isVisible().catch(() => false)) await keep.click();
     await page.waitForTimeout(150);
   }
   await endBtn.click();

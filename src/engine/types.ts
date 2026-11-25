@@ -787,6 +787,8 @@ export interface GameState {
   /** M15: actions remaining in the interactive Sauron Action Step (2, or 3 with
    *  three heroes). Set when a human-Sauron turn enters SauronMinions. */
   sauronActionsLeft?: number;
+  /** Size of this Action Step's budget, so the board can show actions used. */
+  sauronActionsMax?: number;
   /** M15: true once the human Sauron has played his ONE own-turn Shadow card this
    *  Sauron turn (rulebook: one Shadow on your turn + one per hero turn). Reset at
    *  the start of each Sauron Action Step. */
@@ -795,13 +797,13 @@ export interface GameState {
    *  yield several board tokens and a Command action several commands; the human
    *  resolves them one at a time. `remaining` counts the sub-effects still owed
    *  by the current action. Cleared when spent or when the turn ends. */
-  sauronPending?: { track: 'influence' | 'command'; remaining: number };
+  sauronPending?: { track: 'influence' | 'command' | 'draw'; remaining: number; drawnPlots?: string[] };
   /** Interactive Setup: a human-controlled Sauron places the starting plot's
    *  "extension" influence himself (clicking the map), instead of the engine
    *  auto-distributing it via BFS. Set by newGame when `interactiveSetup` is
    *  requested; cleared once every token is placed. Nothing else in the game
    *  may proceed while this is set (see setupPlaceInfluence). */
-  setupInfluencePending?: { remaining: number };
+  setupInfluencePending?: { remaining: number; placed?: string[] };
   /** Interactive Setup: the starting plot card says 'keep K of N Shadow cards;
    *  keep K of M Plot cards'. A human Sauron picks which to keep (private to him);
    *  the turn cannot start until he confirms (see sauronKeepStartingHand). */

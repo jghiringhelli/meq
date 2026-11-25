@@ -785,3 +785,10 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .cb-hpbar i { display: block; height: 100%; background: #d85a4a; }
 .cb-effect { font-size: 0.72rem; color: #ffd970; margin-top: 2px; }
 .cb-report-row small { display: block; color: #a89a78; font-size: 0.68rem; }
+
+.card-tiles { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.3rem 0; }
+.card-tile { width: 150px; background: #1c150d; border: 1px solid #4a3d28; border-radius: 6px; padding: 0.35rem; font-size: 0.74rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.card-tile img { width: 100%; border-radius: 4px; }
+.card-tile-name { font-weight: 700; color: #f0d0c0; }
+.card-tile-meta { color: #9c8f6b; }
+.card-tile-text { color: #cfc3a6; }

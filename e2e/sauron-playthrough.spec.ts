@@ -70,6 +70,10 @@ test('full Sauron game from the UI', async ({ page }) => {
       await click('reveal-tray', page.locator('.enc-tray-ok'));
     } else if (await vis(page, '.hero-step-panel button:has-text("Continue")')) {
       await click('hero-step', page.locator('.hero-step-panel button:has-text("Continue")'));
+    } else if (await vis(page, 'button:has-text("Approve locations"):not([disabled])')) {
+      await click('approve-setup-influence', page.locator('button:has-text("Approve locations")'));
+    } else if (await vis(page, 'button:has-text("Keep this Plot")')) {
+      await click('keep-drawn-plot', page.locator('button:has-text("Keep this Plot")'));
     } else if (await vis(page, '.setup-influence-banner')) {
       sig = 'setup-influence'; await snap(sig);
       await clickMap(/Place influence at/);

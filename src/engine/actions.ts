@@ -17,7 +17,7 @@ import {
   resolveShadowReaction, resolveTreeDecision,
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
   sauronPlayPlot, sauronBeginAction, sauronPlaceInfluence,
-  sauronSpawnMonster, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepStartingHand, sauronFinishCommand,
+  sauronSpawnMonster, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
 } from './game';
 
 /** A serializable player intent. `t` is the discriminant tag. */
@@ -50,7 +50,10 @@ export type Action =
   | { t: 'sauronResolveEvents' }
   | { t: 'sauronBeginAction'; track: EyeTrack }
   | { t: 'sauronPlaceInfluence'; loc: LocationId }
+  | { t: 'sauronKeepDrawnPlot'; id: string }
   | { t: 'setupPlaceInfluence'; loc: LocationId }
+  | { t: 'setupExtractInfluence'; loc: LocationId }
+  | { t: 'setupConfirmInfluence' }
   | { t: 'sauronKeepStartingHand'; shadow: string[]; plot: string[] }
   | { t: 'sauronFinishCommand' }
   | { t: 'sauronCombatInfluence'; loc: string }
@@ -109,7 +112,10 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'sauronResolveEvents': return sauronResolveEvents(state, cat);
     case 'sauronBeginAction': return sauronBeginAction(state, cat, action.track);
     case 'sauronPlaceInfluence': return sauronPlaceInfluence(state, cat, action.loc);
+    case 'sauronKeepDrawnPlot': return sauronKeepDrawnPlot(state, cat, action.id);
     case 'setupPlaceInfluence': return setupPlaceInfluence(state, cat, action.loc);
+    case 'setupExtractInfluence': return setupExtractInfluence(state, cat, action.loc);
+    case 'setupConfirmInfluence': return setupConfirmInfluence(state);
     case 'sauronCombatInfluence': return sauronCombatPlaceInfluence(state, cat, action.loc);
     case 'sauronFinishCommand': return sauronFinishCommand(state);
     case 'sauronKeepStartingHand': return sauronKeepStartingHand(state, cat, action.shadow, action.plot);

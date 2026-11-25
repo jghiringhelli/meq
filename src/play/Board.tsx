@@ -844,9 +844,9 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
             whole deck". */}
         {(() => {
           const active = state.sauron.activePlots ?? [];
-          const cx = 5540, w = 250, h = 440;           // tower plot-slot geometry (board px, measured off the art;
-                                                        // enlarged from 220×400 — cards read too small vs. the slot)
-          const ys = [800, 1400, 2000];                // slot centres, top → bottom
+          const cx = 5573, w = 274, h = 462;           // tower plot-slot geometry — measured off the printed
+                                                        // frames (x5436–5710; y590–1055 / 1193–1655 / 1798–2248)
+          const ys = [822, 1424, 2023];                // slot centres, top → bottom
           return (
             <g pointerEvents="none">
               {ys.map((cy, i) => {
@@ -894,42 +894,43 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
             board-photo art (0..12 tokens) used in the top HUD. */}
         {(() => {
           const eye = state.sauron.eye ?? { influence: 0, draw: 0, command: 0 };
-          const tracks: { key: 'influence' | 'draw' | 'command'; label: string; slots: number[] }[] = [
-            { key: 'influence', label: 'Infl', slots: [6, 5, 4] },
-            { key: 'draw', label: 'Draw', slots: [2, 2, 1] },
-            { key: 'command', label: 'Cmd', slots: [3, 2, 1] },
+          // The nine printed action spaces sit in ONE row (y≈3406), three per
+          // track, left→right: Place Influence 6·5·4, Draw 2·2·1, Command 3·2·1.
+          // Centres measured off the board art.
+          const tracks: { key: 'influence' | 'draw' | 'command'; label: string; xs: number[]; slots: number[] }[] = [
+            { key: 'influence', label: 'Place Influence', xs: [5171, 5269, 5364], slots: [6, 5, 4] },
+            { key: 'draw', label: 'Draw Shadow & Plot', xs: [5480, 5578, 5669], slots: [2, 2, 1] },
+            { key: 'command', label: 'Command', xs: [5791, 5883, 5981], slots: [3, 2, 1] },
           ];
-          const ax = 5130, ay = 2960, aw = 940; // 'actions' hotspot geometry
+          const rowY = 3406, rr = 46;
+          const left = state.sauronActionsLeft ?? 0;
+          const max = state.sauronActionsMax ?? 0;
+          const spending = state.phase === 'SauronMinions' && left > 0 && !state.sauronPending;
           const openShadowRef = () => window.dispatchEvent(new CustomEvent('meq-open-ref', { detail: 'shadow' }));
-          const rowH = 90, rowGap = 18, top = ay + 70;
-          // 'shadow' (Shadow Pool) box geometry — measured directly off the
-          // printed board art (the metal-framed box around the "SHADOW POOL"
-          // title + 12 influence pips): x5175,y3638,810×517 (ratio ~1.57). The
-          // live overlay photo is ~1.49 ratio, so `slice` still crops a hair,
-          // but the box itself is now aligned with the print instead of
-          // sitting ~90px low/right of it (which produced a visible double
-          // "SHADOW POOL" title — the printed one peeking out from under the
-          // misaligned photo).
           const sx = 5175, sy = 3638, sw = 810, sh = 517;
           return (
             <g pointerEvents="none">
-              <text x={ax + aw / 2} y={ay + 30} textAnchor="middle" fontSize={26} fontWeight={700}
-                fill="#f0d0c0">Eye Actions ({state.sauronActionsLeft ?? 0} left)</text>
-              {tracks.map((tr, ti) => {
-                const ry = top + ti * (rowH + rowGap);
+              {max > 0 && (
+                <text x={5571} y={3290} textAnchor="middle" fontSize={30} fontWeight={700} fill="#fff"
+                  stroke="#1a0d0d" strokeWidth={6} paintOrder="stroke">
+                  Actions: {max - left}/{max} used
+                </text>
+              )}
+              {tracks.map((tr) => {
                 const covered = eye[tr.key];
                 return (
                   <g key={'eyetrack' + tr.key}>
-                    <text x={ax + 10} y={ry + rowH / 2 + 8} fontSize={22} fill="#d8c0a8">{tr.label}</text>
-                    {tr.slots.map((v, i) => {
-                      const cx = ax + 160 + i * 90, cy = ry + rowH / 2, on = i < covered;
+                    <title>{`${tr.label}: ${covered}/3 spaces covered`}</title>
+                    {tr.xs.map((cx, i) => {
+                      const on = i < covered;
+                      const next = spending && i === covered; // the space the next action would cover
                       return (
                         <g key={i}>
-                          <circle cx={cx} cy={cy} r={34} fill={on ? '#c0392b' : 'transparent'}
-                            stroke="#c0392b" strokeWidth={3} opacity={on ? 0.9 : 0.5} />
-                          <text x={cx} y={cy + 9} textAnchor="middle" fontSize={26} fill={on ? '#fff' : '#d8c0a8'}>
-                            {on ? '👁' : v}
-                          </text>
+                          {on && <circle cx={cx} cy={rowY} r={rr} fill="#7a1d14" stroke="#ffb09c" strokeWidth={5} opacity={0.88} />}
+                          {on && <text x={cx} y={rowY + 14} textAnchor="middle" fontSize={44}>👁</text>}
+                          {next && <circle cx={cx} cy={rowY} r={rr + 6} fill="none" stroke="#ffd35c" strokeWidth={7} strokeDasharray="14 8">
+                            <animate attributeName="opacity" values="1;0.25;1" dur="1.4s" repeatCount="indefinite" />
+                          </circle>}
                         </g>
                       );
                     })}
