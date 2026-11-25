@@ -33,6 +33,50 @@ async function useLocalBroker(page: Page) {
   page.on('dialog', (d) => d.accept().catch(() => {}));
 }
 
+test('client drop: role is held as offline, then restored on reconnect', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const hostCtx = await browser.newContext();
+  const clientCtx = await browser.newContext();
+  const host = await hostCtx.newPage();
+  const client = await clientCtx.newPage();
+  try {
+    await useLocalBroker(host);
+    await useLocalBroker(client);
+    await host.goto('/');
+    await host.getByRole('button', { name: 'Host online game' }).click();
+    await host.getByRole('button', { name: 'Begin quest' }).click();
+    const code = (await host.locator('.net-code').innerText()).trim();
+
+    await client.goto('/');
+    await client.getByRole('button', { name: 'Join online game' }).click();
+    await client.getByLabel('Your name').fill('Tester');
+    await client.getByLabel('Game code').fill(code);
+    await client.getByRole('button', { name: 'Connect' }).click();
+    await expect(client.locator('.net-dot.ok')).toBeVisible({ timeout: 20_000 });
+    await client.locator('.net-role-row button', { hasText: 'claim' }).first().click();
+    await expect(client.locator('.net-role-row button', { hasText: 'release' })).toBeVisible({ timeout: 20_000 });
+
+    // Hard drop: close the client tab entirely (real peer disconnect).
+    await client.close();
+
+    // Rejoin from the same browser context (same persistent playerId).
+    const client2 = await clientCtx.newPage();
+    await useLocalBroker(client2);
+    await client2.goto('/');
+    await client2.getByRole('button', { name: 'Join online game' }).click();
+    await client2.getByLabel('Your name').fill('Tester');
+    await client2.getByLabel('Game code').fill(code);
+    await client2.getByRole('button', { name: 'Connect' }).click();
+    await expect(client2.locator('.net-dot.ok')).toBeVisible({ timeout: 20_000 });
+    await client2.waitForTimeout(3_000);
+    await expect(client2.locator('.net-role-row button', { hasText: 'release' })).toHaveCount(1);
+    await expect(host.locator('.net-role-row').first()).toContainText('Tester');
+  } finally {
+    await hostCtx.close();
+    await clientCtx.close();
+  }
+});
+
 test('host + client connect over a local P2P broker and share state + roster', async ({ browser }) => {
   const hostCtx: BrowserContext = await browser.newContext();
   const clientCtx: BrowserContext = await browser.newContext();
