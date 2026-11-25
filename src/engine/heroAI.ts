@@ -762,8 +762,11 @@ export const missionAware: HeroStrategy = {
     // the way. If so and the hero's life pool (deck) is running low, recover first
     // instead of walking into the fight. Thalin the dwarf keeps fighting on even without killing his foe, so he tolerates more.
     if (plot && plot.kind === 'move' && fightAhead(s, hero, plot.to)) {
-      // The life pool (deck) IS the remaining life: act only when it runs low.
-      if (hero.life <= (hero.id === 'thalin' ? 3 : 4)) {
+      // The life pool (deck) IS the remaining life AND the next Draw step's supply
+      // (fortitude cards per turn): a hero who can't draw loses part of his turn, so
+      // check the deck against what the next draw plus a fight will consume.
+      const fort = (cat.heroes[hero.id]?.fortitude ?? 3) + (hero.statBonus?.fortitude ?? 0);
+      if (hero.life <= fort + (hero.id === 'thalin' ? 0 : 1)) {
         const canRest = !hero.hasMovedThisTurn && !hero.restedThisTurn;
         const damage = hero.damagePool.length, wear = hero.discard.length;
         // Mostly wear (rest pool) -> a plain rest recycles it anywhere. Real damage
