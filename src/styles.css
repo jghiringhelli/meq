@@ -775,7 +775,22 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .hero-step-panel { margin: 8px 0; padding: 8px 12px; border: 1px solid #c9a24a; border-radius: 6px; background: rgba(0,0,0,.35); }
 .hero-step-next { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 
-.hero-step-panel { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 60; max-width: min(720px, 94vw); box-shadow: 0 4px 24px rgba(0,0,0,.7); background: #1b1610; }
+.hero-step-panel { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 60; max-width: min(720px, 94vw); box-shadow: 0 4px 24px rgba(0,0,0,.7); background: #1b1610; border: 2px solid #f0c860; animation: actionPulse 1.8s ease-in-out infinite; }
+.hero-step-next { font-size: 15px; }
+.hero-step-next button.primary { padding: 10px 22px; font-size: 16px; font-weight: 700; }
+
+/* Pending-decision banners ("place influence", "choose combat or peril", shadow
+ * reaction): fixed, large and pulsing so the required action is unmistakable. */
+.app .banner.setup-influence-banner, .app .banner.combat-or-peril {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 58;
+  max-width: min(860px, 96vw); padding: 0.9rem 1.4rem; font-size: 1.15rem; border-radius: 8px;
+  border: 2px solid #fff3c4; box-shadow: 0 4px 24px rgba(0,0,0,.8); animation: actionPulse 1.8s ease-in-out infinite;
+}
+.app .banner.shadow-reaction { font-size: 1.1rem; border: 2px solid #fff3c4; animation: actionPulse 1.8s ease-in-out infinite; }
+@keyframes actionPulse {
+  0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,.8), 0 0 0 0 rgba(240,200,96,.0); }
+  50% { box-shadow: 0 4px 24px rgba(0,0,0,.8), 0 0 18px 6px rgba(240,200,96,.75); }
+}
 .hero-step-results ul { margin: 4px 0 8px 18px; padding: 0; max-height: 120px; overflow: auto; font-size: 12px; }
 
 .game-over-banner { margin: 8px 12px; padding: 12px 16px; border: 2px solid #c9a24a; border-radius: 6px; background: rgba(120,20,20,.35); font-size: 18px; text-align: center; }

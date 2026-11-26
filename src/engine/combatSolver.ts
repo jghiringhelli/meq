@@ -162,9 +162,17 @@ function chooseCardOption(
   const pc = s.pendingCombat!;
   const belief = monsterCardBelief(cat, pc.defender);
   const budget = pc.attacker.strength - pc.attacker.strengthSpent;
+  // Declaring exhaustion does NOT stop the foe: it keeps playing its whole hand
+  // against a hero who can no longer defend. It only ends the fight cleanly when
+  // the foe is also spent (standoff), so otherwise a hero with any affordable
+  // card must play it rather than "give up" early.
+  const affordable = options.some((o) => o.id !== EXHAUST_OPT && (cat.combatCards[o.id]?.strengthCost ?? 99) <= budget);
+  const foeSpent = pc.defender.exhausted || !pc.defender.hand.length;
+  const allowExhaust = !affordable || foeSpent || ctx.isDecisiveFinale;
   let best = options[0].id, bestScore = -Infinity;
   for (const opt of options) {
     if (opt.id === EXHAUST_OPT) {
+      if (!allowExhaust) continue;
       // Giving up: no more damage taken, but the foe survives. Worth it only when
       // every playable card scores worse (a hopeless fight).
       const v = w.giveUp - (ctx.isTravel ? w.killTravel : 0);
@@ -206,13 +214,19 @@ function choosePrepOption(
   s: GameState, cat: Catalog, options: { id: string }[], ctx: CombatContext, w: CombatWeights,
 ): string {
   const baseStrength = s.pendingCombat!.attacker.strength;
+  // With no card to play the hero is exhausted from the first round and just
+  // absorbs the foe's cards: score that as several rounds of passing, never as
+  // a free 0 (which made "keep all agility as strength" look better than any
+  // card whose bout has a cost).
+  const passRounds = 3;
+  const passValue = heroCardValue(s, PASS_CARD, monsterCardBelief(cat, s.pendingCombat!.defender), ctx, w) * passRounds;
   let best = options[0].id, bestScore = -Infinity;
   for (const opt of options) {
     const draw = opt.id.startsWith('prep-') ? parseInt(opt.id.slice(5), 10) || 0 : 0;
     const sim = resolvePreparation(clone(s), cat, draw); // now at the first combat-card choice
     const kept = (sim.pendingCombat?.attacker.strength ?? baseStrength) - baseStrength; // agility kept as strength
     const cardOpts = sim.pendingChoice?.options ?? [];
-    const firstCardVal = (sim.pendingCombat && cardOpts.length) ? scoreBestCard(sim, cat, cardOpts, ctx, w) : 0;
+    const firstCardVal = (sim.pendingCombat && cardOpts.length) ? scoreBestCard(sim, cat, cardOpts, ctx, w) : Math.min(passValue, 0);
     const v = firstCardVal + draw * w.drawValue + Math.max(0, kept) * w.strengthValue;
     if (v > bestScore) { bestScore = v; best = opt.id; }
   }

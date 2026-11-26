@@ -8,7 +8,9 @@ import { adjacentLocations } from '../src/engine/sauronPlay';
 import { eyePlaceInfluenceOnce } from '../src/engine/ai';
 import { applyAction } from '../src/engine/actions';
 import { influenceAt } from '../src/engine/influence';
-import { applyHeroAction } from '../src/engine/heroAI';
+import { applyHeroAction, mulberry32 } from '../src/engine/heroAI';
+import { beginCombat } from '../src/engine/combat';
+import { solveCombatOption } from '../src/engine/combatSolver';
 
 const boardInfluenceTotal = (s: ReturnType<typeof freshGame>) =>
   Object.values(s.sauron.locationInfluence ?? {}).reduce((n, v) => n + (v as number), 0);
@@ -515,5 +517,20 @@ describe('Flocks of Crebain — the forced combat survives its own skip-ambush',
     expect(ambushPending(s, hero, cat)).toBe(false);
     hero.forcedFoe = crebain;
     expect(ambushPending(s, hero, cat)).toBe(true);
+  });
+});
+
+describe('Combat preparation — the hero AI never enters a fight with an empty hand', () => {
+  it('draws combat cards with its agility instead of keeping it all as strength', () => {
+    const crebain = Object.values(cat.monsters).find((m) => m.name === 'Crebain')!.id;
+    for (const h of freshGame().heroes) {
+      let s = toHeroActions(freshGame());
+      const hero = s.heroes.find((x) => x.id === h.id)!;
+      s.activeHeroIndex = s.heroes.indexOf(hero);
+      s = beginCombat(s, cat, hero.id, crebain, hero.location);
+      if (s.pendingChoice?.kind !== 'combat-prep') continue; // no agility to allocate
+      const pick = solveCombatOption(s, cat, s.pendingChoice.options, mulberry32(1));
+      expect(pick, hero.id).not.toBe('prep-0');
+    }
   });
 });

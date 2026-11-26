@@ -861,7 +861,7 @@ export default function App() {
           <div className="hero-step-next">
             <span><b>Heroes:</b> {heroPanel.text ?? 'The heroes finished their turn.'}</span>
             <button className="primary" onClick={() => {
-              if (!heroPanel.act || !heroPanel.heroId || !catalog) { setHeroPanel(null); return; }
+              if (!heroPanel.act || !heroPanel.heroId || !catalog) { lastActLogLen.current = state.log.length; setHeroPanel(null); return; }
               lastActLogLen.current = state.log.length;
               const ns = applyHeroAction(state, catalog, heroPanel.heroId, heroPanel.act);
               setHeroPanel(null);
