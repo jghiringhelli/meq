@@ -110,7 +110,6 @@ describe('multiplayer role / controller model', () => {
     expect(actionRole(s, { t: 'sauronBeginAction', track: 'influence' })).toBe(SAURON_ROLE);
     expect(actionRole(s, { t: 'sauronPlaceInfluence', loc: 'bree' })).toBe(SAURON_ROLE);
     expect(actionRole(s, { t: 'sauronSpawnMonster', monsterId: 'mon-crebain', loc: 'bree' })).toBe(SAURON_ROLE);
-    expect(actionRole(s, { t: 'sauronDeployMinion', minionId: 'min-x', loc: 'bree' })).toBe(SAURON_ROLE);
     expect(actionRole(s, { t: 'sauronMoveFigure', kind: 'monster', id: 'x', from: 'bree', to: 'archet' })).toBe(SAURON_ROLE);
     expect(actionRole(s, { t: 'sauronHealMinion', minionId: 'min-x' })).toBe(SAURON_ROLE);
     expect(actionRole(s, { t: 'sauronPlayShadow', cardId: 'x' })).toBe(SAURON_ROLE);

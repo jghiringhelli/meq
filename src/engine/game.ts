@@ -15,7 +15,7 @@ export {
 } from './phases';
 export {
   sauronPlayPlot, sauronBeginAction, sauronActionYields,
-  sauronPlaceInfluence, sauronSpawnMonster, sauronDrawMonsterToken, sauronDeployMinion,
+  sauronPlaceInfluence, sauronSpawnMonster, sauronDrawMonsterToken,
   sauronMoveFigure, sauronHealMinion, sauronPlayShadow,   setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
   playablePlots, playableShadow, reserveMinions, monsterTargetsIn, woundedMinions, boardFigures,
   moveTargets, adjacentLocations, sauronCommandTargets,

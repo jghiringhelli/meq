@@ -96,10 +96,10 @@ test('full Sauron game from the UI', async ({ page }) => {
     } else if (await vis(page, '.sauron-panel button:has-text("Done commanding")')) {
       sig = 'command';
       await snap('command-panel');
-      const modes = ['Spawn monster', 'Deploy minion', 'Move figure', 'Heal minion'];
+      const modes = ['Spawn monster', 'Move figure', 'Heal minion'];
       const m = modes[rot++ % modes.length];
       await page.locator(`.sauron-mode-btn:has-text("${m}")`).click();
-      if (m === 'Spawn monster' || m === 'Deploy minion') {
+      if (m === 'Spawn monster') {
         const pick = page.locator('.sauron-picker button').first();
         if (await pick.count()) {
           await pick.click();

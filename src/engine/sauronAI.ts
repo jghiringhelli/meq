@@ -24,10 +24,8 @@ import {
   playablePlots, playableShadow, woundedMinions, boardFigures, moveTargets,
 } from './game';
 import { newGame } from './setup';
-import { clone, gameStage } from './mechanics';
-import { minionsInPlay } from './missions';
+import { clone } from './mechanics';
 import { drawShadow, drawPlots } from './sauronmech';
-import { deployMinion } from './setup';
 import { eyePlaceInfluenceOnce, eyeSpawnMonsterOnce, ratePlot, AI_ECONOMY } from './ai';
 import { regionHasInfluence } from './influence';
 import {
@@ -46,7 +44,6 @@ export type SauronAction =
   | { kind: 'plot'; plotId: string }
   | { kind: 'pass-plot' }
   | { kind: 'influence' }
-  | { kind: 'deploy' }
   | { kind: 'spawn' }
   | { kind: 'heal'; minionId: string }
   | { kind: 'move'; figKind: 'monster' | 'minion'; id: string; from: LocationId; to: LocationId }
@@ -68,15 +65,6 @@ export function isSauronDecision(s: GameState): boolean {
   if (s.phase === 'SauronEvents') return true;                       // plot step
   if (s.phase === 'SauronMinions' && (s.sauronActionsLeft ?? 0) > 0) return true; // action step
   return false;
-}
-
-/** A stage-appropriate reserve minion exists to deploy. */
-function canDeploy(s: GameState, cat: Catalog): boolean {
-  const onBoard = new Set(Object.values(s.map.minionsAt ?? {}).flat());
-  const defeated = new Set(s.map.minionDefeated ?? []);
-  const stage = gameStage(s);
-  return Object.values(cat.minions).some((m) =>
-    !onBoard.has(m.id) && !defeated.has(m.id) && (m.stage ?? 1) <= stage && !(m.finale && s.story.finale));
 }
 
 /** A hero stands on (or the Eye can reach) an influenced, hero-free location so
@@ -101,7 +89,6 @@ export function legalSauronActions(s: GameState, cat: Catalog): SauronAction[] {
   }
   // Action step (SauronMinions, budget > 0)
   if (s.sauron.influence >= AI_ECONOMY.pathBlockCost) acts.push({ kind: 'influence' });
-  if (canDeploy(s, cat)) acts.push({ kind: 'deploy' });
   if (canSpawn(s, cat)) acts.push({ kind: 'spawn' });
   for (const mid of woundedMinions(s, cat)) acts.push({ kind: 'heal', minionId: mid });
   for (const fig of boardFigures(s)) {
@@ -128,7 +115,6 @@ export function applySauronAction(s: GameState, cat: Catalog, act: SauronAction)
     case 'shadow': return sauronPlayShadow(s, cat, act.cardId);      // self-spends
     case 'end': return s;                                            // driver ends the step
     case 'influence': { const c = clone(s); eyePlaceInfluenceOnce(c, cat, noop); spendBudget(c); return c; }
-    case 'deploy': { const c = clone(s); deployMinion(c, cat); spendBudget(c); return c; }
     case 'spawn': { const c = clone(s); eyeSpawnMonsterOnce(c, cat, noop); spendBudget(c); return c; }
     case 'draw': { const c = clone(s); drawShadow(c, cat, 2); drawPlots(c, cat, 2); spendBudget(c); return c; }
     case 'heal': {
@@ -177,12 +163,9 @@ function commandScore(s: GameState, a: SauronAction): number {
   const frac = s.story.sauronProgress / Math.max(1, s.story.length);
   const monsters = Object.values(s.map.monstersAt).reduce((n, x) => n + x.length, 0);
   const activeHeroes = s.heroes.filter((h) => h.status === 'active').length;
-  const hasPlot = (s.sauron.activePlots ?? []).some((p) => !!p.location);
-  const flush = s.sauron.influence >= 6;
   switch (a.kind) {
     case 'heal': return 100;
     case 'shadow': return 78;
-    case 'deploy': return (frac > 1 / 3 && (hasPlot || flush) && minionsInPlay(s) < 4) ? 70 : 8;
     case 'move': return 50;
     case 'influence': return frac < 2 / 3 ? 56 : 40;
     case 'spawn': return monsters < Math.max(1, activeHeroes) ? 48 : 22;

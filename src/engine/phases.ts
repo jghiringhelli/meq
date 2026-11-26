@@ -1003,7 +1003,6 @@ function eyeTakeBestAction(s: GameState, cat: Catalog, frac: number, logMsg: (m:
         let spawnedThisAction = false;
         for (let i = 0; i < yld; i++) {
           if (wounded && healStrongestMinion(s, cat)) { done++; continue; }
-          if (frac > 1 / 3 && minionsInPlay(s) < 4 && deployMinion(s, cat)) { done++; continue; }
           if (!spawnedThisAction && eyeSpawnMonsterOnce(s, cat, logMsg)) { spawnedThisAction = true; done++; continue; }
           if (moveOneMinion(s, cat, plotLocs) || moveOneMonster(s, cat)) { done++; continue; }
           break;

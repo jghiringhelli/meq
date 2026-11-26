@@ -88,9 +88,6 @@ export default function App() {
   // "Rendered more hooks than during the previous render" the instant a game
   // actually starts and the component's render path reaches further down.
   const [sauronMoveFigureSel, setSauronMoveFigureSel] = useState<{ kind: 'monster' | 'minion'; id: string; loc: string } | null>(null);
-  const [sauronCommandSel, setSauronCommandSel] = useState<
-    { kind: 'deploy'; minionId: string } | null
-  >(null);
   // Human Sauron vs AI heroes: the heroes' turn is stepped one action at a time.
   // `act` is what they are about to do; `results` recaps what the last action did.
   const [heroPanel, setHeroPanel] = useState<
@@ -479,13 +476,10 @@ export default function App() {
   // top of this component — see comment there.)
   const heldToken = state.sauronPending?.heldToken;
   const commandTargets = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'command'
-    ? (heldToken ? sauronCommandTargets(state, cat, 'spawn')
-      : sauronCommandSel ? sauronCommandTargets(state, cat, 'deploy') : undefined)
+    ? (heldToken ? sauronCommandTargets(state, cat, 'spawn') : undefined)
     : undefined;
   const doCommandTarget = (loc: string) => {
     if (heldToken) dispatch({ t: 'sauronSpawnMonster', loc } as Action);
-    else if (sauronCommandSel) dispatch({ t: 'sauronDeployMinion', minionId: sauronCommandSel.minionId, loc } as Action);
-    setSauronCommandSel(null);
   };
   // Do I control the specific hero a pending tree-decision affects? Per-hero
   // (not the coarse viewerSide) since online multiplayer can split hero roles
@@ -792,8 +786,7 @@ export default function App() {
           {iControlSauron && (state.activeSide === 'Sauron' || state.activeSide === 'Hero')
             && !state.winner && !state.pendingCombat && !state.pendingChoice && !state.lastCombatSummary && (
             <SauronPanel state={state} cat={cat} dispatch={dispatch}
-              moveFigureSel={sauronMoveFigureSel} onSelectMoveFigure={setSauronMoveFigureSel}
-              commandSel={sauronCommandSel} onSelectCommand={setSauronCommandSel} />
+              moveFigureSel={sauronMoveFigureSel} onSelectMoveFigure={setSauronMoveFigureSel} />
           )}
           <Collapsible id="log" icon="📜" label="Log" summary={logSummary} open={isPanelOpen('log')} onToggle={togglePanel}>
             <LogPane state={state} revealSide={viewerSide} />

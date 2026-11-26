@@ -17,7 +17,7 @@ import {
   resolveShadowReaction, resolveTreeDecision,
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
   sauronPlayPlot, sauronBeginAction, sauronPlaceInfluence,
-  sauronSpawnMonster, sauronDrawMonsterToken, sauronDeployMinion, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
+  sauronSpawnMonster, sauronDrawMonsterToken, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
 } from './game';
 
 /** A serializable player intent. `t` is the discriminant tag. */
@@ -59,7 +59,6 @@ export type Action =
   | { t: 'sauronCombatInfluence'; loc: string }
   | { t: 'sauronSpawnMonster'; loc: LocationId }
   | { t: 'sauronDrawMonsterToken'; regionId: string }
-  | { t: 'sauronDeployMinion'; minionId: MinionId; loc: LocationId }
   | { t: 'sauronMoveFigure'; kind: 'monster' | 'minion'; id: string; from: LocationId; to: LocationId }
   | { t: 'sauronHealMinion'; minionId: MinionId }
   | { t: 'sauronPlayShadow'; cardId: string }
@@ -122,7 +121,6 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'sauronKeepStartingHand': return sauronKeepStartingHand(state, cat, action.shadow, action.plot);
     case 'sauronSpawnMonster': return sauronSpawnMonster(state, cat, action.loc);
     case 'sauronDrawMonsterToken': return sauronDrawMonsterToken(state, cat, action.regionId);
-    case 'sauronDeployMinion': return sauronDeployMinion(state, cat, action.minionId, action.loc);
     case 'sauronMoveFigure': return sauronMoveFigure(state, cat, action.kind, action.id, action.from, action.to);
     case 'sauronHealMinion': return sauronHealMinion(state, cat, action.minionId);
     case 'sauronPlayShadow': return sauronPlayShadow(state, cat, action.cardId);

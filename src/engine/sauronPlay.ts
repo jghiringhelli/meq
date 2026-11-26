@@ -157,7 +157,7 @@ export function reserveMinions(s: GameState, cat: Catalog): MinionId[] {
  *  map) since the rulebook leaves the choice to Sauron but any spot far from
  *  the action is never actually useful. Shared by SauronPanel's sidebar list
  *  and Board's on-map click targets so both always agree. */
-export function sauronCommandTargets(s: GameState, cat: Catalog, kind?: 'spawn' | 'deploy'): LocationId[] {
+export function sauronCommandTargets(s: GameState, cat: Catalog, kind?: 'spawn'): LocationId[] {
   // Monster tokens may only go where the engine will accept them: an influenced location with no hero.
   if (kind === 'spawn') {
     const held = s.sauronPending?.heldToken;
@@ -331,19 +331,6 @@ export function sauronFinishCommand(state: GameState): GameState {
   if (state.sauronPending?.track !== 'command' || state.sauronPending.heldToken) return state;
   const s = clone(state);
   s.sauronPending = undefined;
-  return s;
-}
-
-/** Deploy command: bring a reserve minion into play at a location. */
-export function sauronDeployMinion(state: GameState, cat: Catalog, minionId: MinionId, loc: LocationId): GameState {
-  if (!canCommandFree(state)) return state;
-  if (!cat.minions[minionId]) return state;
-  if (!reserveMinions(state, cat).includes(minionId)) return state;
-  const s = clone(state);
-  (s.map.minionsAt ||= {});
-  (s.map.minionsAt[loc] ||= []).push(minionId);
-  spendCommand(s);
-  log(s, 'sauron', 'Sauron', `deploys ${cat.minions[minionId].name} at ${loc}`);
   return s;
 }
 

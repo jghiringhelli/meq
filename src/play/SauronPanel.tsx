@@ -3,13 +3,13 @@ import type { Catalog, GameState, LocationId } from '../engine/types';
 import type { Action } from '../engine/actions';
 import {
   sauronActionYields,
-  playablePlots, playableShadow, reserveMinions, monsterTargetsIn, woundedMinions, boardFigures,
+  playablePlots, playableShadow, monsterTargetsIn, woundedMinions, boardFigures,
   moveTargets,
 } from '../engine/game';
 import { placementTargets } from '../engine/influence';
 import { plotArt, shadowArt } from '../data/art';
 
-type Mode = 'spawn' | 'deploy' | 'move' | 'heal' | 'shadow' | null;
+type Mode = 'spawn' | 'move' | 'heal' | 'shadow' | null;
 export type { Mode };
 
 interface Props {
@@ -24,16 +24,11 @@ interface Props {
    *  by the parent instead of being private to this panel. */
   moveFigureSel?: { kind: 'monster' | 'minion'; id: string; loc: string } | null;
   onSelectMoveFigure?: (sel: { kind: 'monster' | 'minion'; id: string; loc: string } | null) => void;
-  /** Spawn/deploy destination picking ALSO happens on the map (same reason as
-   *  moveFigureSel above): once a monster/minion is picked in this panel's
-   *  sidebar list, its board destination is clicked on the map. */
-  commandSel?: { kind: 'deploy'; minionId: string } | null;
-  onSelectCommand?: (sel: { kind: 'deploy'; minionId: string } | null) => void;
 }
 
 const locName = (cat: Catalog, id: LocationId) => cat.locations[id]?.name ?? id;
 
-export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSelectMoveFigure, commandSel, onSelectCommand }: Props) {
+export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSelectMoveFigure }: Props) {
   const [mode, setMode] = useState<Mode>(null);
   const [keepShadow, setKeepShadow] = useState<string[]>([]);
   const [keepPlot, setKeepPlot] = useState<string[]>([]);
@@ -52,7 +47,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const figures = boardFigures(s);
   const selected = figures.find((f) => `${f.kind}:${f.id}:${f.loc}` === figure);
 
-  const apply = (action: Action) => { setMode(null); setFigure(''); onSelectCommand?.(null); dispatch(action); };
+  const apply = (action: Action) => { setMode(null); setFigure(''); dispatch(action); };
   // The turn can't end with mandatory actions unspent or a sub-action (e.g. an
   // in-progress influence placement or Command) left hanging — mirrors the
   // rulebook's "spend every action" requirement instead of silently letting
@@ -293,14 +288,13 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                 <p className="prompt">Command — issue up to {s.sauronPending.remaining} more command(s).</p>
               <button className="sauron-mode-btn" onClick={() => apply({ t: 'sauronFinishCommand' })}>Done commanding</button>
                 <div className="sauron-actions">
-                  {(['spawn', 'deploy', 'move', 'heal'] as Mode[]).map((m) => (
+                  {(['spawn', 'move', 'heal'] as Mode[]).map((m) => (
                     <button key={m} className={`sauron-mode-btn${mode === m ? ' active' : ''}`}
                       onClick={() => {
                         setMode(mode === m ? null : m);
-                        onSelectCommand?.(null);
                         onSelectMoveFigure?.(null);
                       }}>
-                      {m === 'spawn' ? 'Spawn monster' : m === 'deploy' ? 'Deploy minion'
+                      {m === 'spawn' ? 'Spawn monster'
                         : m === 'move' ? 'Move figure' : 'Heal minion'}
                     </button>
                   ))}
@@ -331,25 +325,6 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                           );
                         })}
                       </>
-                    )}
-                  </div>
-                )}
-
-                {mode === 'deploy' && (
-                  <div className="sauron-picker">
-                    {reserveMinions(s, cat).map((mid) => (
-                      <button key={mid}
-                        className={commandSel?.kind === 'deploy' && commandSel.minionId === mid ? 'active' : ''}
-                        onClick={() => onSelectCommand?.({ kind: 'deploy', minionId: mid })}>
-                        {cat.minions[mid]?.name ?? mid}
-                      </button>
-                    ))}
-                    {reserveMinions(s, cat).length === 0 && <p className="muted">All minions are already in play.</p>}
-                    {commandSel?.kind === 'deploy' && (
-                      <p className="prompt">
-                        Click a glowing <span style={{ color: '#3ab86a', fontWeight: 700 }}>◉</span> location on the
-                        map to deploy {cat.minions[commandSel.minionId]?.name ?? commandSel.minionId} there.
-                      </p>
                     )}
                   </div>
                 )}

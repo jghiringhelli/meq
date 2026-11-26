@@ -5,9 +5,10 @@
 import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
 import {
-  sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronDeployMinion,
-  sauronPlayShadow, playableShadow, reserveMinions,
+  sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronMoveFigure, boardFigures, moveTargets,
+  sauronPlayShadow, playableShadow,
 } from '../src/engine/game';
+import * as game from '../src/engine/game';
 import { shadowWindow } from '../src/engine/sauronmech';
 import { placementTargets, influenceAt } from '../src/engine/influence';
 import type { GameState } from '../src/engine/types';
@@ -71,11 +72,15 @@ describe('X-1 — human Sauron Action Step uses the Eye Action Tracks', () => {
     const out = sauronBeginAction(s, cat, 'command');
     expect(out.sauronActionsLeft).toBe(2);
     expect(out.sauronPending).toEqual({ track: 'command', remaining: 3 });
-    const mid = reserveMinions(out, cat)[0];
-    const loc = out.heroes[0].location;
-    const deployed = sauronDeployMinion(out, cat, mid, loc);
-    expect(deployed.sauronPending?.remaining).toBe(2); // one command spent, no new action
-    expect(deployed.sauronActionsLeft).toBe(2);
+    const fig = boardFigures(out).find((f) => f.kind === 'minion')!;
+    const to = moveTargets(out, cat, 'minion', fig.loc, fig.id)[0];
+    const moved = sauronMoveFigure(out, cat, 'minion', fig.id, fig.loc, to);
+    expect(moved.sauronPending?.remaining).toBe(2); // one command spent, no new action
+    expect(moved.sauronActionsLeft).toBe(2);
+  });
+
+  it('exposes no "deploy minion" command (rulebook: minions enter only at their era)', () => {
+    expect(Object.keys(game)).not.toContain('sauronDeployMinion');
   });
 
   it('cannot begin a new action while one still owes sub-effects', () => {

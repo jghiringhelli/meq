@@ -79,7 +79,6 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
     case 'sauronKeepStartingHand':
     case 'sauronSpawnMonster':
     case 'sauronDrawMonsterToken':
-    case 'sauronDeployMinion':
     case 'sauronMoveFigure':
     case 'sauronHealMinion':
     case 'sauronPlayShadow':
