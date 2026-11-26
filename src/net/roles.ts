@@ -72,6 +72,7 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
     case 'sauronPlaceInfluence':
     case 'sauronExtractInfluence':
     case 'sauronConfirmInfluence':
+    case 'sauronBankInfluence':
     case 'setupPlaceInfluence':
     case 'sauronKeepDrawnPlot':
     case 'setupExtractInfluence':

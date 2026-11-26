@@ -21,7 +21,7 @@ import {
   advance, endHeroActions, encounterPlan, chooseEncounter, resolveEncounter, resolveChoice,
   sauronEndActionStep, sauronStoryStep, sauronResolveEvents,
   sauronPlayPlot, sauronPlayShadow, autoResolvePendingTree,
-  playablePlots, playableShadow, woundedMinions, boardFigures, moveTargets,
+  playablePlots, plotLocationChoices, playableShadow, woundedMinions, boardFigures, moveTargets,
 } from './game';
 import { newGame } from './setup';
 import { clone } from './mechanics';
@@ -110,7 +110,7 @@ const noop = (_m: string): void => { /* silent inside search */ };
  *  monster bag (no replacement), pool caps and influence prerequisites all hold. */
 export function applySauronAction(s: GameState, cat: Catalog, act: SauronAction): GameState {
   switch (act.kind) {
-    case 'plot': return sauronPlayPlot(s, cat, act.plotId);
+    case 'plot': return sauronPlayPlot(s, cat, act.plotId, plotLocationChoices(s, cat, act.plotId)[0]);
     case 'pass-plot': return s;
     case 'shadow': return sauronPlayShadow(s, cat, act.cardId);      // self-spends
     case 'end': return s;                                            // driver ends the step

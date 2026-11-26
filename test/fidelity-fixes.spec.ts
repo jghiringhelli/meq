@@ -502,3 +502,18 @@ describe('Setup — the Shadow Pool is seeded from the starting plot, not a defa
     expect(boardInfluenceTotal(s)).toBeGreaterThan(0);
   });
 });
+
+describe('Flocks of Crebain — the forced combat survives its own skip-ambush', () => {
+  it('a forced foe still blocks travel although the normal Ambush is skipped', () => {
+    const s = toHeroActions(freshGame());
+    const hero = s.heroes[s.activeHeroIndex];
+    const loc = Object.values(cat.locations).find((l) => l.kind !== 'haven')!.id;
+    hero.location = loc;
+    const crebain = Object.values(cat.monsters).find((m) => m.name === 'Crebain')!.id;
+    s.map.monstersAt[loc] = [crebain];
+    hero.skipAmbush = true;
+    expect(ambushPending(s, hero, cat)).toBe(false);
+    hero.forcedFoe = crebain;
+    expect(ambushPending(s, hero, cat)).toBe(true);
+  });
+});

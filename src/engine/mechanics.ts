@@ -115,6 +115,8 @@ export function raiseAttribute(
  *  combat before the hero may Travel (Move/Explore). Returns true while a foe is
  *  present and the hero must engage it first. */
 export function ambushPending(state: GameState, hero: HeroState, cat?: Catalog): boolean {
+  // A forced foe (Flocks of Crebain) must be fought even though the normal Ambush is skipped.
+  if (hero.forcedFoe && state.map.monstersAt[hero.location]?.includes(hero.forcedFoe)) return true;
   if (hero.skipAmbush) return false;
   // M3: if Sauron chose Peril (not combat) when the hero entered this location
   // during a Travel step, the foe here does not force a fight this turn.

@@ -11,6 +11,7 @@ import { log } from './log';
 import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman } from './encounter';
 import { applyPlotCard, drawShadow, takePlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
 import { influenceAt, canPlaceInfluence, placeInfluenceAction, removeInfluenceAt, monsterPlaceable, placementTargets } from './influence';
+import { plotPlacement, plotPlacementOptions } from './plotReqs';
 
 const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v) || 0);
 
@@ -22,23 +23,39 @@ export function playablePlots(s: GameState, cat: Catalog): Plot[] {
   if (s.story.turn <= 1 || s.sauronPlotPlayed) return []; // skipped turn 1; one plot per Plot Step
   const hand = new Set(s.sauron.plotHand ?? []);
   return cat.plots.filter((p) =>
-    !p.starting && hand.has(p.id) && !active.has(p.id) && s.sauron.influence >= num(p.influenceCost));
+    !p.starting && hand.has(p.id) && !active.has(p.id) && s.sauron.influence >= num(p.influenceCost)
+    && plotPlacement(s, cat, p).ok); // printed board requirement must be met
+}
+
+/** Where a plot's marker may go right now (more than one = the human picks). */
+export function plotLocationChoices(s: GameState, cat: Catalog, plotId: string): LocationId[] {
+  const p = cat.plots.find((x) => x.id === plotId);
+  return p ? plotPlacementOptions(s, cat, p).filter((l): l is LocationId => !!l) : [];
 }
 
 /** Plot Step: play a plot card. Its influence figure is only a THRESHOLD Sauron
  *  must meet in the Shadow Pool (rulebook p.13: "playing the card does not cause
  *  Sauron to discard any influence from the Shadow Pool") — it is never spent.
  *  Phase stays in SauronEvents; the caller then resolves the Event Step. */
-export function sauronPlayPlot(state: GameState, cat: Catalog, plotId: string): GameState {
+export function sauronPlayPlot(state: GameState, cat: Catalog, plotId: string, loc?: LocationId): GameState {
   if (state.phase !== 'SauronEvents' || state.story.turn <= 1 || state.sauronPlotPlayed) return state;
   const p = cat.plots.find((x) => x.id === plotId);
   if (!p) return state;
   const cost = num(p.influenceCost);
   if (state.sauron.influence < cost) return state; // threshold gate only — not a spend
+  const placement = plotPlacement(state, cat, p);
+  if (!placement.ok) return state; // board requirement not met
+  // "Sauron's choice" plots: one legal spot is taken automatically; several need his pick.
+  const choices = plotLocationChoices(state, cat, plotId);
+  let placeAt: LocationId | undefined = placement.location;
+  if (choices.length > 1) {
+    if (!loc || !choices.includes(loc)) return state;
+    placeAt = loc;
+  } else if (choices.length === 1) placeAt = choices[0];
   const s = clone(state);
   s.sauronPlotPlayed = true;
   s.sauron.plotHand = (s.sauron.plotHand ?? []).filter((id) => id !== plotId);
-  applyPlotCard(s, cat, p, cost, (msg) => log(s, 'sauron', 'Sauron', msg));
+  applyPlotCard(s, cat, p, cost, (msg) => log(s, 'sauron', 'Sauron', msg), placeAt);
   return s;
 }
 
@@ -107,14 +124,11 @@ export function sauronBeginAction(state: GameState, cat: Catalog, track: EyeTrac
     return s;
   }
   if (track === 'influence') {
-    // Bank UP TO TWO in the Shadow Pool (capped at 4× stage); the rest extend the
-    // board. Pool income is never free — it costs this action (rulebook pp.15-16).
-    const stage = gameStage(s);
-    const bank = Math.max(0, Math.min(2, yld, 4 * stage - s.sauron.influence));
-    s.sauron.influence += bank;
-    const remaining = yld - bank;
-    if (remaining > 0) s.sauronPending = { track: 'influence', remaining };
-    log(s, 'sauron', 'Sauron', `Place Influence action (space ${yld}): banked ${bank} to pool, ${remaining} to place on the board`);
+    // Rulebook pp.15-16: of the yield Sauron MAY put up to two in the Shadow Pool
+    // (capped at 4× stage); the player chooses with sauronBankInfluence. The rest
+    // extend the board. Pool income is never free — it costs this action.
+    s.sauronPending = { track: 'influence', remaining: yld, banked: 0 };
+    log(s, 'sauron', 'Sauron', `Place Influence action (space ${yld}): place ${yld} token(s) — up to 2 may go to the Shadow Pool`);
     return s;
   }
   s.sauronPending = { track: 'command', remaining: yld };
@@ -197,6 +211,27 @@ export function moveTargets(s: GameState, cat: Catalog, kind: 'monster' | 'minio
   }
   // Monster tokens may only move onto locations that hold influence.
   return nbrs.filter((loc) => influenceAt(s, loc) > 0);
+}
+
+/** Can one more token of the current Place Influence action go to the Shadow Pool? */
+export function canBankInfluence(s: GameState): boolean {
+  const p = s.sauronPending;
+  return s.phase === 'SauronMinions' && p?.track === 'influence' && p.remaining > 0
+    && (p.banked ?? 0) < 2 && s.sauron.influence < 4 * gameStage(s);
+}
+
+/** Move one owed token into (delta +1) or back out of (delta −1) the Shadow Pool. */
+export function sauronBankInfluence(state: GameState, delta: 1 | -1): GameState {
+  const p = state.sauronPending;
+  if (state.phase !== 'SauronMinions' || p?.track !== 'influence') return state;
+  if (delta === 1 ? !canBankInfluence(state) : (p.banked ?? 0) <= 0) return state;
+  const s = clone(state);
+  const q = s.sauronPending!;
+  q.banked = (q.banked ?? 0) + delta;
+  q.remaining -= delta;
+  s.sauron.influence += delta;
+  log(s, 'sauron', 'Sauron', delta === 1 ? `banks 1 influence in the Shadow Pool (now ${s.sauron.influence})` : `takes 1 influence back out of the Shadow Pool (now ${s.sauron.influence})`);
+  return s;
 }
 
 /** Place one owed board token from the current Place Influence action onto a legal
@@ -415,7 +450,7 @@ export function sauronHealMinion(state: GameState, cat: Catalog, minionId: Minio
  *  most-corrupted hero. Only "Play during your Action step." (action-window) cards
  *  qualify, at most ONE per Sauron turn, and — like the automa — it is a free play
  *  that does NOT cost an Eye action. Gated on the Shadow Pool (= influence). */
-export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string): GameState {
+export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string, heroId?: string): GameState {
   if (state.phase !== 'SauronMinions' || state.sauronPending) return state;
   if (state.shadowPlayedThisSauronTurn) return state;      // one own-turn Shadow per Sauron turn
   if (state.story.finale) return state;                     // Errata: no Shadow cards in the Finale
@@ -424,8 +459,10 @@ export function sauronPlayShadow(state: GameState, cat: Catalog, cardId: string)
   if (shadowWindow(card.timing) !== 'action') return state; // reaction cards wait for their window
   if (num(card.poolRequirement) > state.sauron.influence) return state;
   const s = clone(state);
-  const target = s.heroes.filter((h) => h.status === 'active')
-    .sort((a, b) => b.corruption - a.corruption)[0];
+  const actives = s.heroes.filter((h) => h.status === 'active');
+  const chosen = heroId ? actives.find((h) => h.id === heroId) : undefined;
+  if (heroId && !chosen) return state;
+  const target = chosen ?? [...actives].sort((a, b) => b.corruption - a.corruption)[0];
   if (!target) return state;
   s.sauron.shadowHand = s.sauron.shadowHand.filter((x) => x !== cardId);
   s.sauron.shadowDiscard.push(cardId);

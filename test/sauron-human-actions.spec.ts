@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
 import {
   sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronExtractInfluence, sauronConfirmInfluence, sauronMoveFigure, sauronKeepDrawnPlot, boardFigures, moveTargets,
-  sauronPlayShadow, playableShadow,
+  sauronPlayShadow, playableShadow, sauronBankInfluence, canBankInfluence,
 } from '../src/engine/game';
 import * as game from '../src/engine/game';
 import { shadowWindow } from '../src/engine/sauronmech';
@@ -48,13 +48,21 @@ describe('X-1 — human Sauron Action Step uses the Eye Action Tracks', () => {
     expect(kept.sauronPending).toBeUndefined();
   });
 
-  it('a Place Influence action banks at most 2 to the pool and owes the rest to the board', () => {
+  it('a Place Influence action lets the player bank 0-2 to the pool and owes the rest to the board', () => {
     const s = actionStep();
     s.sauron.influence = 0;
-    const out = sauronBeginAction(s, cat, 'influence');
-    expect(out.sauronActionsLeft).toBe(2);
-    expect(out.sauron.influence).toBe(2); // banked exactly 2 (yield 6, cap 2)
-    expect(out.sauronPending).toEqual({ track: 'influence', remaining: 4 });
+    const begun = sauronBeginAction(s, cat, 'influence');
+    expect(begun.sauronActionsLeft).toBe(2);
+    expect(begun.sauron.influence).toBe(0); // nothing is banked automatically
+    expect(begun.sauronPending).toEqual({ track: 'influence', remaining: 6, banked: 0 });
+    // Bank one, then a second; a third is refused (max 2 per action); one can be taken back.
+    const b1 = sauronBankInfluence(begun, 1);
+    const b2 = sauronBankInfluence(b1, 1);
+    expect(sauronBankInfluence(b2, 1)).toBe(b2);
+    expect(b2.sauron.influence).toBe(2);
+    expect(sauronBankInfluence(b2, -1).sauron.influence).toBe(1);
+    const out = b2;
+    expect(out.sauronPending).toEqual({ track: 'influence', remaining: 4, banked: 2 });
     // The remaining 4 tokens go onto the board, one placement at a time.
     const loc = placementTargets(out, cat)[0];
     const before = influenceAt(out, loc);
@@ -87,7 +95,9 @@ describe('X-1 — human Sauron Action Step uses the Eye Action Tracks', () => {
     s.sauron.influence = 4; // stage 1 cap is 4 — no room to bank
     const out = sauronBeginAction(s, cat, 'influence');
     expect(out.sauron.influence).toBe(4);
-    expect(out.sauronPending).toEqual({ track: 'influence', remaining: 6 });
+    expect(canBankInfluence(out)).toBe(false);
+    expect(sauronBankInfluence(out, 1)).toBe(out);
+    expect(out.sauronPending).toEqual({ track: 'influence', remaining: 6, banked: 0 });
   });
 
   it('a Command action costs one action and issues up to its yield in commands', () => {

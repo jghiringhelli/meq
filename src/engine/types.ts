@@ -378,6 +378,9 @@ export interface HeroState {
    *  ambush this turn (Flocks of Crebain / Seem Fairer / Creatures of the Wild).
    *  Cleared once the ambush is skipped or at hero refresh. */
   skipAmbush?: boolean;
+  /** A foe the hero MUST fight before travelling (Flocks of Crebain's forceCombat);
+   *  it overrides skipAmbush, which only waives the normal Ambush step. */
+  forcedFoe?: string;
   /** M3 Combat-or-Peril: locations the hero entered this turn where Sauron chose
    *  Peril instead of forcing a fight — the co-located foe does not block further
    *  travel here. Cleared at hero refresh. */
@@ -803,7 +806,9 @@ export interface GameState {
     /** Command: the one monster token allowed per Command action has been used. */
     monsterDone?: boolean;
     /** Influence: locations filled during this action (the only tokens that can be taken back). */
-    placed?: string[] };
+    placed?: string[];
+    /** Influence: tokens of this action put in the Shadow Pool (at most 2, chosen by the player). */
+    banked?: number };
   /** Interactive Setup: a human-controlled Sauron places the starting plot's
    *  "extension" influence himself (clicking the map), instead of the engine
    *  auto-distributing it via BFS. Set by newGame when `interactiveSetup` is

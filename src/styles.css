@@ -321,6 +321,13 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .eye-slot.covered { background: #3a1010; border-color: var(--danger); color: #ffcf9a; filter: drop-shadow(0 0 2px var(--danger)); }
 
 
+.active-panel { display: flex; flex-wrap: wrap; gap: 1rem; padding: 0.5rem 1rem; background: #17130d; border-bottom: 1px solid #3a2f22; max-height: 38vh; overflow: auto; }
+.active-panel section { flex: 1 1 260px; min-width: 240px; }
+.active-panel h4 { margin: 0 0 4px; color: #c9a24a; font-size: 0.85rem; }
+.active-item { margin: 3px 0; padding: 3px 6px; border: 1px solid #3a2f22; border-radius: 4px; font-size: 0.8rem; }
+.active-item summary { cursor: pointer; }
+.active-item p { margin: 4px 0; }
+.active-art { max-width: 140px; border-radius: 4px; cursor: help; }
 .plot-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; background: #17130d; border-bottom: 1px solid #3a2f22; min-height: 44px; overflow-x: auto; }
 .plot-title { font-size: 0.8rem; color: #8a7c60; white-space: nowrap; }
 .plot-empty { color: #6b5a3a; font-style: italic; }

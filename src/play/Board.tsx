@@ -482,9 +482,10 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
               {/* "+" pip: this location will accept one more influence token
                   right now (mid-game Place Influence action, or Setup). */}
               {isPlaceTarget && (
-                <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
+                <g transform={`translate(0,${-(rr + 46)})`} style={{ cursor: onPlaceInfluence ? 'pointer' : undefined }}
+                  onClick={(e) => { e.stopPropagation(); if (!drag.current?.moved) onPlaceInfluence?.(l.id); }}>
                   <circle r={17} fill="#e0574a" stroke="#1a0303" strokeWidth={3} />
-                  <text y={6} textAnchor="middle" fontSize={22} fontWeight={700} fill="#fff">+</text>
+                  <text y={6} textAnchor="middle" fontSize={22} fontWeight={700} fill="#fff" pointerEvents="none">+</text>
                 </g>
               )}
 
@@ -543,7 +544,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                     <circle r={r + 2 * s} fill="#1e6b2e" stroke="#8fe6a0" strokeWidth={3 * s} />
                     {face
                       ? <image href={face} x={-r} y={-r} width={r * 2} height={r * 2}
-                          preserveAspectRatio="xMidYMid slice" style={{ clipPath: 'inset(0 round 50%)' }} />
+                          preserveAspectRatio="xMidYMin slice" style={{ clipPath: 'inset(0 round 50%)' }} />
                       : <text y={5 * s} textAnchor="middle" fontSize={15 * s} fontWeight={700} fill="#eafaea">
                           {(cat.heroes[first]?.name ?? first)[0]}</text>}
                     <circle r={r} fill="none" stroke={heroColor(first)} strokeWidth={3 * s} />
@@ -553,6 +554,26 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                         <text y={4 * s} textAnchor="middle" fontSize={12 * s} fontWeight={700} fill="#eafaea">+{extra}</text>
                       </g>
                     )}
+                  </g>
+                );
+              })()}
+
+              {/* Encounter-substitution quest (left-middle, crimson ⚔): exploring here
+                  draws a combat against the quest's foe INSTEAD of Encounter cards. */}
+              {(() => {
+                const subs = state.heroes.flatMap((h) => (h.quests?.combats ?? [])
+                  .filter((c) => c.location === l.id && (() => {
+                    const q = cat.quests[c.questId];
+                    return q?.type === 'Advanced Quest' ? !h.quests?.advancedDone : !h.quests?.startingDone;
+                  })())
+                  .map((c) => ({ hero: h.id, monster: c.monster })));
+                if (!subs.length) return null;
+                const r = 14 * s;
+                return (
+                  <g transform={`translate(${-(rr + 4)},${-6 * s})`}>
+                    <title>{subs.map((x) => `${cat.heroes[x.hero]?.name ?? x.hero}'s quest: exploring here → combat ${cat.monsters[x.monster]?.name ?? x.monster} instead of Encounter cards`).join('\n')}</title>
+                    <circle r={r + 2 * s} fill="#7a1d14" stroke="#ffb09c" strokeWidth={3 * s} />
+                    <text y={6 * s} textAnchor="middle" fontSize={17 * s} fill="#fff">⚔</text>
                   </g>
                 );
               })()}

@@ -235,6 +235,7 @@ export function worthFightingForCards(s: GameState, cat: Catalog, hero: HeroStat
 const PERIL_W = 3;   // entering a perilous node
 const MONSTER_W = 2; // entering a node a monster/minion sits on (heroes gain nothing fighting)
 const MISMATCH_W = 0.75; // a move with no matching-terrain card (must burn any card[s])
+const CARD_COST_W = 1.5; // each extra card beyond the first on one move: cards are the heroes' only resource
 // When several plots are affordable, a skilled hero does not blindly chase the
 // single most-dangerous one: he weighs how EXPOSED the route to it is (peril and
 // monster-held nodes accumulated along the weighted path) and will break a
@@ -310,7 +311,7 @@ function legalStepToward(s: GameState, cat: Catalog, hero: HeroState, targets: S
     const onward = field.get(mv.to);
     if (onward === undefined || onward >= here) continue; // must make progress
     const score = onward + 1 + nodePenalty(s, cat, mv.to, hero)
-      + MISMATCH_W * (mv.viaAnyCards ? 1 : 0) + 0.25 * (mv.cost - 1)
+      + MISMATCH_W * (mv.viaAnyCards ? 1 : 0) + CARD_COST_W * (mv.cost - 1) + (mv.cost >= 3 ? 3 : 0)
       - (cat.locations[mv.to]?.kind === 'haven' ? 0.5 : 0); // prefer safe haven waypoints on ties
     if (score < bestScore) { bestScore = score; best = mv.to; }
   }
@@ -753,6 +754,12 @@ export const missionAware: HeroStrategy = {
     if (canSurvey(s, cat, heroId)) return { kind: 'survey' };
     // breaking plots is the win path — pursue it before mission-specific play
     const plot = planPlotCounter(s, cat, hero);
+    // Arrived at a Haven this turn: stop there. Cards in hand are the heroes' only
+    // resource, and a haven is safe (no Shadow cards, better location cards, rest/heal).
+    // Don't keep marching (spending more cards) unless Sauron is near a win.
+    if (plot && plot.kind === 'move' && inHaven && hero.hasMovedThisTurn && !hero.restedThisTurn && !sauronThreatUrgent(s)) {
+      return { kind: 'end' };
+    }
     // Breaking a plot NOW (or pooling favor to) beats everything; but if the plot
     // plan is only a card-hungry march, first take an opportunistic card-gain
     // fight against a weak foe standing here (user tactic) to stock the cards the

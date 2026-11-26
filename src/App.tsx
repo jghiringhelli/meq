@@ -11,9 +11,11 @@ import { applyAction, type Action } from './engine/actions';
 import Board from './play/Board';
 import CounterBar from './play/CounterBar';
 import PlotRow from './play/PlotRow';
+import ActivePanel, { activeCount } from './play/ActivePanel';
 import DeckBar from './play/DeckBar';
 import RefTabs from './play/RefTabs';
 import HeroPanel from './play/HeroPanel';
+import HeroesIntel from './play/HeroesIntel';
 import CombatBoard from './play/CombatBoard';
 import ChoiceModal from './play/ChoiceModal';
 import CombatSummaryModal from './play/CombatSummaryModal';
@@ -75,7 +77,7 @@ export default function App() {
   // toggle acts as a bulk collapse/expand while each chip stays individually
   // clickable to peek at just that one thing.
   const [panelOpen, setPanelOpen] = useState<Record<string, boolean>>({});
-  const isPanelOpen = (key: string) => panelOpen[key] ?? ((key === 'mission' || key === 'net') && !focusMap);
+  const isPanelOpen = (key: string) => panelOpen[key] ?? ((key === 'mission' || key === 'net' || key === 'heroesIntel') && !focusMap);
   const togglePanel = (key: string) => setPanelOpen((m) => ({ ...m, [key]: !isPanelOpen(key) }));
   const toggleFocusMap = () => { setFocusMap((v) => !v); setPanelOpen({}); };
   const heroRng = useRef(mulberry32(0));
@@ -717,6 +719,9 @@ export default function App() {
         <Collapsible id="plots" icon="🚩" label="Plots" summary={plotsSummary} open={isPanelOpen('plots')} onToggle={togglePanel}>
           <PlotRow state={state} cat={cat} />
         </Collapsible>
+        <Collapsible id="active" icon="🗺" label="Active" summary={`${activeCount(state)} in play`} open={isPanelOpen('active')} onToggle={togglePanel}>
+          <ActivePanel state={state} cat={cat} />
+        </Collapsible>
       </div>
       <RefTabs state={state} cat={cat} sauronView={iControlSauron} />
       <PhaseTracker state={state} cat={cat} />
@@ -790,6 +795,12 @@ export default function App() {
               onRest={doRest} onRestTrain={doRestTrain} onEngage={doEngage} onEndTurn={doEndTurn} onExplore={doExplore}
               econ={econ}
             />
+          )}
+          {!seesHeroMission && (
+            <Collapsible id="heroesIntel" icon="🛡" label="Heroes" summary={state.heroes.map((h) => `${cat.heroes[h.id]?.name ?? h.id} deck ${h.deck.length}`).join(' · ')}
+              open={isPanelOpen('heroesIntel')} onToggle={togglePanel} dir="col">
+              <HeroesIntel state={state} cat={cat} />
+            </Collapsible>
           )}
           {/* Sauron's action UI lives in the sidebar (not a full-screen modal)
            *  so the map stays fully visible/illuminated at all times, and only

@@ -91,6 +91,29 @@ const REQS: Record<string, (s: GameState, cat: Catalog) => LocationId | null> = 
 
 export type PlotPlacement = { ok: false } | { ok: true; location?: LocationId };
 
+/** Every location Sauron may put this plot's marker on right now ("Sauron's
+ *  choice" plots can have several; a human picks, the bot takes the first).
+ *  [] = requirement not met; [undefined] = no board location. */
+export function plotPlacementOptions(s: GameState, cat: Catalog, plot: Plot): (LocationId | undefined)[] {
+  const one = plotPlacement(s, cat, plot);
+  if (!one.ok) return [];
+  const all = (pred: (l: LocationId) => boolean) => Object.keys(cat.locations).filter((l) => pred(l as LocationId)) as LocationId[];
+  switch (plot.id) {
+    case 'a-promise-of-rings':
+      return all((l) => hasCharacter(s, l) && (hasMonster(s, l) || hasMinion(s, l)));
+    case 'urgent-summons':
+      return all((l) => hasCharacter(s, l) && !plotMarkerAt(s, l));
+    case 'loss-of-an-heir':
+      return (['edoras', 'minas-tirith'] as LocationId[]).filter((l) => mobWithin1(s, cat, l));
+    case 'a-broken-line-of-kings':
+    case 'a-broken-line-of-kings-2':
+      return all((l) => cat.locations[l].kind === 'haven' && !plotMarkerAt(s, l)
+        && neighbors(cat, l).reduce((n, nb) => n + influenceAt(s, nb), 0) >= 6);
+    default:
+      return [one.location];
+  }
+}
+
 /** Whether `plot` may be played right now, and where its marker is placed. A
  *  plot with no printed board condition is always playable (its marker goes on
  *  its `affects` location, or off-board when it has none). A plot with a modelled

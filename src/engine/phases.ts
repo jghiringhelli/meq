@@ -12,7 +12,7 @@ import { applyOps } from './noncombat';
 import { planEncounter, applyAtoms, autoResolveTree, treeActorIsHuman, statValue, revealMonsters, drainEventTreeQueue, type PlanResult } from './encounter';
 import { eyePlaceInfluenceOnce, eyeSpawnMonsterOnce } from './ai';
 import { evalMission, minionsInPlay } from './missions';
-import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, raiseShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield } from './sauronmech';
+import { maybeDrawPeril, advancePlots, drawShadow, drawPlots, playShadow, playShadowReaction, raiseShadowReaction, sauronAuto, lateGameReset, eyePlaceToken, eyeTrackYield, eyeState } from './sauronmech';
 import { beginCombat } from './combat';
 import { influenceAt, clearInfluenceAt, enforceInfluenceRules, isPerilous } from './influence';
 import { tryCompleteQuestsOnExplore, questSubstituteMonster } from './quests';
@@ -650,6 +650,7 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
     hero.travelStepsThisTurn = 0;
     hero.favorGainedThisTurn = 0;
     hero.skipAmbush = false;
+    hero.forcedFoe = undefined;
     hero.perilResolvedAt = [];
     // restrictMovement (Winter Storm etc.): cap THIS turn's Travel steps.
     hero.turnTravelCap = hero.moveRestriction;
@@ -970,7 +971,16 @@ function eyeTakeBestAction(s: GameState, cat: Catalog, frac: number, logMsg: (m:
     { track: 'influence' as const, score: (frac < 2 / 3 ? 56 : 40) },
     { track: 'command' as const, score: commandUrgency },
   ].filter((t) => eyeTrackYield(s, t.track) !== null);
+  // Repeating a track is less and less efficient (2nd/3rd space). Only worth it when
+  // urgent (command to save a plot, a starved hand) or late; otherwise it is better to skip.
+  const eye = eyeState(s);
+  for (const t of tracks) {
+    const covered = eye[t.track];
+    const pen = covered === 1 ? 8 : covered >= 2 ? 30 : 0;
+    t.score -= frac > 2 / 3 ? pen / 2 : pen;
+  }
   tracks.sort((a, b) => b.score - a.score);
+  if (tracks.length && tracks[0].score < 25 && frac <= 2 / 3) return null;
 
   for (const { track } of tracks) {
     const yld = eyePlaceToken(s, track, logMsg);

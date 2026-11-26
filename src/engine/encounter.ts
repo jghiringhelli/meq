@@ -506,6 +506,7 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
       const mid = findMonsterByName(cat, atom.monster);
       if (!mid) return '';
       (s.map.monstersAt[hero.location] ||= []).push(mid);
+      hero.forcedFoe = mid;
       return `must combat ${cat.monsters[mid].name}`;
     }
     case 'combatReward': {

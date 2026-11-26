@@ -3,9 +3,10 @@ import type { Catalog, GameState, LocationId } from '../engine/types';
 import type { Action } from '../engine/actions';
 import {
   sauronActionYields,
-  playablePlots, playableShadow, monsterTargetsIn, woundedMinions, boardFigures,
-  moveTargets,
+  playablePlots, plotLocationChoices, playableShadow, monsterTargetsIn, woundedMinions, boardFigures,
+  moveTargets, canBankInfluence,
 } from '../engine/game';
+import { gameStage } from '../engine/mechanics';
 import { placementTargets } from '../engine/influence';
 import { plotArt, shadowArt } from '../data/art';
 
@@ -30,6 +31,8 @@ const locName = (cat: Catalog, id: LocationId) => cat.locations[id]?.name ?? id;
 
 export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSelectMoveFigure }: Props) {
   const [mode, setMode] = useState<Mode>(null);
+  const [plotPick, setPlotPick] = useState<string | null>(null);
+  const [shadowPick, setShadowPick] = useState<string | null>(null);
   const [keepShadow, setKeepShadow] = useState<string[]>([]);
   const [keepPlot, setKeepPlot] = useState<string[]>([]);
   const figure = moveFigureSel ? `${moveFigureSel.kind}:${moveFigureSel.id}:${moveFigureSel.loc}` : '';
@@ -192,16 +195,30 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
               ? 'Plot Step skipped on the first turn. Resolve this turn\'s events.'
               : 'Plot Step — play one plot card, or pass. Then resolve this turn\'s events.'}</p>
             <div className="sauron-plots">
-              {playablePlots(s, cat).slice(0, 8).map((p) => (
+              {playablePlots(s, cat).slice(0, 8).map((p) => {
+                const spots = plotLocationChoices(s, cat, p.id);
+                return (
                 <button key={p.id} className="sauron-plot-btn"
-                  onClick={() => dispatch({ t: 'sauronPlayPlot', plotId: p.id })}>
+                  onClick={() => { if (spots.length > 1) setPlotPick(plotPick === p.id ? null : p.id); else dispatch({ t: 'sauronPlayPlot', plotId: p.id }); }}>
                   <span className="cc-label">{p.name}</span>
                   <span className="cc-ability">
                     {p.marker ?? 'red'} +{p.advance ?? p.track.length} · cost {p.influenceCost ?? 0}
                     {p.favorToCounter ? ` · counter ${p.favorToCounter}` : ''}
+                    {spots.length === 1 ? ` · at ${cat.locations[spots[0]]?.name ?? spots[0]}` : spots.length > 1 ? ` · choose location (${spots.length})` : ''}
                   </span>
                 </button>
-              ))}
+                );
+              })}
+              {plotPick && (
+                <div className="sauron-picker">
+                  <p className="prompt">Where does <b>{cat.plots.find((x) => x.id === plotPick)?.name}</b> take effect?</p>
+                  {plotLocationChoices(s, cat, plotPick).map((l) => (
+                    <button key={l} onClick={() => { dispatch({ t: 'sauronPlayPlot', plotId: plotPick, loc: l }); setPlotPick(null); }}>
+                      {cat.locations[l]?.name ?? l}
+                    </button>
+                  ))}
+                </div>
+              )}
               {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">{s.sauronPlotPlayed ? 'You have played your Plot card this turn.' : 'No affordable plots (slots full or too costly).'}</p>}
             </div>
             <button className="primary" onClick={() => dispatch({ t: 'sauronResolveEvents' })}>
@@ -236,10 +253,23 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
             {!s.sauronPending && mode === 'shadow' && (
               <div className="sauron-picker">
                 {playableShadow(s, cat).map((cid) => (
-                  <button key={cid} onClick={() => apply({ t: 'sauronPlayShadow', cardId: cid })}>
+                  <button key={cid} onClick={() => {
+                    if (s.heroes.filter((h) => h.status === 'active').length > 1) setShadowPick(shadowPick === cid ? null : cid);
+                    else apply({ t: 'sauronPlayShadow', cardId: cid });
+                  }}>
                     {cat.shadow[cid]?.name ?? cid}
                   </button>
                 ))}
+                {shadowPick && (
+                  <div>
+                    <p className="prompt">Target of <b>{cat.shadow[shadowPick]?.name}</b>:</p>
+                    {s.heroes.filter((h) => h.status === 'active').map((h) => (
+                      <button key={h.id} onClick={() => { apply({ t: 'sauronPlayShadow', cardId: shadowPick, heroId: h.id }); setShadowPick(null); }}>
+                        {cat.heroes[h.id]?.name ?? h.id} @ {cat.locations[h.location]?.name ?? h.location}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {playableShadow(s, cat).length === 0 && <p className="muted">No playable shadow cards.</p>}
               </div>
             )}
@@ -255,6 +285,14 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
               const noTargets = placementTargets(s, cat).length === 0;
               return (
               <div className="sauron-picker">
+                <p className="prompt">
+                  Shadow Pool: <b>{s.sauron.influence}</b>/{4 * gameStage(s)} — put up to 2 of this action's tokens there:{' '}
+                  <button disabled={(s.sauronPending.banked ?? 0) <= 0}
+                    onClick={() => dispatch({ t: 'sauronBankInfluence', delta: -1 })}>−</button>
+                  {' '}{s.sauronPending.banked ?? 0}/2{' '}
+                  <button disabled={!canBankInfluence(s)}
+                    onClick={() => dispatch({ t: 'sauronBankInfluence', delta: 1 })}>+ to pool</button>
+                </p>
                 <p className="prompt">
                   {s.sauronPending.remaining > 0
                     ? <>Place {s.sauronPending.remaining} more influence token{s.sauronPending.remaining === 1 ? '' : 's'} —
