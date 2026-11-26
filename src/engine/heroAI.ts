@@ -14,7 +14,7 @@ import {
   heroSurvey, canSurvey, autoResolvePendingTree, heroTradeFavor, otherHeroesHere,
   heroConsultCharacter, charactersHere, consultWouldCorrupt,
 } from './game';
-import { ambushPending } from './mechanics';
+import { ambushPending, clone } from './mechanics';
 import { isPerilous } from './influence';
 import { corruptionBlocksSocial, corruptionFavorGainCap } from './corruption';
 import { solveCombatOption } from './combatSolver';
@@ -79,6 +79,12 @@ function bfsFirstStep(cat: Catalog, from: LocationId, targets: Set<LocationId>):
   }
   return null;
 }
+/** Legal moves minus any location the hero already left with nothing done in between (no pointless loops). */
+function aiMoves(cat: Catalog, hero: HeroState) {
+  const path = hero.travelPath ?? [];
+  return legalMoves(cat, hero).filter((m) => !path.includes(m.to));
+}
+
 function nearestHavens(cat: Catalog): Set<LocationId> {
   return new Set(Object.values(cat.locations).filter((l) => l.kind === 'haven').map((l) => l.id));
 }
@@ -307,7 +313,7 @@ function legalStepToward(s: GameState, cat: Catalog, hero: HeroState, targets: S
   if (here === undefined || !isFinite(here) || here === 0) return null;
   let best: LocationId | null = null;
   let bestScore = Infinity;
-  for (const mv of legalMoves(cat, hero)) {
+  for (const mv of aiMoves(cat, hero)) {
     const onward = field.get(mv.to);
     if (onward === undefined || onward >= here) continue; // must make progress
     const score = onward + 1 + nodePenalty(s, cat, mv.to, hero)
@@ -645,7 +651,7 @@ export const randomWalk: HeroStrategy = {
     const foes = engageableMonsters(s, heroId);
     for (const m of foes) acts.push({ kind: 'engage', monsterId: m });
     if (canExplore(s, cat, heroId)) acts.push({ kind: 'explore' });
-    for (const mv of legalMoves(cat, hero)) acts.push({ kind: 'move', to: mv.to });
+    for (const mv of aiMoves(cat, hero)) acts.push({ kind: 'move', to: mv.to });
     if (cat.locations[hero.location].kind === 'haven' && !hero.restedThisTurn && !hero.hasMovedThisTurn) acts.push({ kind: 'rest' });
     acts.push({ kind: 'end' });
     return pick(rng, acts);
@@ -680,7 +686,7 @@ export const heuristic: HeroStrategy = {
     }
     // Travel as far as the hand allows BEFORE taking the terminal Encounter step
     // (Explore): the Travel step repeats until out of cards (rulebook p.22).
-    const moves = legalMoves(cat, hero);
+    const moves = aiMoves(cat, hero);
     if (moves.length) {
       // hunt nearby monsters first, else head for the nearest haven
       const monsterLocs = new Set<LocationId>(
@@ -714,7 +720,7 @@ export const cautious: HeroStrategy = {
     }
     const influenced = (loc: LocationId) => (s.sauron.locationInfluence?.[loc] ?? 0) > 0;
     if (influenced(base.to)) {
-      const safe = legalMoves(cat, hero).filter((m) => !influenced(m.to));
+      const safe = aiMoves(cat, hero).filter((m) => !influenced(m.to));
       if (safe.length) return { kind: 'move', to: safe[0].to };
     }
     return base;
@@ -821,7 +827,7 @@ export const missionAware: HeroStrategy = {
       const havenStep = legalStepToward(s, cat, hero, nearestHavens(cat));
       if (havenStep) return { kind: 'move', to: havenStep };
       const influenced = (loc: LocationId) => (s.sauron.locationInfluence?.[loc] ?? 0) > 0;
-      const moves = legalMoves(cat, hero);
+      const moves = aiMoves(cat, hero);
       const safe = moves.filter((m) => !influenced(m.to));
       const pool = (hero.corruption > 0 ? safe : moves);
       const target = pool[0] ?? moves[0];
@@ -903,6 +909,10 @@ export function playoutGame(
 
 export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act: HeroAction): GameState {
   act = coerceHeroAction(s, cat, heroId, act);
+  if (act.kind !== 'move' && act.kind !== 'end') {
+    const h = s.heroes.find((x) => x.id === heroId);
+    if (h?.travelPath?.length) { s = clone(s); s.heroes.find((x) => x.id === heroId)!.travelPath = []; }
+  }
   switch (act.kind) {
     case 'engage': return heroEngage(s, cat, heroId, act.monsterId);
     case 'explore': return heroExplore(s, cat, heroId);

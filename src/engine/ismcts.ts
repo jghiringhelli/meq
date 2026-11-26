@@ -48,7 +48,7 @@ export function legalHeroActions(s: GameState, cat: Catalog, heroId: HeroId): He
   const acts: HeroAction[] = [];
   for (const m of engageableMonsters(s, heroId)) acts.push({ kind: 'engage', monsterId: m });
   if (canExplore(s, cat, heroId)) acts.push({ kind: 'explore' });
-  for (const mv of legalMoves(cat, hero)) acts.push({ kind: 'move', to: mv.to });
+  for (const mv of legalMoves(cat, hero).filter((m) => !(hero.travelPath ?? []).includes(m.to))) acts.push({ kind: 'move', to: mv.to });
   const t = targetablePlot(s, cat, heroId);
   if (t) {
     const p = cat.plots.find((x) => x.id === t.eventId);

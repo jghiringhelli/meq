@@ -75,6 +75,7 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
     }
     spent = `via any-card (discarded ${names.length}: ${names.join(', ')})`;
   }
+  (hero.travelPath ||= []).push(hero.location);
   relocateHero(s, heroId, to);
   hero.hasMovedThisTurn = true;
   hero.travelStepsThisTurn = (hero.travelStepsThisTurn ?? 0) + 1;
@@ -651,6 +652,7 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
     hero.favorGainedThisTurn = 0;
     hero.skipAmbush = false;
     hero.forcedFoe = undefined;
+    hero.travelPath = [];
     hero.perilResolvedAt = [];
     // restrictMovement (Winter Storm etc.): cap THIS turn's Travel steps.
     hero.turnTravelCap = hero.moveRestriction;

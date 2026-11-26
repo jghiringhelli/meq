@@ -381,6 +381,9 @@ export interface HeroState {
   /** A foe the hero MUST fight before travelling (Flocks of Crebain's forceCombat);
    *  it overrides skipAmbush, which only waives the normal Ambush step. */
   forcedFoe?: string;
+  /** Locations this hero left since his last non-travel action this turn. The AI never
+   *  steps back onto one (a loop with nothing done in between). */
+  travelPath?: string[];
   /** M3 Combat-or-Peril: locations the hero entered this turn where Sauron chose
    *  Peril instead of forcing a fight — the co-located foe does not block further
    *  travel here. Cleared at hero refresh. */
