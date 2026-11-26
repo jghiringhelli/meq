@@ -18,6 +18,8 @@ describe('Sauron AI Place Influence logs every board placement', () => {
     s.story.length = 10;
     s.story.sauronProgress = 6; // frac = 0.6
     s.sauron.shadowHand = ['shadow-x', 'shadow-y'];
+    // Keep Command from outranking Influence (it gains urgency when monsters < heroes).
+    for (const h of s.heroes) (s.map.monstersAt[h.location] ||= []).push(Object.keys(cat.monsters)[0]);
     s.sauron.influence = 4; // pool already at the stage-1 cap (4*1) -> bank = 0, all yield goes to board
     s = advance(s, cat);
     const placementLines = s.log

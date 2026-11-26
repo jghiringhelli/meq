@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
 import {
-  sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronMoveFigure, boardFigures, moveTargets,
+  sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronMoveFigure, sauronKeepDrawnPlot, boardFigures, moveTargets,
   sauronPlayShadow, playableShadow,
 } from '../src/engine/game';
 import * as game from '../src/engine/game';
@@ -39,8 +39,13 @@ describe('X-1 — human Sauron Action Step uses the Eye Action Tracks', () => {
     const out = sauronBeginAction(s, cat, 'draw');
     expect(out.sauronActionsLeft).toBe(2); // one action spent
     expect(out.sauron.shadowHand.length).toBe(2); // filled to the Draw yield
-    expect((out.sauron.plotHand ?? []).length).toBe(plotHandBefore + 1); // draw 2 plots, keep the best 1
-    expect(out.sauronPending).toBeUndefined(); // Draw resolves fully at once
+    // The human chooses which drawn Plot to keep (never auto-picked).
+    expect(out.sauronPending?.track).toBe('draw');
+    expect(out.sauronPending?.drawnPlots?.length).toBe(2);
+    expect((out.sauron.plotHand ?? []).length).toBe(plotHandBefore);
+    const kept = sauronKeepDrawnPlot(out, cat, out.sauronPending!.drawnPlots![1]);
+    expect((kept.sauron.plotHand ?? []).length).toBe(plotHandBefore + 1); // draw 2 plots, keep 1
+    expect(kept.sauronPending).toBeUndefined();
   });
 
   it('a Place Influence action banks at most 2 to the pool and owes the rest to the board', () => {

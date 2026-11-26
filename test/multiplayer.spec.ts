@@ -165,7 +165,7 @@ describe('multiplayer — host-authoritative flow (1 Sauron host + 3 hero client
     // resolving any incidental pending prompts (tree decisions / choices) that
     // a hero's turn-end can raise along the way.
     for (let i = 0; i < 40 && t.game.phase !== 'SauronRefresh'; i++) {
-      if (t.game.pendingTree) { t.hostAct({ t: 'treeDecision', optionIndex: 0 }); continue; }
+      if (t.game.pendingTree) { t.hostAct({ t: 'treeDecision', optionIndex: Math.max(0, t.game.pendingTree.options.findIndex((o) => o.enabled)) }); continue; }
       if (t.game.pendingChoice) { t.hostAct({ t: 'choice', optionId: t.game.pendingChoice.options[0].id }); continue; }
       t.hostAct({ t: 'endHeroActions' });
     }
@@ -176,7 +176,7 @@ describe('multiplayer — host-authoritative flow (1 Sauron host + 3 hero client
     // by the host (referee) before the Sauron-role client's next step.
     const settle = () => {
       for (let i = 0; i < 10 && (t.game.pendingTree || t.game.pendingChoice); i++) {
-        if (t.game.pendingTree) t.hostAct({ t: 'treeDecision', optionIndex: 0 });
+        if (t.game.pendingTree) t.hostAct({ t: 'treeDecision', optionIndex: Math.max(0, t.game.pendingTree.options.findIndex((o) => o.enabled)) });
         else if (t.game.pendingChoice) t.hostAct({ t: 'choice', optionId: t.game.pendingChoice.options[0].id });
       }
     };

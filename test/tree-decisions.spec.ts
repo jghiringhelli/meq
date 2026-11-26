@@ -129,7 +129,7 @@ describe('Peril "Choose one" is the hero\'s decision', () => {
     expect(s.pendingTree?.actor).toBe('hero');
     expect(s.pendingTree?.cardId).toBe(ILL_MET);
     expect(s.pendingTree?.options.length).toBe(2);
-    const s2 = resolveTreeDecision(s, cat, 0); // "lose 2 favor"
+    const s2 = resolveTreeDecision(s, cat, s.pendingTree!.options.findIndex((o) => o.enabled)); // first affordable option
     expect(s2.pendingTree).toBeFalsy();
   });
 
@@ -163,7 +163,7 @@ describe('Peril "Choose one" is the hero\'s decision', () => {
     expect(() => applyAction(s, cat, { t: 'endHeroActions' })).toThrow(/pending decision/i);
     expect(() => applyAction(s, cat, { t: 'advance' })).toThrow(/pending decision/i);
     // Resolving it is still allowed and clears the pause.
-    const resolved = applyAction(s, cat, { t: 'treeDecision', optionIndex: 0 });
+    const resolved = applyAction(s, cat, { t: 'treeDecision', optionIndex: s.pendingTree!.options.findIndex((o) => o.enabled) });
     expect(resolved.pendingTree).toBeFalsy();
   });
 });

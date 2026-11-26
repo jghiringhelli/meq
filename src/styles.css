@@ -625,6 +625,8 @@ button.ghost:hover { opacity: 1; background: #3a2f22; }
 .bout { padding: 0.1rem 0; }
 
 .banner, .app .banner { text-align: center; padding: 0.6rem; background: var(--accent); color: #201a10; font-weight: bold; }
+/* Must float above the combat overlay (z 60): a combat-start reaction is raised while it is open. */
+.app .banner.shadow-reaction { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 70; max-width: min(900px, 96vw); border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,.8); }
 
 /* A card/encounter effect-tree decision (e.g. Ill-met Company's "lose 2 favor
  * OR Sauron draws 2 Corruption") blocks the whole screen until resolved — this

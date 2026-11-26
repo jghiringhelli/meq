@@ -100,7 +100,7 @@ test('full Sauron game from the UI', async ({ page }) => {
       const m = modes[rot++ % modes.length];
       await page.locator(`.sauron-mode-btn:has-text("${m}")`).click();
       if (m === 'Spawn monster') {
-        const pick = page.locator('.sauron-picker button').first();
+        const pick = page.locator('.sauron-picker button:not([disabled])').first();
         if (await pick.count()) {
           await pick.click();
           await page.waitForTimeout(150);
@@ -114,7 +114,7 @@ test('full Sauron game from the UI', async ({ page }) => {
           if (!await clickMap(/Move|Target:|→/)) notes.push('Move figure: no map target');
         }
       } else if (m === 'Heal minion') {
-        const b = page.locator('.sauron-picker button').first();
+        const b = page.locator('.sauron-picker button:not([disabled])').first();
         if (await b.count()) await b.click();
       }
       await page.waitForTimeout(200);
@@ -135,7 +135,7 @@ test('full Sauron game from the UI', async ({ page }) => {
         if (await b.isEnabled().catch(() => false)) {
           await b.click();
           if (pick === 'Play shadow') {
-            const s = page.locator('.sauron-picker button').first();
+            const s = page.locator('.sauron-picker button:not([disabled])').first();
             if (await s.count()) { await snap('shadow-picker'); await s.click(); }
           }
         } else {
