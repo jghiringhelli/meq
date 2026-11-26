@@ -660,12 +660,10 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
               key: `encounters:${region}`, x: 70, y: Math.round(encTop + bandH * i),
               w: 500, h: Math.round(bandH), label: `${region} encounters`,
             })),
-            // The Plot *deck* (the face-down draw pile) has no numbered slot of
-            // its own on the printed board — physically it sits loose above the
-            // tower's 3 numbered active-plot slots. Its hotspot is kept to that
-            // small area only, so it doesn't overlap/shadow the 3 slots below
-            // (each of which handles its own click — see the plot-track block).
-            { key: 'plots', x: 5430, y: 330, w: 220, h: 260, label: 'Plot deck' },
+            // The Plot *deck* (the face-down draw pile) is the 4th, unnumbered
+            // emblem frame at the foot of the tower, below the 3 numbered
+            // active-plot slots. Its hotspot is kept to that frame only.
+            { key: 'plots', x: 5436, y: 2385, w: 274, h: 470, label: 'Plot deck' },
             { key: 'shadow', x: 5175, y: 3638, w: 810, h: 517, label: 'Shadow Pool' },
           ];
           return (
@@ -683,7 +681,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                   hotspot a player has to discover by accident. */}
               {(() => {
                 const n = state.sauron.plotDeck?.length ?? 0;
-                const bx = 5430 + 220 / 2, by = 330 + 260 / 2;
+                const bx = 5436 + 274 / 2, by = 2385 + 470 / 2;
                 return (
                   <g pointerEvents="none">
                     <rect x={bx - 60} y={by - 40} width={120} height={80} rx={8}
@@ -844,8 +842,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
             whole deck". */}
         {(() => {
           const active = state.sauron.activePlots ?? [];
-          const cx = 5573, w = 274, h = 462;           // tower plot-slot geometry — measured off the printed
-                                                        // frames (x5436–5710; y590–1055 / 1193–1655 / 1798–2248)
+          const cx = 5573, w = 280, h = 470;           // tower plot-slot geometry — measured off the printed frames
           const ys = [822, 1424, 2023];                // slot centres, top → bottom
           return (
             <g pointerEvents="none">

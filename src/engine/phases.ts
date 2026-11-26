@@ -741,7 +741,7 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   //  · Sauron dominant       → draw 3, resolve the HIGHEST priority (worst for heroes)
   //  · Heroes dominant       → draw 3, resolve the LOWEST priority (best for heroes)
   const turn = s.story.turn;
-  const dom = dominantSide(s);
+  const dom = turn > 1 ? dominantSide(s) : null; // first Sauron turn: always a single card (rulebook p.10)
   const drawn = drawEventCards(s, cat, dom ? 3 : 1);
   let chosen: EventCard[] = [];
   if (drawn.length) {
