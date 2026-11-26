@@ -996,6 +996,7 @@ export function advanceHeroSide(
   while (!s.winner && s.activeSide === 'Hero' && steps < maxSteps) {
     steps++;
     if (s.sauronCombatInfluence) break; // a human Sauron places combat influence first
+    if (peek && s.pendingReveal) break; // a human Sauron confirms the Peril draw before the heroes go on
     if (s.pendingChoice) {
       const seat = s.pendingChoice.seat;
       if (seat === 'sauron') break; // a human Sauron picks the foe's card

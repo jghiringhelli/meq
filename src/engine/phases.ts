@@ -581,10 +581,11 @@ export function endHeroActions(state: GameState, cat: Catalog): GameState {
   if (hero.status === 'active' && !hero.encounterStepDone) {
     hero.encounterStepDone = true;
     const wisdom = cat.heroes[hero.id].wisdom + (hero.statBonus?.wisdom ?? 0);
-    if (!isPerilous(s, cat, hero.location, wisdom)) {
+    if (!isPerilous(s, cat, hero.location, wisdom) && hero.perilousHere !== hero.location) {
       if (runEncounterStep(s, cat, hero.id)) return s;
     }
   }
+  hero.perilousHere = undefined;
   log(s, 'hero-end', hero.id, 'ends turn');
   if (s.activeHeroIndex < s.heroes.length - 1) {
     s.activeHeroIndex += 1;
@@ -654,6 +655,7 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
     hero.forcedFoe = undefined;
     hero.travelPath = [];
     hero.perilResolvedAt = [];
+    hero.perilousHere = undefined;
     // restrictMovement (Winter Storm etc.): cap THIS turn's Travel steps.
     hero.turnTravelCap = hero.moveRestriction;
     hero.moveRestriction = undefined;

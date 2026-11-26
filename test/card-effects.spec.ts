@@ -650,13 +650,14 @@ describe('atom: examineTokens', () => {
 });
 
 describe('atom: forcePeril', () => {
-  it("guarantees the hero's location holds at least 1 influence", () => {
+  it("marks the location perilous for the turn without placing influence", () => {
     const s = freshGame();
     const h = heroOf(s);
     h.location = nonHaven;
     s.sauron.locationInfluence = {};
     applyAtom(s, cat, h.id, { op: 'forcePeril' });
-    expect(s.sauron.locationInfluence[nonHaven]).toBeGreaterThanOrEqual(1);
+    expect(h.perilousHere).toBe(nonHaven);
+    expect(s.sauron.locationInfluence[nonHaven] ?? 0).toBe(0);
   });
 
   it('leaves an already-influenced location unchanged', () => {

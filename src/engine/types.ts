@@ -388,6 +388,9 @@ export interface HeroState {
    *  Peril instead of forcing a fight — the co-located foe does not block further
    *  travel here. Cleared at hero refresh. */
   perilResolvedAt?: LocationId[];
+  /** "His Arm Has Grown Long": this location counts as perilous until the end of
+   *  the hero's turn (skips his Encounter Step). */
+  perilousHere?: LocationId;
   /** M10 hero economy: recruited Characters (allies) travelling with the hero,
    *  and quest progress (both quests done => contributes to Spear of the West). */
   allies?: string[];

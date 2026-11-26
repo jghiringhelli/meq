@@ -5,7 +5,7 @@ import {
   newGame, legalMoves, engageableMonsters, canExplore,
   favorHere, charactersHere, plotHere, canCleanse, canDarkPath, canCompleteQuest, otherHeroesHere,
   canDiscardPlot, plotCounterCost,
-  canSurvey, moveTargets as moveTargetsFor, sauronCommandTargets, moveOptions,
+  canSurvey, moveTargets as moveTargetsFor, sauronCommandTargets, moveOptions, resolveChoice,
 } from './engine/game';
 import { applyAction, type Action } from './engine/actions';
 import Board from './play/Board';
@@ -193,6 +193,18 @@ export default function App() {
     const c = roster[heroId];
     return !c || c.kind !== 'human' || c.connected === false;
   }, [net.role, roster, state?.humanSide]);
+
+  // A choice owed by an AI-controlled hero (e.g. Training picked during Sauron's Event
+  // step) is made by the hero AI — the driver below only runs on the Hero side. Never
+  // shown to a human Sauron: it would reveal the hero's cards.
+  useEffect(() => {
+    if (!catalog || !state || state.winner || net.role === 'client') return;
+    const pc = state.pendingChoice;
+    if (!pc || pc.seat === 'sauron' || state.activeSide === 'Hero') return;
+    const hero = state.heroes.find((h) => h.seat === pc.seat);
+    if (!hero || !isAiHero(hero.id)) return;
+    setState(resolveChoice(state, catalog, missionAware.combatOption(state, catalog, pc.options, heroRng.current)));
+  }, [catalog, state, net.role, isAiHero]);
 
   useEffect(() => {
     if (!catalog || !state || state.winner) return;
