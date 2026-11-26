@@ -453,11 +453,17 @@ export default function App() {
   // the interactive Setup extension placement (setupInfluencePending); both
   // share the same extension-rule legality (engine/influence.ts).
   const placingSetup = iControlSauron && !!state.setupInfluencePending && state.setupInfluencePending.remaining > 0;
-  const placingAction = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'influence';
+  const placingAction = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'influence' && state.sauronPending.remaining > 0;
   const placingCombat = iControlSauron && !!state.sauronCombatInfluence && !state.pendingChoice;
   const placeInfluenceTargets = placingSetup || placingAction || placingCombat ? placementTargets(state, cat) : undefined;
   const doPlaceInfluence = (loc: string) =>
     dispatch({ t: placingCombat ? 'sauronCombatInfluence' : placingSetup ? 'setupPlaceInfluence' : 'sauronPlaceInfluence', loc } as Action);
+  const settingUp = iControlSauron && !!state.setupInfluencePending;
+  const inAction = iControlSauron && state.phase === 'SauronMinions' && state.sauronPending?.track === 'influence';
+  const extractInfluenceLocs = settingUp ? [...new Set(state.setupInfluencePending!.placed ?? [])]
+    : inAction ? [...new Set(state.sauronPending!.placed ?? [])] : undefined;
+  const doExtractInfluence = (loc: string) =>
+    dispatch({ t: settingUp ? 'setupExtractInfluence' : 'sauronExtractInfluence', loc } as Action);
   // Sauron's Move-figure Command sub-action — same on-map pattern as influence
   // placement, just its own colour/badge so the two click-modes are never
   // visually ambiguous. (sauronMoveFigureSel's useState is hoisted above the
@@ -726,6 +732,11 @@ export default function App() {
           sauronView={iControlSauron}
           placeInfluenceTargets={placeInfluenceTargets}
           onPlaceInfluence={placeInfluenceTargets ? doPlaceInfluence : undefined}
+          onBeginAction={iControlSauron && state.phase === 'SauronMinions' && (state.sauronActionsLeft ?? 0) > 0 && !state.sauronPending
+            && !state.pendingShadowReaction && !state.pendingCombat && !state.pendingChoice && !state.pendingTree
+            ? (track) => dispatch({ t: 'sauronBeginAction', track }) : undefined}
+          extractInfluenceLocs={extractInfluenceLocs}
+          onExtractInfluence={extractInfluenceLocs?.length ? doExtractInfluence : undefined}
           moveFigureTargets={moveFigureTargets}
           onMoveFigureTarget={moveFigureTargets ? doMoveFigure : undefined}
           commandTargets={commandTargets}

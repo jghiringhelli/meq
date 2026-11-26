@@ -756,10 +756,9 @@ function runSauronEvents(s: GameState, cat: Catalog): GameState {
   s.sauron.activeEvents = chosen.map((e) => ({ eventId: e.id, step: 0 }));
   log(s, 'sauron-event', 'Sauron', `Event Step (${dom ? dom + ' dominant' : 'no dominance'}): drew ${drawn.length}, resolving ${chosen.map((e) => e.name).join(', ') || 'none'}`,
     { dominant: dom, drawn: drawn.map((e) => e.id), resolved: chosen.map((e) => e.id) });
-  // Surface the drawn Event card(s) to a human hero player: a reveal tray shows
-  // all drawn cards with the resolved one highlighted (read + OK). Skipped when a
-  // human plays Sauron — he already sees his own event resolution.
-  if (drawn.length && s.humanSide !== 'Sauron') {
+  // Surface the drawn Event card(s) in a reveal tray (read + OK): the resolved one is
+  // highlighted. Shown to a human Sauron as well, so he sees which event fired.
+  if (drawn.length) {
     s.pendingReveal = {
       kind: 'event', deck: 'events',
       title: dom ? `Event Step — ${dom} dominant` : 'Event Step',

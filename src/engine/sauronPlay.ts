@@ -10,7 +10,7 @@ import { drawMonsterToken } from './ai';
 import { log } from './log';
 import { autoResolveTree, stepResolveTree, treeActor, treeActorIsHuman } from './encounter';
 import { applyPlotCard, drawShadow, takePlots, eyePlaceToken, eyeTrackYield, shadowWindow, type EyeTrack } from './sauronmech';
-import { influenceAt, canPlaceInfluence, placeInfluenceAction, removeInfluenceAt, monsterPlaceable } from './influence';
+import { influenceAt, canPlaceInfluence, placeInfluenceAction, removeInfluenceAt, monsterPlaceable, placementTargets } from './influence';
 
 const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v) || 0);
 
@@ -209,8 +209,9 @@ export function sauronPlaceInfluence(state: GameState, cat: Catalog, loc: Locati
   const s = clone(state);
   const placed = placeInfluenceAction(s, cat, loc, 1);
   if (placed <= 0) return state;
+  // Stays pending at 0 remaining until Sauron confirms, so this action's tokens can still be taken back.
   s.sauronPending!.remaining -= 1;
-  if (s.sauronPending!.remaining <= 0) s.sauronPending = undefined;
+  (s.sauronPending!.placed ||= []).push(loc);
   log(s, 'sauron', 'Sauron', `places influence on ${cat.locations[loc]?.name ?? loc} (now ${influenceAt(s, loc)})`);
   return s;
 }
@@ -239,15 +240,51 @@ export function setupPlaceInfluence(state: GameState, cat: Catalog, loc: Locatio
 export function setupExtractInfluence(state: GameState, cat: Catalog, loc: LocationId): GameState {
   const p = state.setupInfluencePending;
   if (!p?.placed?.includes(loc)) return state;
-  const remainingPlaced = [...p.placed];
-  remainingPlaced.splice(remainingPlaced.indexOf(loc), 1);
   const s = clone(state);
-  for (const l of p.placed) removeInfluenceAt(s, l, 1);
-  for (const l of remainingPlaced) {
-    if (!canPlaceInfluence(s, cat, l) || placeInfluenceAction(s, cat, l, 1) <= 0) return state;
-  }
+  const remainingPlaced = extractPlaced(s, cat, p.placed, loc);
+  if (!remainingPlaced) return state;
   s.setupInfluencePending = { remaining: p.remaining + 1, placed: remainingPlaced };
   log(s, 'setup', 'Sauron', `extracts influence from ${cat.locations[loc]?.name ?? loc}`);
+  return s;
+}
+
+/** Take one token of `placed` (this action's tokens only) off `loc` in `s`, then
+ *  re-lay the rest in any order the extension rule accepts. Returns the new
+ *  placed list, or null (s must then be discarded) if the rest can't stay legal. */
+function extractPlaced(s: GameState, cat: Catalog, placed: string[], loc: LocationId): string[] | null {
+  const rest = [...placed];
+  rest.splice(rest.indexOf(loc), 1);
+  for (const l of placed) removeInfluenceAt(s, l, 1);
+  const laid: string[] = [];
+  let todo = rest;
+  while (todo.length) {
+    const next = todo.filter((l) => !(canPlaceInfluence(s, cat, l) && placeInfluenceAction(s, cat, l, 1) > 0 && (laid.push(l), true)));
+    if (next.length === todo.length) return null;
+    todo = next;
+  }
+  return laid;
+}
+
+/** Mid-game Place Influence: take back a token placed during THIS action only. */
+export function sauronExtractInfluence(state: GameState, cat: Catalog, loc: LocationId): GameState {
+  const p = state.sauronPending;
+  if (state.phase !== 'SauronMinions' || p?.track !== 'influence' || !p.placed?.includes(loc)) return state;
+  const s = clone(state);
+  const laid = extractPlaced(s, cat, p.placed, loc);
+  if (!laid) return state;
+  s.sauronPending = { ...p, remaining: p.remaining + 1, placed: laid };
+  log(s, 'sauron', 'Sauron', `takes back influence from ${cat.locations[loc]?.name ?? loc}`);
+  return s;
+}
+
+/** Mid-game Place Influence: lock in the placements (also ends the action early
+ *  when no legal location is left). */
+export function sauronConfirmInfluence(state: GameState, cat: Catalog): GameState {
+  const p = state.sauronPending;
+  if (state.phase !== 'SauronMinions' || p?.track !== 'influence') return state;
+  if (p.remaining > 0 && placementTargets(state, cat).length > 0) return state;
+  const s = clone(state);
+  s.sauronPending = undefined;
   return s;
 }
 

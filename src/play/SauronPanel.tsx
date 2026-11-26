@@ -59,14 +59,6 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const hp = s.setupInfluencePending ? undefined : s.setupHandPending;
   const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>, id: string) =>
     set((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
-  const plotCard = (id: string) => {
-    const p = cat.plots.find((x) => x.id === id);
-    return p ? `${p.name} (${p.marker ?? 'red'} +${p.advance ?? p.track.length}, cost ${p.influenceCost ?? 0})` : id;
-  };
-  const shadowCard = (id: string) => {
-    const c = cat.shadow[id];
-    return c ? `${c.name} (pool ${c.poolRequirement}, ${c.timing})` : id;
-  };
   const plotTile = (id: string, action?: React.ReactNode) => {
     const p = cat.plots.find((x) => x.id === id);
     if (!p) return <div key={id} className="card-tile">{id}</div>;
@@ -137,7 +129,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
           <label key={id} className="sauron-keep">
             <input type="checkbox" checked={keepShadow.includes(id)}
               onChange={() => toggle(setKeepShadow, id)} />
-            <span>{shadowCard(id)} — <span className="muted">{cat.shadow[id]?.effect}</span></span>
+            {shadowTile(id)}
           </label>
         ))}
         <p className="prompt">Keep {hp.plotKeep} of {hp.plotOffered.length} Plot cards:</p>
@@ -145,7 +137,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
           <label key={id} className="sauron-keep">
             <input type="checkbox" checked={keepPlot.includes(id)}
               onChange={() => toggle(setKeepPlot, id)} />
-            <span>{plotCard(id)} — <span className="muted">{cat.plots.find((x) => x.id === id)?.effect}</span></span>
+            {plotTile(id)}
           </label>
         ))}
         <button className="primary" disabled={!ok}
@@ -257,17 +249,33 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                 itself (see Board.tsx's placeInfluenceTargets), not from a list
                 here — keeps the map the single source of truth for where
                 Sauron's influence can legally extend to. */}
-            {s.sauronPending?.track === 'influence' && (
+            {s.sauronPending?.track === 'influence' && (() => {
+              const pl = new Map<string, number>();
+              for (const l of s.sauronPending.placed ?? []) pl.set(l, (pl.get(l) ?? 0) + 1);
+              const noTargets = placementTargets(s, cat).length === 0;
+              return (
               <div className="sauron-picker">
                 <p className="prompt">
-                  Place {s.sauronPending.remaining} more influence token{s.sauronPending.remaining === 1 ? '' : 's'} —
-                  click a glowing <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.
+                  {s.sauronPending.remaining > 0
+                    ? <>Place {s.sauronPending.remaining} more influence token{s.sauronPending.remaining === 1 ? '' : 's'} —
+                      click a glowing <span style={{ color: '#e0574a', fontWeight: 700 }}>+</span> location on the map.</>
+                    : 'All placed — take one back if you misplaced it, or confirm.'}
                 </p>
-                {placementTargets(s, cat).length === 0 && (
+                {noTargets && s.sauronPending.remaining > 0 && (
                   <span className="muted">No legal locations (extend from a stronghold).</span>
                 )}
+                {pl.size > 0 && (<>
+                  <p className="prompt">Placed this action (take back to correct):</p>
+                  <ul>{[...pl].map(([loc, n]) => (
+                    <li key={loc}>{cat.locations[loc]?.name ?? loc} ×{n}{' '}
+                      <button onClick={() => dispatch({ t: 'sauronExtractInfluence', loc })}>Take back</button></li>
+                  ))}</ul>
+                </>)}
+                <button className="primary" disabled={s.sauronPending.remaining > 0 && !noTargets}
+                  onClick={() => dispatch({ t: 'sauronConfirmInfluence' })}>Confirm placement</button>
               </div>
-            )}
+              );
+            })()}
 
             {/* Draw action in progress: the player (never the AI) picks the one
                 Plot card to keep from those drawn (rulebook p.17). */}

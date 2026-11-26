@@ -14,6 +14,14 @@ test('playing Sauron: choose starting hand, then step through the heroes', async
 
   // 1. Influence placement first, then approve.
   await expect(page.getByText(/influence left to place/).first()).toBeVisible();
+  const placeSpot = () => page.locator('svg circle:has(title)').filter({ has: page.locator('title', { hasText: /Place influence at/ }) }).first();
+  // A placed token can be taken back with the "−" pip, which only exists once something was placed.
+  const pips = page.locator('svg g:has(> title:text-matches("Take back influence"))');
+  await expect(pips).toHaveCount(0);
+  await placeSpot().click({ force: true });
+  await expect(pips).toHaveCount(1);
+  await pips.first().click({ force: true });
+  await expect(pips).toHaveCount(0);
   for (let i = 0; i < 12; i++) {
     const spot = page.locator('svg circle:has(title)').filter({ has: page.locator('title', { hasText: /Place influence at/ }) }).first();
     if (!await spot.isVisible().catch(() => false)) break;

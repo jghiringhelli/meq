@@ -21,6 +21,7 @@ function driveSauronTurn(s: GameState, cat: Catalog): GameState {
     else {
       const region = Object.values(cat.locations)[0].regionId;
       s = sauronPlaceInfluence(s, cat, region);
+      if (s.sauronPending) s.sauronPending = undefined; // bot never needs to take tokens back
     }
     if (s.sauronActionsLeft === before) break; // no progress; bail
   }

@@ -23,6 +23,9 @@ interface Props {
    *  these dispatches onPlaceInfluence instead of the normal inspect/move click. */
   placeInfluenceTargets?: string[];
   onPlaceInfluence?: (loc: string) => void;
+  /** Locations holding a token placed in the current setup / Place Influence action (shown with a "−" to take it back). */
+  extractInfluenceLocs?: string[];
+  onExtractInfluence?: (loc: string) => void;
   /** Legal destinations for Sauron's currently-selected figure in the Move
    *  Command sub-action (SauronPanel's figure picker, lifted up into
    *  App.tsx's state) — a third on-map click-mode, distinct from move/place
@@ -40,6 +43,8 @@ interface Props {
    *  monster tokens to Sauron would also reveal them on every hero player's
    *  screen, since `state` itself is shared across all connected browsers. */
   sauronView?: boolean;
+  /** Human Sauron: clicking the glowing next space on an Eye track starts that action. */
+  onBeginAction?: (track: 'influence' | 'draw' | 'command') => void;
 }
 
 const TERRAIN_COLOR: Record<string, string> = {
@@ -92,7 +97,7 @@ const TR_BANDS: Record<string, [number, number][]> = {
 
 interface Chip { key: string; art: string; border: string; count: number; label: string; fill: string; init: string; fit?: 'meet' | 'slice'; facedown?: boolean; tip?: string; inspect?: InspectPayload; }
 
-export default function Board({ state, cat, moveTargets, onMove, moveHints, consultable, consultDisabled, onConsult, sauronView, placeInfluenceTargets, onPlaceInfluence, moveFigureTargets, onMoveFigureTarget, commandTargets, onCommandTarget }: Props) {
+export default function Board({ state, cat, moveTargets, onMove, moveHints, consultable, consultDisabled, onConsult, sauronView, onBeginAction, placeInfluenceTargets, onPlaceInfluence, extractInfluenceLocs, onExtractInfluence, moveFigureTargets, onMoveFigureTarget, commandTargets, onCommandTarget }: Props) {
   const [hover, setHover] = useState<string | null>(null);
   const inspect = useInspect();
   const [view, setView] = useState({ z: 1, x: 0, y: 0 });
@@ -104,6 +109,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
   const image = boardArt() || cat.board.image;
   const targetSet = new Set(moveTargets);
   const placeSet = new Set(placeInfluenceTargets ?? []);
+  const extractSet = new Set(extractInfluenceLocs ?? []);
   const moveFigSet = new Set(moveFigureTargets ?? []);
   const commandSet = new Set(commandTargets ?? []);
 
@@ -482,8 +488,7 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                 </g>
               )}
 
-              {/* "◉" pip: Sauron's selected monster/minion may be spawned or
-                  deployed here right now (Command action's Spawn/Deploy). */}
+              {/* "◉" pip: Sauron's selected monster/minion may be spawned here right now. */}
               {isCommandTarget && (
                 <g transform={`translate(0,${-(rr + 46)})`} pointerEvents="none">
                   <circle r={17} fill="#3ab86a" stroke="#0a2313" strokeWidth={3} />
@@ -928,6 +933,12 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                           {next && <circle cx={cx} cy={rowY} r={rr + 6} fill="none" stroke="#ffd35c" strokeWidth={7} strokeDasharray="14 8">
                             <animate attributeName="opacity" values="1;0.25;1" dur="1.4s" repeatCount="indefinite" />
                           </circle>}
+                          {next && onBeginAction && (
+                            <circle cx={cx} cy={rowY} r={rr + 6} fill="transparent" pointerEvents="auto" style={{ cursor: 'pointer' }}
+                              onClick={(e) => { e.stopPropagation(); if (!drag.current?.moved) onBeginAction(tr.key); }}>
+                              <title>{`Start action: ${tr.label}`}</title>
+                            </circle>
+                          )}
                         </g>
                       );
                     })}
@@ -1086,6 +1097,18 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
             </g>
           );
         })()}
+
+        {/* "−" pips (top layer so no hotspot covers them): one beside each "+" on locations
+            holding a token placed during THIS setup / Place Influence action. */}
+        {onExtractInfluence && locs.filter((l) => extractSet.has(l.id)).map((l) => (
+          <g key={`ex-${l.id}`} transform={`translate(${l.coords.x + (placeSet.has(l.id) ? 44 : 0)},${l.coords.y - 136})`}
+            style={{ cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); if (!drag.current?.moved) onExtractInfluence(l.id); }}>
+            <title>{`Take back influence placed at ${l.name}`}</title>
+            <circle r={17} fill="#3a3a3a" stroke="#e8d9b0" strokeWidth={3} />
+            <text y={6} textAnchor="middle" fontSize={26} fontWeight={700} fill="#fff" pointerEvents="none">−</text>
+          </g>
+        ))}
         </g>
       </svg>
     </div>

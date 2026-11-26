@@ -28,7 +28,7 @@ function sauronTurn(s: GameState, cat: Catalog): GameState {
     s = sauronBeginAction(s, cat, needPlots ? 'draw' : 'influence');
     if (s.sauronActionsLeft === before) s = sauronBeginAction(s, cat, 'influence');
     for (const loc of Object.keys(cat.locations)) {
-      if (!s.sauronPending) break;
+      if (!s.sauronPending || s.sauronPending.remaining <= 0) break;
       s = sauronPlaceInfluence(s, cat, loc);
     }
     if (s.sauronPending) s.sauronPending = undefined; // nothing legal left to place

@@ -801,7 +801,9 @@ export interface GameState {
     /** Command: a monster token drawn from a pile and awaiting placement ('blank' = false rumor). */
     heldToken?: { regionId: string; token: string };
     /** Command: the one monster token allowed per Command action has been used. */
-    monsterDone?: boolean };
+    monsterDone?: boolean;
+    /** Influence: locations filled during this action (the only tokens that can be taken back). */
+    placed?: string[] };
   /** Interactive Setup: a human-controlled Sauron places the starting plot's
    *  "extension" influence himself (clicking the map), instead of the engine
    *  auto-distributing it via BFS. Set by newGame when `interactiveSetup` is

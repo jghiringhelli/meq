@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { cat, freshGame } from './helpers';
 import {
-  sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronMoveFigure, sauronKeepDrawnPlot, boardFigures, moveTargets,
+  sauronBeginAction, sauronActionYields, sauronPlaceInfluence, sauronExtractInfluence, sauronConfirmInfluence, sauronMoveFigure, sauronKeepDrawnPlot, boardFigures, moveTargets,
   sauronPlayShadow, playableShadow,
 } from '../src/engine/game';
 import * as game from '../src/engine/game';
@@ -61,7 +61,25 @@ describe('X-1 — human Sauron Action Step uses the Eye Action Tracks', () => {
     const laid = sauronPlaceInfluence(out, cat, loc);
     expect(influenceAt(laid, loc)).toBe(before + 1);
     expect(laid.sauronPending?.remaining).toBe(3);
+    expect(laid.sauronPending?.placed).toEqual([loc]);
     expect(laid.sauron.influence).toBe(2); // pool never changes while laying board tokens
+
+    // Taking back only works for tokens placed in this action, and re-opens the slot.
+    expect(sauronExtractInfluence(laid, cat, 'not-a-placed-loc' as typeof loc)).toBe(laid);
+    const undone = sauronExtractInfluence(laid, cat, loc);
+    expect(influenceAt(undone, loc)).toBe(before);
+    expect(undone.sauronPending?.remaining).toBe(4);
+    expect(undone.sauronPending?.placed).toEqual([]);
+
+    // After the last token the action stays open (so it can be corrected) until confirmed.
+    let all = laid;
+    while ((all.sauronPending?.remaining ?? 0) > 0) {
+      const t = placementTargets(all, cat)[0];
+      all = sauronPlaceInfluence(all, cat, t);
+    }
+    expect(all.sauronPending?.track).toBe('influence');
+    expect(all.sauronPending?.remaining).toBe(0);
+    expect(sauronConfirmInfluence(all, cat).sauronPending).toBeUndefined();
   });
 
   it('never banks past the 4× stage pool cap', () => {

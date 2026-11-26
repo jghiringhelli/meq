@@ -120,6 +120,8 @@ test('full Sauron game from the UI', async ({ page }) => {
       await page.waitForTimeout(200);
       if (rot % 4 === 0 || !await vis(page, '.sauron-panel button:has-text("Done commanding")')) { /* continue */ }
       else if (rot % 2 === 0) await page.locator('button:has-text("Done commanding")').click();
+    } else if (await vis(page, '.sauron-picker button:has-text("Confirm placement"):not([disabled])')) {
+      await click('confirm-placement', page.locator('.sauron-picker button:has-text("Confirm placement")'));
     } else if (await vis(page, '.sauron-picker:has-text("Place")')) {
       sig = 'place-influence'; await snap(sig);
       if (!await clickMap(/Place influence at/)) await page.waitForTimeout(100);
