@@ -77,6 +77,7 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
   }
   (hero.travelPath ||= []).push(hero.location);
   relocateHero(s, heroId, to);
+  hero.ambushFoughtAt = undefined; // a new location: its foe is met via Combat-or-Peril, not the Ambush step
   hero.hasMovedThisTurn = true;
   hero.travelStepsThisTurn = (hero.travelStepsThisTurn ?? 0) + 1;
   log(s, 'hero-move', heroId, `${hero.location} ${spent}`);
@@ -652,6 +653,7 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
     hero.travelStepsThisTurn = 0;
     hero.favorGainedThisTurn = 0;
     hero.skipAmbush = false;
+    hero.ambushFoughtAt = undefined;
     hero.forcedFoe = undefined;
     hero.travelPath = [];
     hero.perilResolvedAt = [];

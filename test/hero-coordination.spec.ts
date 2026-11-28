@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { cat } from './helpers';
 import { newGame } from '../src/engine/game';
-import { coordinatedPlotTarget, worthFightingForCards } from '../src/engine/heroAI';
+import { coordinatedPlotTarget, missionAware } from '../src/engine/heroAI';
 import type { GameState } from '../src/engine/types';
 
 // Two-hero coordination: heroes split affordable plots across the party and
@@ -24,8 +24,8 @@ describe('hero AI coordination (coordinatedPlotTarget)', () => {
     s.heroes[1].favor = 3;
     // A plot at each hero's location; both affordable.
     s.sauron.activePlots = [
-      { eventId: 's-monsters-in-the-east', location: 'fornost' } as any,
-      { eventId: 's-sauron-hunts-for-the-ring', location: 'edoras' } as any,
+      { eventId: 'gollum-is-captured', location: 'fornost' } as any,
+      { eventId: 'a-promise-of-rings', location: 'edoras' } as any,
     ];
     const st = s.story.sauron;
     const t0 = coordinatedPlotTarget(s, cat, s.heroes[0], st);
@@ -43,7 +43,7 @@ describe('hero AI coordination (coordinatedPlotTarget)', () => {
     s.heroes[0].favor = 3;
     s.heroes[1].favor = 3;
     s.sauron.activePlots = [
-      { eventId: 'a-dark-messenger', location: 'fornost' } as any,
+      { eventId: 'saruman-falls-to-corruption', location: 'fornost' } as any,
     ];
     const st = s.story.sauron;
     const t0 = coordinatedPlotTarget(s, cat, s.heroes[0], st);
@@ -57,7 +57,7 @@ describe('hero AI coordination (coordinatedPlotTarget)', () => {
     s.heroes[0].favor = 1;
     s.heroes[1].favor = 1; // pooled 2 < cost 5
     s.sauron.activePlots = [
-      { eventId: 'a-dark-messenger', location: 'fornost' } as any,
+      { eventId: 'saruman-falls-to-corruption', location: 'fornost' } as any,
     ];
     const st = s.story.sauron;
     expect(coordinatedPlotTarget(s, cat, s.heroes[0], st)).toBeNull();
@@ -65,41 +65,51 @@ describe('hero AI coordination (coordinatedPlotTarget)', () => {
   });
 });
 
-describe('opportunistic card-gain fight (worthFightingForCards)', () => {
-  function heroVsMonster(monsterId: string) {
-    const s = newGame(cat, 2, ['argalad']);
-    s.heroes[0].statBonus = { agility: 5, strength: 3 } as any; // high-agility, card-drawing hero
-    s.heroes[0].hand = ['x1', 'x2'] as any; // card-poor
-    s.heroes[0].corruption = 0;
-    s.heroes[0].damagePool = [] as any;
+describe('hero AI plot priorities', () => {
+  it('ignores a 1/turn plot: no target, nothing worth chasing or paying for', () => {
+    const s = twoHeroGame();
+    s.heroes[0].favor = 5;
+    s.heroes[1].favor = 5;
     s.sauron.activePlots = [{ eventId: 's-monsters-in-the-east', location: 'fornost' } as any];
-    return { s, mon: monsterId };
-  }
-
-  it('fights a genuinely weak, non-corrupting foe when card-poor with a plot to chase', () => {
-    const { s, mon } = heroVsMonster('mon-snaga'); // F6 S3, no corruption
-    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(true);
+    expect(coordinatedPlotTarget(s, cat, s.heroes[0], s.story.sauron)).toBeNull();
+    expect(coordinatedPlotTarget(s, cat, s.heroes[1], s.story.sauron)).toBeNull();
   });
 
-  it('does NOT fight a tough foe', () => {
-    const { s, mon } = heroVsMonster('mon-balrog'); // F9 S12
-    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
+  it('chases a 1/turn plot only when one more tick reaches the Finale', () => {
+    const s = twoHeroGame();
+    s.heroes[0].favor = 5;
+    s.story.sauron = { yellow: 6, red: 17, black: 4 };
+    s.sauron.activePlots = [{ eventId: 's-monsters-in-the-east', location: 'fornost' } as any];
+    expect(has(coordinatedPlotTarget(s, cat, s.heroes[0], s.story.sauron), 'fornost')).toBe(true);
   });
 
-  it('does NOT fight a corruption-dealing foe even if statistically weak', () => {
-    const { s, mon } = heroVsMonster('mon-agent'); // F5 S3 but inflicts Corruption
-    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
+  it('breaks the critical 3/turn plot before a 2/turn plot when only one is affordable', () => {
+    const s = twoHeroGame();
+    s.heroes[0].favor = 4;
+    s.heroes[1].favor = 0;
+    s.heroes[0].location = 'edoras';
+    s.heroes[1].location = 'edoras';
+    s.sauron.activePlots = [
+      { eventId: 'gollum-is-captured', location: 'edoras' } as any,
+      { eventId: 'rise-of-the-uruk-hai', location: 'fornost' } as any,
+    ];
+    const t = coordinatedPlotTarget(s, cat, s.heroes[0], s.story.sauron);
+    expect(has(t, 'fornost')).toBe(true);
   });
-
-  it('does NOT bother when already card-rich', () => {
-    const { s, mon } = heroVsMonster('mon-snaga');
-    s.heroes[0].hand = ['a', 'b', 'c', 'd', 'e'] as any; // 5 cards
-    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
-  });
-
-  it('does NOT bother when there is no plot race on', () => {
-    const { s, mon } = heroVsMonster('mon-snaga');
-    s.sauron.activePlots = [];
-    expect(worthFightingForCards(s, cat, s.heroes[0], mon)).toBe(false);
+});
+describe('hero AI commitment', () => {
+  it('keeps heading to the plot he set out for even when another becomes more attractive', () => {
+    const s = twoHeroGame();
+    s.heroes[0].favor = 3;
+    s.heroes[1].favor = 0;
+    s.sauron.activePlots = [
+      { eventId: 'gollum-is-captured', location: 'edoras' } as any,
+      { eventId: 'a-promise-of-rings', location: 'fornost' } as any,
+    ];
+    const hero = s.heroes[0];
+    hero.location = 'rivendell';
+    hero.aiPlan = { key: 'edoras', targets: ['edoras'] };
+    const act = missionAware.heroAction(s, cat, hero.id, () => 0.5);
+    if (act.kind === 'move') expect(act.plan?.key).toBe('edoras');
   });
 });

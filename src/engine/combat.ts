@@ -78,6 +78,8 @@ export function beginCombat(
   const mon = cat.monsters[monsterId];
   const min = cat.minions[monsterId];
   const heroStrength = statValue(s, cat, heroId, 'strength');
+  // The Ambush step is a single combat before any travel this turn; afterwards the hero may go on.
+  if (!hero.hasMovedThisTurn) hero.ambushFoughtAt = locationId;
   const attacker = makeHeroCombatant(cat, hero, heroStrength);
   // Cowardly Corruption card: at the start of each combat, discard 1 random
   // Hero card from the hero's combat deck (per held Cowardly card).

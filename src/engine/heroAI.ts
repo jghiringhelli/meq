@@ -4,7 +4,7 @@
 // strategies, and mine what works. Strategies range from a pure random walk to
 // heuristic play. Everything is deterministic per seed (a strategy's own PRNG is
 // seeded separately so it never perturbs the game rng).
-import type { Catalog, GameState, HeroId, HeroState, LocationId, SauronDoctrine } from './types';
+import type { Catalog, GameState, HeroId, HeroState, LocationId, SauronDoctrine, Terrain } from './types';
 import { STAGE_SIZE, SHADOW_FALLS, STORY_FINALE } from './types';
 import { newGame } from './setup';
 import {
@@ -14,7 +14,7 @@ import {
   heroSurvey, canSurvey, autoResolvePendingTree, heroTradeFavor, otherHeroesHere,
   heroConsultCharacter, charactersHere, consultWouldCorrupt,
 } from './game';
-import { ambushPending, clone } from './mechanics';
+import { ambushPending, clone, neighbors, otherEnd, terrainsInHand } from './mechanics';
 import { isPerilous } from './influence';
 import { corruptionBlocksSocial, corruptionFavorGainCap } from './corruption';
 import { solveCombatOption } from './combatSolver';
@@ -47,7 +47,7 @@ export interface HeroStrategy {
 export type HeroAction =
   | { kind: 'engage'; monsterId: string }
   | { kind: 'explore' }
-  | { kind: 'move'; to: LocationId }
+  | { kind: 'move'; to: LocationId; plan?: { key: string; targets: string[] } }
   | { kind: 'rest' }
   | { kind: 'counter-plot' }
   | { kind: 'retrieve-favor' }
@@ -200,39 +200,6 @@ function pickConsultChoice(s: GameState, cat: Catalog, hero: HeroState, characte
   return rng() < p ? 'ability' : 'favor';
 }
 
-/** Whether a hero should pick a fight VOLUNTARILY. Heroes gain nothing from
- *  combat (rulebook: monsters/minions are obstacles, not objectives), so they
- *  only engage when they can win cheaply — high agility (evades blows) or a full
- *  enough hand to bring a real attack. Otherwise they route around. A forced
- *  ambush still coerces engagement in applyHeroAction regardless of this. */
-function combatReady(cat: Catalog, h: HeroState): boolean {
-  const agility = (cat.heroes[h.id]?.agility ?? 0) + (h.statBonus?.agility ?? 0);
-  return agility >= 3 || h.hand.length >= 4;
-}
-
-/** Opportunistic card-gain fight (an experienced-player tactic): a hero gains
- *  nothing from combat itself, but a HIGH-AGILITY hero facing a genuinely WEAK
- *  monster can spend the Preparation step drawing cards (each agility point draws
- *  one) and still win the short bout — walking away with MORE hero cards than he
- *  started with. Worth doing only when the hero actually needs those cards to
- *  press the plot race: he is card-poor, there is a plot to work toward, and he
- *  is healthy enough to risk a bout. Deliberately narrow (only the weakest,
- *  non-corrupting foes) so a smart hero still routes around real danger. */
-export function worthFightingForCards(s: GameState, cat: Catalog, hero: HeroState, monsterId: string): boolean {
-  const mon = cat.monsters[monsterId];
-  if (!mon) return false;
-  if (/corrupt/i.test(mon.ability ?? '')) return false; // corruption-dealers are never "cheap"
-  const agility = (cat.heroes[hero.id]?.agility ?? 0) + (hero.statBonus?.agility ?? 0);
-  const strength = (cat.heroes[hero.id]?.strength ?? 0) + (hero.statBonus?.strength ?? 0);
-  if (agility < 4) return false;                 // need real draw headroom in Preparation
-  if (mon.strength > 3 || mon.fortitude > 6) return false; // only the weakest foes
-  if (strength + agility < mon.fortitude + 2) return false; // must overwhelm it fast
-  if ((s.sauron.activePlots ?? []).length === 0) return false; // no plot race → no need
-  if (hero.hand.length > 4) return false;        // already card-rich
-  if (hero.corruption > 2 || hero.damagePool.length > 2) return false; // too fragile to risk
-  return true;
-}
-
 // Routing weights (all in "extra safe-steps" units, so they trade off against
 // real distance): a human detours several safe hops rather than eat a peril,
 // dodges monster-held nodes, and prefers matching-terrain moves (1 card) over
@@ -261,8 +228,11 @@ function nodePenalty(s: GameState, cat: Catalog, loc: LocationId, hero: HeroStat
   const known = (s.map.revealedMonstersAt ?? []).includes(loc);
   const bluff = (s.map.rumorsAt?.[loc] ?? 0) > 0 && !known;
   if (realMon || bluff) p += MONSTER_W;
-  // A minion is a far deadlier fight: a hero with a thin life pool routes around it.
-  if ((s.map.minionsAt?.[loc]?.length ?? 0) > 0) p += hero.life <= 3 ? 6 * MONSTER_W : hero.life <= 6 ? MONSTER_W : 0;
+  // A minion is a far deadlier fight than a monster token: always detour around it
+  // (a longer safe road beats a fight), and all the more with a thin life pool.
+  if ((s.map.minionsAt?.[loc]?.length ?? 0) > 0) p += hero.life <= 6 ? 6 * MONSTER_W : 3 * MONSTER_W;
+  // Any fight on a hurt hero is a likely defeat (which also feeds Sauron's marker).
+  if (realMon && hero.life <= 6) p += 2 * MONSTER_W;
   return p;
 }
 
@@ -325,6 +295,29 @@ function legalStepToward(s: GameState, cat: Catalog, hero: HeroState, targets: S
 }
 
 const STAGE_III = 2 * STAGE_SIZE; // marker height at which a marker is one stage from the Finale
+/** A hero at or below this many life cards stops to recover instead of marching on. */
+const RECOVER_LIFE = 8;
+
+/** Recovery for a hero whose life pool is nearly empty: rest (a Haven also heals real
+ *  damage), or head for a Haven when the damage can only be healed there. Resting
+ *  nudges Sauron's laggard marker, so it is only done when truly needed. */
+function planRecover(s: GameState, cat: Catalog, hero: HeroState, reserve = 0): HeroAction | null {
+  if (hero.life - reserve > (hero.id === 'thalin' ? RECOVER_LIFE - 2 : RECOVER_LIFE)) return null;
+  const inHaven = cat.locations[hero.location].kind === 'haven';
+  const damage = hero.damagePool.length, wear = hero.discard.length;
+  if (damage + wear === 0) return null;
+  const canRest = !hero.hasMovedThisTurn && !hero.restedThisTurn;
+  const needsHaven = damage >= 2 && damage * 2 >= wear;
+  if (canRest && (hero.id === 'beravor' || (needsHaven ? inHaven : wear >= 1 || inHaven))) return { kind: 'rest' };
+  if (needsHaven && !inHaven && !hero.hasMovedThisTurn && hero.hand.length > 0) {
+    const back = legalStepToward(s, cat, hero, nearestHavens(cat));
+    if (back) return { kind: 'move', to: back };
+  }
+  return null;
+}
+
+/** A hero at or below this many life cards does not walk into a fight he can avoid. */
+const LOW_LIFE = 10;
 
 /** How urgently the heroes should break a plot, given the two ways Sauron ends
  *  the game: (A) any ONE marker reaches the Finale (18); (B) ALL THREE reach the
@@ -350,7 +343,27 @@ function plotDanger(st: { yellow: number; red: number; black: number }, marker: 
     const relB = height <= minM + 1 ? 1 : 0.3;
     dangerB = (advance * relB * 24) / threatB;
   }
-  return dangerA + dangerB;
+  // A 3/turn plot is critical: it outranks anything else the party could break.
+  return (dangerA + dangerB) * (advance >= 3 ? 2 : 1);
+}
+
+type ActivePlot = NonNullable<GameState['sauron']['activePlots']>[number];
+
+/** Whether a plot deserves the heroes' favor and detours. Only the counters
+ *  matter: 1/turn plots are not worth chasing or paying for (unless one more
+ *  tick would reach the Finale); 2/turn plots are; 3/turn plots are critical. */
+function plotWorthy(s: GameState, cat: Catalog, e: ActivePlot): boolean {
+  const plot = cat.plots.find((p) => p.id === e.eventId);
+  if (!plot) return false;
+  const advance = plot.advance ?? 1;
+  if (advance >= 2) return true;
+  const marker = (plot.marker ?? 'red') as 'yellow' | 'red' | 'black';
+  const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
+  return (st[marker] ?? 0) + advance >= STORY_FINALE;
+}
+
+function worthyPlots(s: GameState, cat: Catalog): ActivePlot[] {
+  return (s.sauron.activePlots ?? []).filter((e) => plotWorthy(s, cat, e));
 }
 
 /** Co-located allies pool favor onto the active hero so he can break a plot he
@@ -397,7 +410,7 @@ export function coordinatedPlotTarget(
   s: GameState, cat: Catalog, hero: HeroState,
   st: { yellow: number; red: number; black: number },
 ): Set<LocationId> | null {
-  const active = s.sauron.activePlots ?? [];
+  const active = worthyPlots(s, cat);
   if (!active.length) return null;
   const activeHeroes = s.heroes.filter((h) => h.status === 'active')
     .slice().sort((a, b) => (a.id < b.id ? -1 : 1));
@@ -492,7 +505,7 @@ export function coordinatedPlotTarget(
  *  the Finale, or all three at the Shadow Falls (see plotDanger). Returns null
  *  when no plot is affordable/reachable. */
 function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroAction | null {
-  const active = s.sauron.activePlots ?? [];
+  const active = worthyPlots(s, cat);
   if (!active.length) return null;
   const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
   // Standing on a counterable plot is the highest-value action: counter it now if
@@ -502,7 +515,7 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
   // it still fires when no single hero can solo-afford the break.
   {
     const here = targetablePlot(s, cat, hero.id);
-    if (here) {
+    if (here && plotWorthy(s, cat, here)) {
       const hp = cat.plots.find((p) => p.id === here.eventId);
       const cost = hp?.favorToCounter ?? 2;
       if (hero.favor >= cost) return { kind: 'counter-plot' };
@@ -517,7 +530,7 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
     const target = coordinatedPlotTarget(s, cat, hero, st);
     if (target) {
       const step = legalStepToward(s, cat, hero, target);
-      if (step) return { kind: 'move', to: step };
+      if (step) return { kind: 'move', to: step, plan: planOf(target) };
     }
     return null; // no productive plot step this turn — the caller banks favor
   }
@@ -550,7 +563,48 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
   const best = cands[0];
   const targets = best.loc ? new Set<LocationId>([best.loc]) : plotSlots;
   const step = legalStepToward(s, cat, hero, targets);
-  return step ? { kind: 'move', to: step } : null;
+  return step ? { kind: 'move', to: step, plan: planOf(targets) } : null;
+}
+
+const SLOTS_KEY = '#slots';
+function planOf(targets: Set<LocationId>): { key: string; targets: string[] } {
+  return { key: targets.size === 1 ? [...targets][0] : SLOTS_KEY, targets: [...targets] };
+}
+
+/** The destination this hero already set out for, while it is still worth reaching:
+ *  the plot is still in play and he has not arrived. */
+function heldTargets(s: GameState, cat: Catalog, hero: HeroState): Set<LocationId> | null {
+  const p = hero.aiPlan;
+  if (!p) return null;
+  if (!worthyPlots(s, cat).some((e) => (e.location ?? SLOTS_KEY) === p.key)) return null;
+  if (p.key !== SLOTS_KEY && hero.location === p.key) return null;
+  return new Set(p.targets);
+}
+
+/** Dry-run of the trip toward `targets` with the cards actually in hand: each hop
+ *  spends a matching-terrain card if one is left, else the path's any-card cost.
+ *  Returns the cards the trip will burn and how many foes stand on the way, so the
+ *  go / recover-first decision is made once, up front, on the true arrival state. */
+function projectTrip(s: GameState, cat: Catalog, hero: HeroState, targets: Set<LocationId>): { cards: number; foes: number } {
+  const field = weightedDistField(s, cat, targets, hero);
+  const terrains = terrainsInHand(cat, hero);
+  let loc = hero.location, cards = 0, foes = 0;
+  const seen = new Set<LocationId>([loc]);
+  for (let hop = 0; hop < 14 && !targets.has(loc); hop++) {
+    let best: { to: LocationId; terrain: Terrain; cost: number } | null = null, bestScore = Infinity;
+    for (const e of neighbors(cat, loc)) {
+      const to = otherEnd(e, loc);
+      const d = field.get(to);
+      if (d === undefined || seen.has(to) || d >= (field.get(loc) ?? Infinity)) continue;
+      if (d < bestScore) { bestScore = d; best = { to, terrain: e.terrain, cost: Math.max(1, e.cost || 1) }; }
+    }
+    if (!best) break;
+    const i = terrains.indexOf(best.terrain);
+    if (i >= 0) { terrains.splice(i, 1); cards += 1; } else cards += best.cost;
+    if ((s.map.monstersAt[best.to]?.length ?? 0) + (s.map.minionsAt?.[best.to]?.length ?? 0) > 0) foes++;
+    seen.add(best.to); loc = best.to;
+  }
+  return { cards, foes };
 }
 
 /** Consulting a Character present at the hero's location yields +2 favor (Eleanor
@@ -560,8 +614,8 @@ function planPlotCounter(s: GameState, cat: Catalog, hero: HeroState): HeroActio
  *  bottleneck (the hero cannot yet afford the cheapest active plot's counter).
  *  Skips a Character whose consult would self-corrupt (an active corruption plot
  *  taints them) and Isolated heroes (who may not consult). */
-function planConsult(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): HeroAction | null {
-  const active = s.sauron.activePlots ?? [];
+function planConsult(s: GameState, cat: Catalog, hero: HeroState): HeroAction | null {
+  const active = worthyPlots(s, cat);
   if (!active.length) return null; // no plot race → no favor need
   if (corruptionBlocksSocial(cat, hero)) return null; // Isolated: cannot consult
   const cheapest = Math.min(
@@ -570,7 +624,8 @@ function planConsult(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): Her
   if (hero.favor >= cheapest) return null; // already able to break a plot — don't burn the token
   for (const c of charactersHere(s, hero.id)) {
     if (consultWouldCorrupt(s, c)) continue;
-    return { kind: 'consult', character: c, choice: pickConsultChoice(s, cat, hero, c, rng) };
+    // With a plot worth breaking and not enough favor, favor is the point of the consult.
+    return { kind: 'consult', character: c, choice: 'favor' };
   }
   return null;
 }
@@ -579,7 +634,7 @@ function planConsult(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): Her
  *  can't yet afford — a cue to go earn favor (explore) rather than idle. */
 function urgentUnaffordablePlot(s: GameState, cat: Catalog, hero: HeroState): boolean {
   const st = s.story.sauron ?? { yellow: 0, red: 0, black: 0 };
-  for (const e of s.sauron.activePlots ?? []) {
+  for (const e of worthyPlots(s, cat)) {
     const plot = cat.plots.find((p) => p.id === e.eventId);
     if (!plot) continue;
     const cost = plot.favorToCounter ?? 2;
@@ -606,12 +661,20 @@ function restAdvancesThreatB(s: GameState): boolean {
  *  the nearest favor token. Returns null when there is nothing to gain. */
 function planEarnFavor(s: GameState, cat: Catalog, hero: HeroState): HeroAction | null {
   if (favorHere(s, hero.id) > 0) return { kind: 'retrieve-favor' };
-  const active = s.sauron.activePlots ?? [];
-  if (!active.length) return null; // no plots to break => no urgency
+  const active = worthyPlots(s, cat);
+  if (!active.length) return null; // no plots worth breaking => no urgency
   const tokenLocs = Object.entries(s.map.favorAt ?? {})
     .filter(([, n]) => (n ?? 0) > 0).map(([l]) => l as LocationId);
-  if (!tokenLocs.length) return null;
-  const step = legalStepToward(s, cat, hero, new Set(tokenLocs));
+  // A Character to consult is worth +2 favor, as good as a token or two.
+  if (!corruptionBlocksSocial(cat, hero)) {
+    for (const [l, cs] of Object.entries(s.map.charactersAt ?? {})) {
+      if (cs.some((c) => !consultWouldCorrupt(s, c))) tokenLocs.push(l as LocationId);
+    }
+  }
+  const targets = new Set(tokenLocs);
+  targets.delete(hero.location);
+  if (!targets.size) return null;
+  const step = legalStepToward(s, cat, hero, targets);
   return step ? { kind: 'move', to: step } : null;
 }
 
@@ -623,17 +686,16 @@ function planPrepare(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): Her
   const inHaven = cat.locations[hero.location].kind === 'haven';
   if (inHaven && !hero.hasMovedThisTurn && !hero.restedThisTurn && (hero.corruption > 1 || hero.damagePool.length > 1)) return null;
   const social = !corruptionBlocksSocial(cat, hero);
-  if (social && hero.favor < 4) {
+  if (social && hero.favor < 5) {
     for (const c of charactersHere(s, hero.id)) {
       if (!consultWouldCorrupt(s, c)) return { kind: 'consult', character: c, choice: pickConsultChoice(s, cat, hero, c, rng) };
     }
   }
-  const questLocs = Object.entries(s.map.questAt ?? {})
-    .filter(([, ids]) => ids.includes(hero.id)).map(([l]) => l as LocationId);
-  if (questLocs.includes(hero.location) && canExplore(s, cat, hero.id)) return { kind: 'explore' };
-  const goals = new Set<LocationId>(questLocs);
+  // Favor first (tokens, Characters): it is what breaks plots. Quests are only about
+  // getting stronger — and often a fight — so they come after the favor trail runs dry.
+  const goals = new Set<LocationId>();
   for (const [l, n] of Object.entries(s.map.favorAt ?? {})) if ((n ?? 0) > 0) goals.add(l as LocationId);
-  if (social && hero.favor < 4) {
+  if (social && hero.favor < 5) {
     for (const [l, cs] of Object.entries(s.map.charactersAt ?? {})) {
       if (cs.some((c) => !consultWouldCorrupt(s, c))) goals.add(l as LocationId);
     }
@@ -641,6 +703,14 @@ function planPrepare(s: GameState, cat: Catalog, hero: HeroState, rng: Rng): Her
   goals.delete(hero.location);
   const toGoal = goals.size ? legalStepToward(s, cat, hero, goals) : null;
   if (toGoal) return { kind: 'move', to: toGoal };
+  const questLocs = Object.entries(s.map.questAt ?? {})
+    .filter(([, ids]) => ids.includes(hero.id)).map(([l]) => l as LocationId);
+  const healthy = hero.life > LOW_LIFE + 4;
+  if (healthy && questLocs.includes(hero.location) && canExplore(s, cat, hero.id)) return { kind: 'explore' };
+  const questGoals = new Set(questLocs);
+  questGoals.delete(hero.location);
+  const toQuest = healthy && questGoals.size ? legalStepToward(s, cat, hero, questGoals) : null;
+  if (toQuest) return { kind: 'move', to: toQuest };
   // Nothing to collect: approach the places Sauron's plots are tied to.
   const plotZones = new Set<LocationId>(
     cat.plots.map((p) => p.affects as LocationId).filter((l) => !!l && !!cat.locations[l] && l !== hero.location),
@@ -772,47 +842,57 @@ export const missionAware: HeroStrategy = {
     // it when adjacent tokens are unrevealed — it costs no action.
     if (canSurvey(s, cat, heroId)) return { kind: 'survey' };
     // breaking plots is the win path — pursue it before mission-specific play
-    const plot = planPlotCounter(s, cat, hero);
+    const plot0 = planPlotCounter(s, cat, hero);
+    if (plot0 && (plot0.kind === 'counter-plot' || plot0.kind === 'trade-favor')) return plot0;
+    // Commitment: a hero already under way keeps his destination (and the route he
+    // sized up when he left) until the plot is gone or he arrives. The go / recover-
+    // first call is made ONCE, before departing, on the cards the trip will burn —
+    // never re-made mid-trip just because the trip itself spent cards.
+    const held = plot0 && plot0.kind === 'move' ? heldTargets(s, cat, hero) : null;
+    let plot: HeroAction | null = plot0;
+    let reserve = 0;
+    if (held) {
+      const st0 = legalStepToward(s, cat, hero, held);
+      if (st0) plot = { kind: 'move', to: st0, plan: hero.aiPlan };
+    } else if (plot0 && plot0.kind === 'move' && plot0.plan) {
+      const trip = projectTrip(s, cat, hero, new Set(plot0.plan.targets));
+      reserve = trip.foes > 0 ? 3 : 0;
+    }
     // Arrived at a Haven this turn: stop there. Cards in hand are the heroes' only
     // resource, and a haven is safe (no Shadow cards, better location cards, rest/heal).
     // Don't keep marching (spending more cards) unless Sauron is near a win.
     if (plot && plot.kind === 'move' && inHaven && hero.hasMovedThisTurn && !hero.restedThisTurn && !sauronThreatUrgent(s)) {
       return { kind: 'end' };
     }
-    // Breaking a plot NOW (or pooling favor to) beats everything; but if the plot
-    // plan is only a card-hungry march, first take an opportunistic card-gain
-    // fight against a weak foe standing here (user tactic) to stock the cards the
-    // march needs.
-    if (plot && (plot.kind === 'counter-plot' || plot.kind === 'trade-favor')) return plot;
-    // Heroes avoid fights, but a plot march often meets a minion/monster token on
-    // the way. If so and the hero's life pool (deck) is running low, recover first
-    // instead of walking into the fight. Thalin the dwarf keeps fighting on even without killing his foe, so he tolerates more.
-    if (plot && plot.kind === 'move' && fightAhead(s, hero, plot.to)) {
-      // The life pool (deck) IS the remaining life AND the next Draw step's supply
-      // (fortitude cards per turn): a hero who can't draw loses part of his turn, so
-      // check the deck against what the next draw plus a fight will consume.
-      const fort = (cat.heroes[hero.id]?.fortitude ?? 3) + (hero.statBonus?.fortitude ?? 0);
-      if (hero.life <= fort + (hero.id === 'thalin' ? 0 : 1)) {
+    // A hero running on empty (travel and encounters drain the life pool) cannot march
+    // or survive the Encounter step: recover before anything else.
+    const recover = held ? null : planRecover(s, cat, hero, reserve);
+    if (recover) return recover;
+    // Fighting is never a goal: it is only the toll on the road to a plot. A hurt hero
+    // does not pay it — he recovers first (rest anywhere for wear, in a Haven for real
+    // damage) and, if he cannot, simply stops here rather than walking into the fight.
+    // Thalin the dwarf keeps fighting on even without killing his foe, so he tolerates more.
+    if (!held && plot && plot.kind === 'move' && fightAhead(s, hero, plot.to)) {
+      if (hero.life <= (hero.id === 'thalin' ? LOW_LIFE - 2 : LOW_LIFE)) {
         const canRest = !hero.hasMovedThisTurn && !hero.restedThisTurn;
         const damage = hero.damagePool.length, wear = hero.discard.length;
         // Mostly wear (rest pool) -> a plain rest recycles it anywhere. Real damage
         // -> only a Haven rest heals it, so it is worth the trip.
         const needsHeal = damage >= 2 && damage * 2 >= wear;
         // Beravor heals anywhere when resting (or trains if unhurt), so she always rests.
-        if (canRest && (hero.id === 'beravor' ? damage + wear >= 1 : needsHeal ? inHaven : wear >= 2)) return { kind: 'rest' };
+        if (canRest && (hero.id === 'beravor' ? damage + wear >= 1 : needsHeal ? inHaven : wear >= 1 || damage >= 1)) return { kind: 'rest' };
         if (needsHeal && !inHaven && !hero.hasMovedThisTurn) {
           const back = legalStepToward(s, cat, hero, nearestHavens(cat));
           if (back) return { kind: 'move', to: back };
         }
+        if (hero.hasMovedThisTurn && !sauronThreatUrgent(s)) return { kind: 'end' };
       }
     }
     // Fund the plot race: consulting a co-located Character for favor (the classic
     // "ask the characters for favours" tactic) is the heroes' best favor source —
-    // do it before marching or fighting when favor is the bottleneck.
-    const consult = planConsult(s, cat, hero, rng);
+    // do it before marching when favor is the bottleneck.
+    const consult = planConsult(s, cat, hero);
     if (consult) return consult;
-    const easyFoe = engageableMonsters(s, heroId).find((m) => worthFightingForCards(s, cat, hero, m));
-    if (easyFoe) return { kind: 'engage', monsterId: easyFoe };
     if (plot) return plot;
     const earn = planEarnFavor(s, cat, hero);
     if (earn) return earn;
@@ -833,32 +913,45 @@ export const missionAware: HeroStrategy = {
       // Resting feeds Sauron's laggard, so near the Falls only rest when it matters.
       const restBar = restAdvancesThreatB(s) ? 1 : 0;
       if (inHaven && !hero.hasMovedThisTurn && (hero.corruption > restBar || hero.damagePool.length > restBar)) return { kind: 'rest' };
-      const foes = engageableMonsters(s, heroId);
-      if (foes.length && hero.damagePool.length <= 1 && combatReady(cat, hero)) return { kind: 'engage', monsterId: foes[0] };
       // Head for a haven to cleanse, weaving around peril/monsters (peril-aware
       // routing) rather than marching straight through the influenced corridor.
       const havenStep = legalStepToward(s, cat, hero, nearestHavens(cat));
       if (havenStep) return { kind: 'move', to: havenStep };
       const influenced = (loc: LocationId) => (s.sauron.locationInfluence?.[loc] ?? 0) > 0;
       const moves = aiMoves(cat, hero);
-      const safe = moves.filter((m) => !influenced(m.to));
-      const pool = (hero.corruption > 0 ? safe : moves);
-      const target = pool[0] ?? moves[0];
+      const safe = moves.filter((m) => !influenced(m.to) && !fightAhead(s, hero, m.to));
+      const pool = (hero.corruption > 0 ? safe : moves.filter((m) => !fightAhead(s, hero, m.to)));
+      const target = pool[0];
       if (target) return { kind: 'move', to: target.to };
       return inHaven && !hero.hasMovedThisTurn ? { kind: 'rest' } : { kind: 'end' };
     }
     if (kind === 'monstersAtMost' || kind === 'minionsAtMost') {
+      // The secret mission is the second priority: hunt only a healthy hero's neighbours,
+      // and only while no plot worth breaking is pulling him elsewhere (we are past `plot`).
       const foes = engageableMonsters(s, heroId);
-      if (foes.length) return { kind: 'engage', monsterId: foes[0] };
-      return heuristic.heroAction(s, cat, heroId, rng); // heuristic already hunts
+      if (foes.length && hero.life > LOW_LIFE) return { kind: 'engage', monsterId: foes[0] };
     }
-    if (kind === 'heroFavorAtLeast' || kind === 'allQuestsComplete') {
-      if (canExplore(s, cat, heroId)) return { kind: 'explore' }; // favor/quests come from encounters
-      return heuristic.heroAction(s, cat, heroId, rng);
+    if ((kind === 'heroFavorAtLeast' || kind === 'allQuestsComplete') && hero.life > LOW_LIFE
+        && canExplore(s, cat, heroId) && !fightAhead(s, hero, hero.location)) {
+      return { kind: 'explore' }; // favor/quests come from encounters
     }
-    return heuristic.heroAction(s, cat, heroId, rng);
+    return idlePlay(s, cat, hero);
   },
 };
+
+/** Tertiary play, when no plot or mission step applies: get stronger for the next
+ *  plot — heal in a Haven, explore (favor, cards, quests) where it is quiet, or move
+ *  toward the nearest Haven — never hunting monsters. */
+function idlePlay(s: GameState, cat: Catalog, hero: HeroState): HeroAction {
+  const inHaven = cat.locations[hero.location].kind === 'haven';
+  if (inHaven && !hero.hasMovedThisTurn && !hero.restedThisTurn
+      && (hero.corruption > 0 || hero.damagePool.length > 0 || hero.discard.length > 1)) return { kind: 'rest' };
+  if (canExplore(s, cat, hero.id) && hero.life > LOW_LIFE && !fightAhead(s, hero, hero.location)) return { kind: 'explore' };
+  const step = legalStepToward(s, cat, hero, nearestHavens(cat));
+  if (step && !fightAhead(s, hero, step)) return { kind: 'move', to: step };
+  if (!hero.restedThisTurn && !hero.hasMovedThisTurn && (inHaven || hero.discard.length > 1)) return { kind: 'rest' };
+  return { kind: 'end' };
+}
 
 STRATEGIES['mission-aware'] = missionAware;
 
@@ -929,8 +1022,13 @@ export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act:
   switch (act.kind) {
     case 'engage': return heroEngage(s, cat, heroId, act.monsterId);
     case 'explore': return heroExplore(s, cat, heroId);
-    case 'move': return heroMove(s, cat, heroId, act.to);
-    case 'rest': return heroRest(s, cat, heroId);
+    case 'move': {
+      const r = heroMove(s, cat, heroId, act.to);
+      const h = r.heroes.find((x) => x.id === heroId);
+      if (h && act.plan && h.location === act.to) h.aiPlan = act.plan;
+      return r;
+    }
+    case 'rest': { const r = heroRest(s, cat, heroId); const h = r.heroes.find((x) => x.id === heroId); if (h) delete h.aiPlan; return r; }
     case 'counter-plot': return heroDiscardPlot(s, cat, heroId);
     case 'retrieve-favor': return heroRetrieveFavor(s, cat, heroId);
     case 'consult': return heroConsultCharacter(s, cat, heroId, act.character, act.choice);
