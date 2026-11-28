@@ -71,6 +71,8 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   // Dim (never hide) cards that cannot be played right now.
   const plotDim = (id: string, cost: number) =>
     s.phase === 'SauronEvents' ? !playablePlotIds.has(id) : cost > s.sauron.influence;
+  const plotReady = (id: string) => s.phase === 'SauronEvents' && playablePlotIds.has(id);
+  const shadowReady = (id: string) => s.phase === 'SauronMinions' && playableShadowIds.has(id);
   const shadowDim = (id: string) => {
     const c = cat.shadow[id];
     if (!c) return false;
@@ -82,7 +84,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
     if (!p) return <div key={id} className="card-tile">{id}</div>;
     const img = plotArt(p.image);
     return (
-      <div key={id} className={`card-tile${plotDim(id, Number(p.influenceCost) || 0) ? ' card-tile--dim' : ''}`}>
+      <div key={id} className={`card-tile${plotDim(id, Number(p.influenceCost) || 0) ? ' card-tile--dim' : ''}${plotReady(id) ? ' card-tile--ready' : ''}`}>
         {img && <img src={img} alt={p.name} />}
         <div className="card-tile-name">{p.name}</div>
         <div className="card-tile-meta">{p.marker ?? 'red'} +{p.advance ?? p.track.length} · cost {p.influenceCost ?? 0} · counter {p.favorToCounter ?? '—'} favor</div>
@@ -96,7 +98,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
     const c = cat.shadow[id];
     const img = shadowArt(id);
     return (
-      <div key={id} className={`card-tile${shadowDim(id) ? ' card-tile--dim' : ''}`} title={shadowDim(id) ? 'Not playable right now' : undefined}>
+      <div key={id} className={`card-tile${shadowDim(id) ? ' card-tile--dim' : ''}${shadowReady(id) ? ' card-tile--ready' : ''}`} title={shadowDim(id) ? 'Not playable right now' : shadowReady(id) ? 'Playable now' : undefined}>
         {img && <img src={img} alt={c?.name ?? id} />}
         <div className="card-tile-name">{c?.name ?? id}</div>
         <div className="card-tile-meta">pool {c?.poolRequirement} · {c?.timing}</div>

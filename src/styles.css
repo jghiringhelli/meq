@@ -832,5 +832,6 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .hand-section--plot { background: rgba(120,40,30,.18); }
 .hand-section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
 
-.card-tile--dim { opacity: .4; filter: grayscale(.5); }
-.card-tile--dim:hover { opacity: .85; }
+.card-tile--dim { opacity: .68; }
+.card-tile--dim:hover { opacity: 1; }
+.card-tile--ready { box-shadow: 0 0 0 2px rgba(232,192,120,.85), 0 0 10px rgba(232,192,120,.55); }
