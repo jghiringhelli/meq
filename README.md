@@ -35,12 +35,13 @@ This is a beta made in spare time. Rules follow the official rulebook (no balanc
 
 Known limitations:
 
-- **Hero AI is weak tactically** (routing, card spending, combat choices), so AI-controlled heroes lose more often than they should. Playing the Heroes yourself is the better-tested side.
+- **Hero AI is decent but not smart.** It has been improved (stops at havens, avoids loops, doesn't give up combats early, heads for plots when it has favor), but in simulations AI-only heroes still lose to the Sauron AI most of the time. Playing the Heroes yourself is the better-tested side.
 - **Playing Sauron as a human is new** and the least tested part of the game; expect rough edges.
 - **Online play is experimental.** It is peer-to-peer and host-authoritative: the host's browser holds the game, so nobody can play while the host is offline. To continue later, the host resumes the slot with 🌐 Host and friends rejoin with the new code.
 - **Saves live only in your browser** (several slots, oldest evicted if storage fills). Clearing site data deletes them.
 - **The Finale and some rarer card interactions are lightly tested**, and the mobile layout is experimental.
-- **No official artwork is shipped**; load your own VASSAL module in the browser for card art.
+
+Artwork: no official art is shipped, out of respect for the IP. If you own the original game, load your copy of the VASSAL module in the browser and the real card art is used locally (never uploaded).
 
 ## Reporting a bug
 
