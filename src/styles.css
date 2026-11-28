@@ -826,3 +826,8 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .saved-games__info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .saved-games__info small { opacity: .75; }
 .saved-games__row .ghost.danger { color: #e07070; }
+
+.hand-section { margin-top: 8px; padding: 6px; border-radius: 8px; border: 1px solid #4a3a2a; }
+.hand-section--shadow { background: rgba(60,30,90,.18); }
+.hand-section--plot { background: rgba(120,40,30,.18); }
+.hand-section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }

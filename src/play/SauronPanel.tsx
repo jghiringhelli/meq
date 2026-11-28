@@ -36,6 +36,8 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const [shadowPick, setShadowPick] = useState<string | null>(null);
   const [keepShadow, setKeepShadow] = useState<string[]>([]);
   const [keepPlot, setKeepPlot] = useState<string[]>([]);
+  const [shadowSort, setShadowSort] = useState<'draw' | 'name' | 'pool' | 'timing'>('draw');
+  const [plotSort, setPlotSort] = useState<'draw' | 'name' | 'marker' | 'cost'>('draw');
   const figure = moveFigureSel ? `${moveFigureSel.kind}:${moveFigureSel.id}:${moveFigureSel.loc}` : '';
   const setFigure = (v: string) => {
     if (!v) { onSelectMoveFigure?.(null); return; }
@@ -90,13 +92,49 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
       </div>
     );
   };
+  const sortedShadow = [...s.sauron.shadowHand].sort((a, b) => {
+    const ca = cat.shadow[a], cb = cat.shadow[b];
+    if (shadowSort === 'name') return (ca?.name ?? a).localeCompare(cb?.name ?? b);
+    if (shadowSort === 'pool') return Number(ca?.poolRequirement ?? 0) - Number(cb?.poolRequirement ?? 0);
+    if (shadowSort === 'timing') return (ca?.timing ?? '').localeCompare(cb?.timing ?? '');
+    return 0;
+  });
+  const sortedPlots = [...(s.sauron.plotHand ?? [])].sort((a, b) => {
+    const pa = cat.plots.find((x) => x.id === a), pb = cat.plots.find((x) => x.id === b);
+    if (plotSort === 'name') return (pa?.name ?? a).localeCompare(pb?.name ?? b);
+    if (plotSort === 'marker') return (pa?.marker ?? '').localeCompare(pb?.marker ?? '');
+    if (plotSort === 'cost') return Number(pa?.influenceCost ?? 0) - Number(pb?.influenceCost ?? 0);
+    return 0;
+  });
   const handView = (
     <div className="sauron-hand">
       <b>Your hand</b>
-      <div><u>Shadow</u>{s.sauron.shadowHand.length === 0 && <span className="muted"> none</span>}
-        <div className="card-tiles">{s.sauron.shadowHand.map((id) => shadowTile(id))}</div></div>
-      <div><u>Plot</u>{(s.sauron.plotHand ?? []).length === 0 && <span className="muted"> none</span>}
-        <div className="card-tiles">{(s.sauron.plotHand ?? []).map((id) => plotTile(id))}</div></div>
+      <div className="hand-section hand-section--shadow">
+        <div className="hand-section-head">
+          <u>👁 Shadow cards ({s.sauron.shadowHand.length})</u>
+          <select value={shadowSort} onChange={(e) => setShadowSort(e.target.value as typeof shadowSort)} aria-label="Sort shadow cards">
+            <option value="draw">Order: as drawn</option>
+            <option value="name">Sort: name</option>
+            <option value="pool">Sort: pool cost</option>
+            <option value="timing">Sort: when playable</option>
+          </select>
+        </div>
+        {s.sauron.shadowHand.length === 0 && <span className="muted"> none</span>}
+        <div className="card-tiles">{sortedShadow.map((id) => shadowTile(id))}</div>
+      </div>
+      <div className="hand-section hand-section--plot">
+        <div className="hand-section-head">
+          <u>🚩 Plot cards ({(s.sauron.plotHand ?? []).length})</u>
+          <select value={plotSort} onChange={(e) => setPlotSort(e.target.value as typeof plotSort)} aria-label="Sort plot cards">
+            <option value="draw">Order: as drawn</option>
+            <option value="name">Sort: name</option>
+            <option value="marker">Sort: story track</option>
+            <option value="cost">Sort: influence cost</option>
+          </select>
+        </div>
+        {(s.sauron.plotHand ?? []).length === 0 && <span className="muted"> none</span>}
+        <div className="card-tiles">{sortedPlots.map((id) => plotTile(id))}</div>
+      </div>
     </div>
   );
 
