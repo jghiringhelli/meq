@@ -31,7 +31,16 @@ This project ships **no artwork**. Download the free community VASSAL module (Mi
 
 ## Beta status
 
-This is a beta made in spare time. Rules follow the official rulebook (no balance changes). Known limits: the hero AI is passive, mobile layout is experimental, online play and the Finale are lightly tested. Bugs and quality-of-life suggestions are welcome via GitHub issues (templates include screenshots); fan content is optional. No timelines promised.
+This is a beta made in spare time. Rules follow the official rulebook (no balance changes). Bugs and quality-of-life suggestions are welcome via GitHub issues (templates include screenshots); fan content is optional. No timelines promised.
+
+Known limitations:
+
+- **Hero AI is weak tactically** (routing, card spending, combat choices), so AI-controlled heroes lose more often than they should. Playing the Heroes yourself is the better-tested side.
+- **Playing Sauron as a human is new** and the least tested part of the game; expect rough edges.
+- **Online play is experimental.** It is peer-to-peer and host-authoritative: the host's browser holds the game, so nobody can play while the host is offline. To continue later, the host resumes the slot with 🌐 Host and friends rejoin with the new code.
+- **Saves live only in your browser** (several slots, oldest evicted if storage fills). Clearing site data deletes them.
+- **The Finale and some rarer card interactions are lightly tested**, and the mobile layout is experimental.
+- **No official artwork is shipped**; load your own VASSAL module in the browser for card art.
 
 ## Reporting a bug
 
