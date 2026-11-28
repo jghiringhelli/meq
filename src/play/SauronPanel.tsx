@@ -8,6 +8,7 @@ import {
   moveTargets, canBankInfluence,
 } from '../engine/game';
 import { gameStage } from '../engine/mechanics';
+import { shadowWindow } from '../engine/sauronmech';
 import { placementTargets } from '../engine/influence';
 import { plotArt, shadowArt } from '../data/art';
 
@@ -65,12 +66,23 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const hp = s.setupInfluencePending ? undefined : s.setupHandPending;
   const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>, id: string) =>
     set((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+  const playablePlotIds = new Set(playablePlots(s, cat).map((p) => p.id));
+  const playableShadowIds = new Set(playableShadow(s, cat));
+  // Dim (never hide) cards that cannot be played right now.
+  const plotDim = (id: string, cost: number) =>
+    s.phase === 'SauronEvents' ? !playablePlotIds.has(id) : cost > s.sauron.influence;
+  const shadowDim = (id: string) => {
+    const c = cat.shadow[id];
+    if (!c) return false;
+    if (Number(c.poolRequirement) > s.sauron.influence) return true;
+    return shadowWindow(c.timing) === 'action' && !playableShadowIds.has(id);
+  };
   const plotTile = (id: string, action?: React.ReactNode) => {
     const p = cat.plots.find((x) => x.id === id);
     if (!p) return <div key={id} className="card-tile">{id}</div>;
     const img = plotArt(p.image);
     return (
-      <div key={id} className="card-tile">
+      <div key={id} className={`card-tile${plotDim(id, Number(p.influenceCost) || 0) ? ' card-tile--dim' : ''}`}>
         {img && <img src={img} alt={p.name} />}
         <div className="card-tile-name">{p.name}</div>
         <div className="card-tile-meta">{p.marker ?? 'red'} +{p.advance ?? p.track.length} · cost {p.influenceCost ?? 0} · counter {p.favorToCounter ?? '—'} favor</div>
@@ -84,7 +96,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
     const c = cat.shadow[id];
     const img = shadowArt(id);
     return (
-      <div key={id} className="card-tile">
+      <div key={id} className={`card-tile${shadowDim(id) ? ' card-tile--dim' : ''}`} title={shadowDim(id) ? 'Not playable right now' : undefined}>
         {img && <img src={img} alt={c?.name ?? id} />}
         <div className="card-tile-name">{c?.name ?? id}</div>
         <div className="card-tile-meta">pool {c?.poolRequirement} · {c?.timing}</div>
