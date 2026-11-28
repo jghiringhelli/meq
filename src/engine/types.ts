@@ -382,6 +382,8 @@ export interface HeroState {
    *  any move). The foe may still be there, but the Ambush step is over: the hero
    *  may continue his turn (rulebook p.22). Cleared on travel and at refresh. */
   ambushFoughtAt?: string;
+  /** Consecutive turns the AI deliberately sat out (banking a bigger hand). */
+  idleStreak?: number;
   /** AI commitment: the plot trip this hero set out on. Kept until the plot is gone,
    *  the hero arrives, or he is defeated — so the plan is not re-litigated every step. */
   aiPlan?: { key: string; targets: string[] };

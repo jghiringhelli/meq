@@ -112,4 +112,16 @@ describe('hero AI commitment', () => {
     const act = missionAware.heroAction(s, cat, hero.id, () => 0.5);
     if (act.kind === 'move') expect(act.plan?.key).toBe('edoras');
   });
+
+  it('sits out once in a Haven with nothing to do, but never twice in a row', () => {
+    const s = newGame(cat, 1, ['argalad']);
+    s.sauron.activePlots = [];
+    const hero = s.heroes[0];
+    hero.location = 'rivendell';
+    hero.damagePool = []; hero.discard = []; hero.corruptionCards = []; hero.corruption = 0;
+    hero.hasMovedThisTurn = true; // already in the zone logic's "no drift" case
+    hero.idleStreak = 1;
+    const act = missionAware.heroAction(s, cat, hero.id, () => 0.5);
+    expect(act.kind === 'end' && act.idle).not.toBe(true);
+  });
 });

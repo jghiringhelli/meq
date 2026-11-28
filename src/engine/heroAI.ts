@@ -14,7 +14,7 @@ import {
   heroSurvey, canSurvey, autoResolvePendingTree, heroTradeFavor, otherHeroesHere,
   heroConsultCharacter, charactersHere, consultWouldCorrupt,
 } from './game';
-import { ambushPending, clone, neighbors, otherEnd, terrainsInHand } from './mechanics';
+import { ambushPending, clone, neighbors, otherEnd, terrainsInHand, hasItem } from './mechanics';
 import { isPerilous } from './influence';
 import { corruptionBlocksSocial, corruptionFavorGainCap } from './corruption';
 import { solveCombatOption } from './combatSolver';
@@ -54,7 +54,7 @@ export type HeroAction =
   | { kind: 'consult'; character: string; choice: 'favor' | 'ability' }
   | { kind: 'survey' }
   | { kind: 'trade-favor'; fromId: HeroId; toId: HeroId; n: number }
-  | { kind: 'end' };
+  | { kind: 'end'; idle?: boolean };
 
 // ---- shared helpers ----------------------------------------------------
 function firstEnabled(options: { enabled: boolean }[]): number {
@@ -216,6 +216,43 @@ const CARD_COST_W = 1.5; // each extra card beyond the first on one move: cards 
 // gauntlet. This scales that path-exposure against a plot's danger score.
 const EXPOSURE_W = 25;
 
+/** Rough life-pool cost of fighting whatever stands on `loc`, given the hero's hand and
+ *  stats: how many bouts his best attack cards need to wear the foe down, times the hit
+ *  the foe lands per bout (its strength, eased by the hero's agility). An unrevealed
+ *  token is priced as an average monster. Only used to RANK routes and decide whether
+ *  the hero is fit to make the trip — never to resolve a combat. */
+function foeLoss(s: GameState, cat: Catalog, hero: HeroState, loc: LocationId): number {
+  const foes: { health: number; strength: number }[] = [];
+  for (const id of s.map.monstersAt[loc] ?? []) {
+    const m = cat.monsters[id];
+    if (m) foes.push({ health: m.health, strength: m.strength });
+  }
+  for (const id of s.map.minionsAt?.[loc] ?? []) {
+    const m = cat.minions[id];
+    if (m) foes.push({ health: s.map.minionHealth?.[id] ?? m.health, strength: m.strength });
+  }
+  const known = (s.map.revealedMonstersAt ?? []).includes(loc);
+  if (!foes.length && (s.map.rumorsAt?.[loc] ?? 0) > 0 && !known) foes.push({ health: 3, strength: 4 });
+  if (!foes.length) return 0;
+  // Best attack cards he can afford: strength is the per-fight spending budget.
+  const budget = heroStat(cat, hero, 'strength');
+  const atk: number[] = [];
+  for (const cid of hero.hand) {
+    const c = cat.combatCards[cid];
+    if (c && c.attack > 0) atk.push(c.attack);
+  }
+  atk.sort((a, b) => b - a);
+  const used = atk.slice(0, Math.max(1, Math.min(4, budget >> 1)));
+  const avgAtk = used.length ? Math.max(1, used.reduce((n, a) => n + a, 0) / used.length) : 1;
+  const ease = heroStat(cat, hero, 'agility') >= 4 ? 0.75 : 1;
+  let loss = 0;
+  for (const f of foes) {
+    const bouts = Math.min(6, Math.ceil(f.health / avgAtk));
+    loss += bouts * Math.max(1, Math.round(f.strength / 3)) * ease;
+  }
+  return loss;
+}
+
 function nodePenalty(s: GameState, cat: Catalog, loc: LocationId, hero: HeroState): number {
   let p = 0;
   if (isPerilous(s, cat, loc, heroWisdom(cat, hero))) p += PERIL_W;
@@ -227,7 +264,7 @@ function nodePenalty(s: GameState, cat: Catalog, loc: LocationId, hero: HeroStat
   const realMon = mons.length > 0;
   const known = (s.map.revealedMonstersAt ?? []).includes(loc);
   const bluff = (s.map.rumorsAt?.[loc] ?? 0) > 0 && !known;
-  if (realMon || bluff) p += MONSTER_W;
+  if (realMon || bluff) p += MONSTER_W * Math.max(0.5, Math.min(4, foeLoss(s, cat, hero, loc) / 2));
   // A minion is a far deadlier fight than a monster token: always detour around it
   // (a longer safe road beats a fight), and all the more with a thin life pool.
   if ((s.map.minionsAt?.[loc]?.length ?? 0) > 0) p += hero.life <= 6 ? 6 * MONSTER_W : 3 * MONSTER_W;
@@ -585,26 +622,33 @@ function heldTargets(s: GameState, cat: Catalog, hero: HeroState): Set<LocationI
  *  spends a matching-terrain card if one is left, else the path's any-card cost.
  *  Returns the cards the trip will burn and how many foes stand on the way, so the
  *  go / recover-first decision is made once, up front, on the true arrival state. */
-function projectTrip(s: GameState, cat: Catalog, hero: HeroState, targets: Set<LocationId>): { cards: number; foes: number } {
+function projectTrip(s: GameState, cat: Catalog, hero: HeroState, targets: Set<LocationId>): { cards: number; foes: number; loss: number } {
   const field = weightedDistField(s, cat, targets, hero);
   const terrains = terrainsInHand(cat, hero);
-  let loc = hero.location, cards = 0, foes = 0;
+  const horse = hasItem(hero, 'item-horse', 'Horse');
+  const boat = hasItem(hero, 'item-boat', 'Boat');
+  let loc = hero.location, cards = 0, foes = 0, loss = 0;
   const seen = new Set<LocationId>([loc]);
   for (let hop = 0; hop < 14 && !targets.has(loc); hop++) {
-    let best: { to: LocationId; terrain: Terrain; cost: number } | null = null, bestScore = Infinity;
+    let best: { to: LocationId; terrain: Terrain; cost: number; water: boolean } | null = null, bestScore = Infinity;
     for (const e of neighbors(cat, loc)) {
       const to = otherEnd(e, loc);
       const d = field.get(to);
       if (d === undefined || seen.has(to) || d >= (field.get(loc) ?? Infinity)) continue;
-      if (d < bestScore) { bestScore = d; best = { to, terrain: e.terrain, cost: Math.max(1, e.cost || 1) }; }
+      if (d < bestScore) {
+        const base = Math.max(1, e.cost || 1);
+        const cost = e.water ? (boat ? 1 : base) : horse ? Math.max(1, base - 1) : base;
+        bestScore = d; best = { to, terrain: e.terrain, cost, water: !!e.water };
+      }
     }
     if (!best) break;
-    const i = terrains.indexOf(best.terrain);
+    const i = best.water && boat ? -1 : terrains.indexOf(best.terrain);
     if (i >= 0) { terrains.splice(i, 1); cards += 1; } else cards += best.cost;
-    if ((s.map.monstersAt[best.to]?.length ?? 0) + (s.map.minionsAt?.[best.to]?.length ?? 0) > 0) foes++;
+    const l = foeLoss(s, cat, hero, best.to);
+    if (l > 0) { foes++; loss += l; }
     seen.add(best.to); loc = best.to;
   }
-  return { cards, foes };
+  return { cards, foes, loss };
 }
 
 /** Consulting a Character present at the hero's location yields +2 favor (Eleanor
@@ -856,7 +900,7 @@ export const missionAware: HeroStrategy = {
       if (st0) plot = { kind: 'move', to: st0, plan: hero.aiPlan };
     } else if (plot0 && plot0.kind === 'move' && plot0.plan) {
       const trip = projectTrip(s, cat, hero, new Set(plot0.plan.targets));
-      reserve = trip.foes > 0 ? 3 : 0;
+      reserve = Math.min(8, Math.round(trip.loss));
     }
     // Arrived at a Haven this turn: stop there. Cards in hand are the heroes' only
     // resource, and a haven is safe (no Shadow cards, better location cards, rest/heal).
@@ -939,18 +983,36 @@ export const missionAware: HeroStrategy = {
   },
 };
 
+/** Hand size above which sitting out is no longer free: Storms of Mordor-style effects
+ *  strip a hand down to five, so a swollen hand is a liability, not savings. */
+const IDLE_HAND_MAX = 8;
+/** Havens in the heart of the action (Rohan and Gondor): the idle hero drifts there. */
+const ZONE_HAVENS = new Set<LocationId>(['minas-tirith', 'edoras']);
+
 /** Tertiary play, when no plot or mission step applies: get stronger for the next
- *  plot — heal in a Haven, explore (favor, cards, quests) where it is quiet, or move
- *  toward the nearest Haven — never hunting monsters. */
+ *  plot. A hero with nothing worth doing sits still in a safe place and draws a bigger
+ *  hand next turn (once — two idle turns in a row is a liability); otherwise he heals,
+ *  explores where it is quiet, or drifts toward the Haven nearest the action zone.
+ *  Never hunts monsters. */
 function idlePlay(s: GameState, cat: Catalog, hero: HeroState): HeroAction {
   const inHaven = cat.locations[hero.location].kind === 'haven';
+  const streak = hero.idleStreak ?? 0;
   if (inHaven && !hero.hasMovedThisTurn && !hero.restedThisTurn
       && (hero.corruption > 0 || hero.damagePool.length > 0 || hero.discard.length > 1)) return { kind: 'rest' };
-  if (canExplore(s, cat, hero.id) && hero.life > LOW_LIFE && !fightAhead(s, hero, hero.location)) return { kind: 'explore' };
+  const healthy = hero.life > LOW_LIFE;
+  // Drift toward the action zone while healthy and not already in it.
+  if (healthy && !ZONE_HAVENS.has(hero.location) && !hero.hasMovedThisTurn) {
+    const step = legalStepToward(s, cat, hero, ZONE_HAVENS);
+    if (step && !fightAhead(s, hero, step)) return { kind: 'move', to: step };
+  }
+  if (inHaven && !hero.hasMovedThisTurn && !hero.restedThisTurn && streak < 1 && hero.hand.length <= IDLE_HAND_MAX) {
+    return { kind: 'end', idle: true };
+  }
+  if (canExplore(s, cat, hero.id) && healthy && !fightAhead(s, hero, hero.location)) return { kind: 'explore' };
   const step = legalStepToward(s, cat, hero, nearestHavens(cat));
   if (step && !fightAhead(s, hero, step)) return { kind: 'move', to: step };
   if (!hero.restedThisTurn && !hero.hasMovedThisTurn && (inHaven || hero.discard.length > 1)) return { kind: 'rest' };
-  return { kind: 'end' };
+  return { kind: 'end', idle: !hero.hasMovedThisTurn };
 }
 
 STRATEGIES['mission-aware'] = missionAware;
@@ -1015,6 +1077,19 @@ export function playoutGame(
 
 export function applyHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act: HeroAction): GameState {
   act = coerceHeroAction(s, cat, heroId, act);
+  const r = applyCoerced(s, cat, heroId, act);
+  // Track deliberate sit-outs so the AI never idles two turns in a row.
+  if (act.kind === 'end' || act.kind === 'move' || act.kind === 'rest' || act.kind === 'explore' || act.kind === 'engage') {
+    const h = r.heroes.find((x) => x.id === heroId);
+    if (h) {
+      const next = act.kind === 'end' && act.idle ? (h.idleStreak ?? 0) + 1 : act.kind === 'end' ? h.idleStreak : 0;
+      if (next) h.idleStreak = next; else delete h.idleStreak;
+    }
+  }
+  return r;
+}
+
+function applyCoerced(s: GameState, cat: Catalog, heroId: HeroId, act: HeroAction): GameState {
   if (act.kind !== 'move' && act.kind !== 'end') {
     const h = s.heroes.find((x) => x.id === heroId);
     if (h?.travelPath?.length) { s = clone(s); s.heroes.find((x) => x.id === heroId)!.travelPath = []; }
