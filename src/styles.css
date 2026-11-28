@@ -817,3 +817,12 @@ button.tiny { padding: 0.1rem 0.45rem; font-size: 0.72rem; }
 .card-tile-name { font-weight: 700; color: #f0d0c0; }
 .card-tile-meta { color: #9c8f6b; }
 .card-tile-text { color: #cfc3a6; }
+
+.saved-games { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.saved-games__title { margin: 0 0 4px; font-size: 1rem; }
+.saved-games__row { display: flex; gap: 6px; align-items: stretch; }
+.saved-games__row .secondary { flex: 1; text-align: left; }
+.saved-games__row { padding: 8px 10px; border: 1px solid #5a4a2a; border-radius: 8px; background: rgba(0,0,0,.25); align-items: center; }
+.saved-games__info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.saved-games__info small { opacity: .75; }
+.saved-games__row .ghost.danger { color: #e07070; }

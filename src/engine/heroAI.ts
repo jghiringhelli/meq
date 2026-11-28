@@ -465,6 +465,19 @@ export function coordinatedPlotTarget(
       .slice(0, 2);
     if (team.some((h) => h.id === hero.id)) return targetSetFor(p.loc);
   }
+  // 3. Spare hero with favor in hand: favor has no use beyond breaking plots (and
+  //    is easy to lose), so rather than wandering off to farm more, head for the
+  //    nearest affordable plot — preferring one no other hero is already covering.
+  const covered = new Set<LocationId | null>(assign.values());
+  let spare: { p: P; d: number; free: boolean } | null = null;
+  for (const p of plots) {
+    if (hero.favor < p.cost) continue;
+    const d = distTo(hero, p.loc);
+    if (!Number.isFinite(d)) continue;
+    const free = !covered.has(p.loc);
+    if (!spare || (free && !spare.free) || (free === spare.free && d < spare.d)) spare = { p, d, free };
+  }
+  if (spare) return targetSetFor(spare.p.loc);
   return null;
 }
 
@@ -970,6 +983,13 @@ function coerceHeroAction(s: GameState, cat: Catalog, heroId: HeroId, act: HeroA
       || act.kind === 'retrieve-favor' || act.kind === 'consult')) {
     const foes = engageableMonsters(s, heroId);
     if (foes.length) act = { kind: 'engage', monsterId: foes[0] };
+  }
+  // A card-forced fight (Flocks of Crebain, Seem Fairer Feel Fouler) must happen
+  // before anything else, including resting, surveying or simply ending the turn.
+  if (hero.forcedFoe && act.kind !== 'engage' && s.map.monstersAt[hero.location]?.includes(hero.forcedFoe)) {
+    const foes = engageableMonsters(s, heroId);
+    const foe = foes.includes(hero.forcedFoe) ? hero.forcedFoe : foes[0];
+    if (foe) act = { kind: 'engage', monsterId: foe };
   }
   return act;
 }

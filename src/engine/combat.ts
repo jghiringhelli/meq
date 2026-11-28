@@ -385,11 +385,13 @@ function runBout(s: GameState, cat: Catalog): GameState {
   // Monster innate combat power (defender side): may redirect/boost the hero
   // damage, force hand discards, heal the monster, or force a random card next.
   let fromHand = 0;
+  let spyInfluence = 0;
   if (monRef) {
     const aType = aCard && !out.attacker.canceled ? (aCard.type as CombatType) : '';
     const dType = dCard && !out.defender.canceled ? (dCard.type as CombatType) : '';
     const prevented = dType === 'melee' ? Math.max(0, Math.min(out.attacker.finalAtk, out.defender.finalDef)) : 0;
     const monMax = cat.monsters[pc.defender.refId]?.fortitude ?? pc.defender.life;
+    const rawDmgToHero = dmgToAttacker;
     const post = applyMonsterPostBout(s, cat, {
       refId: monRef, attackerType: aType, defenderType: dType,
       dmgToHero: dmgToAttacker, prevented, monsterMaxLife: monMax, manual: !sauronAuto(s),
@@ -397,6 +399,7 @@ function runBout(s: GameState, cat: Catalog): GameState {
     if (post.influenceOwed) owePlacement(s, cat, post.influenceOwed, `${pc.defender.name} Spy: place influence`);
     if (post.offerDraw) pc.mayDraw = true;
     dmgToAttacker = post.dmgToHero;
+    spyInfluence = Math.max(0, rawDmgToHero - post.dmgToHero);
     fromHand = post.fromHand;
     if (post.heal > 0 && pc.defender.life > 0) pc.defender.life += post.heal;
     if (post.forceHeroRandom) pc.forceHeroRandom = true;
@@ -445,10 +448,10 @@ function runBout(s: GameState, cat: Catalog): GameState {
     attackerStr: { cost: pc.attacker.strengthSpent - aSpent0, spent: pc.attacker.strengthSpent, total: pc.attacker.strength },
     defenderStr: { cost: pc.defender.strengthSpent - dSpent0, spent: pc.defender.strengthSpent, total: pc.defender.strength },
     attackerLife: pc.attacker.life, defenderLife: pc.defender.life,
-    note: `${aName} vs ${dName}${parts.length ? ` (${parts.join(', ')})` : ''}`,
+    note: `${aName} vs ${dName}${parts.length ? ` (${parts.join(', ')})` : ''}${spyInfluence ? ` — Spy: ${spyInfluence} damage becomes ${spyInfluence} influence` : ''}`,
   });
   log(s, 'combat-bout', pc.attacker.refId,
-    `r${pc.round}: ${aName} deals ${dmgToDefender} (def ${pc.defender.life}); ${dName} deals ${dmgToAttacker} (atk ${pc.attacker.life})`,
+    `r${pc.round}: ${aName} deals ${dmgToDefender} to ${pc.defender.name} (health left ${Math.max(0, pc.defender.life)}); ${dName} deals ${dmgToAttacker} to ${pc.attacker.name}${spyInfluence ? ` + ${spyInfluence} influence (Spy)` : ''} (hero life ${pc.attacker.life})`,
     { attackerCard: aCid, defenderCard: dCid });
 
   // remember types played this round for next-round match effects.
@@ -524,6 +527,7 @@ function endCombat(s: GameState, cat: Catalog, result: 'attacker' | 'defender' |
   log(s, 'combat-end', 'system', `${reason} (winner: ${result})`);
 
   const hero = s.heroes.find((h) => h.id === pc.attacker.refId)!;
+  hero.forcedFoe = undefined; // the forced fight has happened; a surviving foe no longer blocks the AI
   const damageTakenBefore = hero.damagePool.length;
   // Sync the shared card zones back: the life pool, hand, rest pool (discard),
   // and damage pool all live on the one persistent hero state.

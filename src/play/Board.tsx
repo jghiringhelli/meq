@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Catalog, GameState } from '../engine/types';
 import { STORY_FINALE } from '../engine/types';
 import { reserveMinions } from '../engine/sauronPlay';
-import { characterArt, minionArt, heroArt, token, plotArt, monsterArt, shadowPoolArt, boardArt } from '../data/art';
+import { characterArt, minionArt, heroArt, token, plotArt, eventArt, monsterArt, shadowPoolArt, boardArt } from '../data/art';
 import { useInspect, type InspectPayload } from './CardInspector';
 
 interface Props {
@@ -821,6 +821,45 @@ export default function Board({ state, cat, moveTargets, onMove, moveHints, cons
                   <title>{`Event Deck: ${activeMissions.length} active mission(s) — click for details`}</title>
                   <circle r={90} fill="#1e6b2e" stroke="#8fe6a0" strokeWidth={6} />
                   <text y={12} textAnchor="middle" fontSize={64} fontWeight={700} fill="#eafaea">{activeMissions.length}</text>
+                </g>
+              )}
+            </g>
+          );
+        })()}
+
+        {/* Current Event / Quest card slot (top-left): public information. Shows the
+            latest Event card and, if one is in play, the latest event quest. */}
+        {(() => {
+          const lastEvId = state.sauron.activeEvents?.length
+            ? state.sauron.activeEvents[state.sauron.activeEvents.length - 1].eventId
+            : (state.sauron.eventDiscard ?? []).slice(-1)[0];
+          const missions = state.sauron.activeEventPlots ?? [];
+          const lastQ = missions[missions.length - 1];
+          const evCard = lastEvId ? cat.events.find((e) => e.id === lastEvId) : undefined;
+          const qPlot = lastQ ? cat.plots.find((x) => x.id === lastQ.eventId) : undefined;
+          const qEv = lastQ && !qPlot ? cat.events.find((x) => x.id === lastQ.eventId) : undefined;
+          const qName = qPlot?.name ?? qEv?.name;
+          const qImg = qPlot ? plotArt(qPlot.image) : qEv ? eventArt(qEv.id) : '';
+          const qLoc = lastQ?.location ? (cat.locations[lastQ.location]?.name ?? lastQ.location) : '?';
+          const evImg = evCard ? eventArt(evCard.id) : '';
+          if (!evCard && !lastQ) return null;
+          const X = 92, Y = 124, W = 296, H = 478;
+          return (
+            <g>
+              {evCard && (
+                <g style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); inspect({ title: evCard.name, img: evImg, subtitle: 'Latest Event card', text: evCard.text ?? '' }); }}>
+                  <title>{`Latest Event: ${evCard.name}`}</title>
+                  {evImg
+                    ? <image href={evImg} x={X} y={Y} width={W} height={lastQ ? H / 2 - 6 : H} preserveAspectRatio="xMidYMid meet" />
+                    : <rect x={X} y={Y} width={W} height={lastQ ? H / 2 - 6 : H} fill="#2a1a10" stroke="#e8c078" strokeWidth={4} />}
+                </g>
+              )}
+              {lastQ && (
+                <g style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); inspect({ title: qName ?? lastQ.eventId, img: qImg || undefined, subtitle: `Latest quest · at ${qLoc}`, text: qPlot?.effect ?? qEv?.text ?? '' }); }}>
+                  <title>{`Latest quest: ${qName ?? lastQ.eventId} (at ${qLoc})`}</title>
+                  {qImg
+                    ? <image href={qImg} x={X} y={evCard ? Y + H / 2 + 6 : Y} width={W} height={evCard ? H / 2 - 6 : H} preserveAspectRatio="xMidYMid meet" />
+                    : <rect x={X} y={evCard ? Y + H / 2 + 6 : Y} width={W} height={evCard ? H / 2 - 6 : H} fill="#10281a" stroke="#8fe6a0" strokeWidth={4} />}
                 </g>
               )}
             </g>

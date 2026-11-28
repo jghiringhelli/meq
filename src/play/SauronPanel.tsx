@@ -4,6 +4,7 @@ import type { Action } from '../engine/actions';
 import {
   sauronActionYields,
   playablePlots, plotLocationChoices, playableShadow, monsterTargetsIn, woundedMinions, boardFigures,
+  canDiscardActivePlot,
   moveTargets, canBankInfluence,
 } from '../engine/game';
 import { gameStage } from '../engine/mechanics';
@@ -193,7 +194,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
           <div className="sauron-step">
             <p className="prompt">{firstTurn
               ? 'Plot Step skipped on the first turn. Resolve this turn\'s events.'
-              : 'Plot Step — play one plot card, or pass. Then resolve this turn\'s events.'}</p>
+              : 'Plot Step — play one plot card OR discard one active plot (not both), or pass. Then resolve this turn\'s events.'}</p>
             <div className="sauron-plots">
               {playablePlots(s, cat).slice(0, 8).map((p) => {
                 const spots = plotLocationChoices(s, cat, p.id);
@@ -219,7 +220,18 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                   ))}
                 </div>
               )}
-              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">{s.sauronPlotPlayed ? 'You have played your Plot card this turn.' : 'No affordable plots (slots full or too costly).'}</p>}
+              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">{s.sauronPlotPlayed ? 'You have used your Plot step this turn.' : 'No affordable plots (slots full or too costly).'}</p>}
+              {canDiscardActivePlot(s) && (
+                <div className="sauron-picker">
+                  <p className="prompt">Or discard an active plot instead:</p>
+                  {(s.sauron.activePlots ?? []).map((e) => (
+                    <button key={e.eventId} className="sauron-plot-btn"
+                      onClick={() => dispatch({ t: 'sauronDiscardPlot', plotId: e.eventId })}>
+                      <span className="cc-label">Discard {cat.plots.find((p) => p.id === e.eventId)?.name ?? e.eventId}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button className="primary" onClick={() => dispatch({ t: 'sauronResolveEvents' })}>
               Resolve events & begin actions ▶

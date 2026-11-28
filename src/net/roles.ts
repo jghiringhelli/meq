@@ -67,6 +67,7 @@ export function actionRole(state: GameState, action: Action): RoleId | 'flow' {
       return SAURON_ROLE;
     case 'sauronStoryStep':
     case 'sauronPlayPlot':
+    case 'sauronDiscardPlot':
     case 'sauronResolveEvents':
     case 'sauronBeginAction':
     case 'sauronPlaceInfluence':

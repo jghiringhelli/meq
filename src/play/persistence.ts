@@ -31,26 +31,107 @@ const history = createHistoryStore<HistoryEntry>(NAMESPACE);
 const notes = createNotesStore(NAMESPACE);
 const crashes = createCrashStore(NAMESPACE);
 
-/** Persist the current in-progress game so it survives a reload. */
-export function saveGame(_seed: number, state: GameState): void {
-  saveSlot.save(state);
+// ---- Multiple saved games -------------------------------------------------
+// Each game (keyed by its seed) lives in its own localStorage entry, with a
+// small index of metadata for the "Saved games" list. Saves are compacted (the
+// event log is capped) and, if the browser quota is hit, the oldest OTHER saves
+// are evicted until the current one fits — it is never silently dropped.
+const INDEX_KEY = `${NAMESPACE}.games.v2`;
+const GAME_KEY = (seed: number) => `${NAMESPACE}.game.v2.${seed}`;
+const MAX_SAVES = 12;
+const LOG_KEEP = 400;
+
+export interface SavedGameMeta {
+  seed: number;
+  savedAt: string;
+  round: number;
+  turn: number;
+  /** Which side a human plays: 'Hero', 'Sauron' or 'AI' (nobody — all AI). */
+  humanSide: string;
+  heroes: string[];
 }
 
-/** Load a resumable in-progress game (null if none / unfinished-only). */
-export function loadSavedGame(): { seed: number; state: GameState } | null {
-  const loaded = saveSlot.load();
-  return loaded ? { seed: loaded.state.seed, state: loaded.state } : null;
+function readIndex(): SavedGameMeta[] {
+  const raw = storage.safeGet(INDEX_KEY);
+  if (!raw) return [];
+  try {
+    const list = JSON.parse(raw) as SavedGameMeta[];
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+function writeIndex(list: SavedGameMeta[]): void {
+  storage.safeSet(INDEX_KEY, JSON.stringify(list));
 }
 
-export function hasSavedGame(): boolean {
-  return saveSlot.has();
-}
-
-export function clearSavedGame(): void {
+/** One-time import of the old single-slot save. */
+function migrateLegacy(): void {
+  const legacy = saveSlot.load();
+  if (!legacy) return;
+  saveGame(legacy.state.seed, legacy.state);
   saveSlot.clear();
 }
 
-/** Append a finished game to the persistent history and drop the live save. */
+function trySet(key: string, value: string): boolean {
+  try { localStorage.setItem(key, value); return true; } catch { return false; }
+}
+
+/** Persist the in-progress game so it survives a reload. Returns false if it could not be stored. */
+export function saveGame(seed: number, state: GameState): boolean {
+  const compact: GameState = state.log && state.log.length > LOG_KEEP
+    ? { ...state, log: state.log.slice(-LOG_KEEP) } : state;
+  let json: string;
+  try { json = JSON.stringify({ schema: SCHEMA, state: compact }); } catch { return false; }
+  const meta: SavedGameMeta = {
+    seed, savedAt: new Date().toISOString(), round: state.round, turn: state.story?.turn ?? 0,
+    humanSide: state.humanSide ?? 'AI', heroes: state.heroes.map((h) => h.id),
+  };
+  let list = readIndex().filter((m) => m.seed !== seed);
+  let ok = trySet(GAME_KEY(seed), json);
+  // Quota: free the oldest other saves until this one fits.
+  while (!ok && list.length) {
+    const oldest = list.reduce((a, b) => (a.savedAt < b.savedAt ? a : b));
+    storage.safeRemove(GAME_KEY(oldest.seed));
+    list = list.filter((m) => m.seed !== oldest.seed);
+    ok = trySet(GAME_KEY(seed), json);
+  }
+  if (!ok) return false;
+  list.unshift(meta);
+  for (const m of list.splice(MAX_SAVES)) storage.safeRemove(GAME_KEY(m.seed));
+  writeIndex(list);
+  return true;
+}
+
+/** All saved games, most recently played first. */
+export function listSavedGames(): SavedGameMeta[] {
+  migrateLegacy();
+  const list = readIndex().filter((m) => storage.safeGet(GAME_KEY(m.seed)) !== null);
+  return list.sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1));
+}
+
+/** Load a saved game by seed (default: the most recent one). */
+export function loadSavedGame(seed?: number): { seed: number; state: GameState } | null {
+  const target = seed ?? listSavedGames()[0]?.seed;
+  if (target === undefined) return null;
+  const raw = storage.safeGet(GAME_KEY(target));
+  if (!raw) return null;
+  try {
+    const env = JSON.parse(raw) as { schema: number; state: GameState };
+    if (env.schema !== SCHEMA || !env.state) return null;
+    return { seed: target, state: env.state };
+  } catch { return null; }
+}
+
+export function hasSavedGame(): boolean {
+  return listSavedGames().length > 0;
+}
+
+/** Delete one saved game. */
+export function deleteSavedGame(seed: number): void {
+  storage.safeRemove(GAME_KEY(seed));
+  writeIndex(readIndex().filter((m) => m.seed !== seed));
+}
+
+/** Append a finished game to the persistent history and drop ITS live save. */
 export function recordCompletedGame(seed: number, state: GameState): void {
   history.record({
     seed,
@@ -60,7 +141,7 @@ export function recordCompletedGame(seed: number, state: GameState): void {
     turn: state.story?.turn ?? 0,
     finishedAt: new Date().toISOString(),
   });
-  clearSavedGame();
+  deleteSavedGame(seed);
 }
 
 export function loadHistory(): HistoryEntry[] {

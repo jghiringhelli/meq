@@ -16,7 +16,7 @@ import {
   heroDiscardPlot, heroCleanseCorruption, heroTradeFavor, heroSurvey, resolveCombatOrPeril,
   resolveShadowReaction, resolveTreeDecision,
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep,
-  sauronPlayPlot, sauronBeginAction, sauronPlaceInfluence, sauronExtractInfluence, sauronConfirmInfluence, sauronBankInfluence,
+  sauronPlayPlot, sauronDiscardPlot, sauronBeginAction, sauronPlaceInfluence, sauronExtractInfluence, sauronConfirmInfluence, sauronBankInfluence,
   sauronSpawnMonster, sauronDrawMonsterToken, sauronMoveFigure, sauronHealMinion, sauronPlayShadow, setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,
 } from './game';
 
@@ -47,6 +47,7 @@ export type Action =
   | { t: 'treeDecision'; optionIndex: number }
   | { t: 'sauronStoryStep' }
   | { t: 'sauronPlayPlot'; plotId: string; loc?: LocationId }
+  | { t: 'sauronDiscardPlot'; plotId: string }
   | { t: 'sauronResolveEvents' }
   | { t: 'sauronBeginAction'; track: EyeTrack }
   | { t: 'sauronPlaceInfluence'; loc: LocationId }
@@ -112,6 +113,7 @@ export function applyAction(state: GameState, cat: Catalog, action: Action): Gam
     case 'treeDecision': return resolveTreeDecision(state, cat, action.optionIndex);
     case 'sauronStoryStep': return sauronStoryStep(state, cat);
     case 'sauronPlayPlot': return sauronPlayPlot(state, cat, action.plotId, action.loc);
+    case 'sauronDiscardPlot': return sauronDiscardPlot(state, cat, action.plotId);
     case 'sauronResolveEvents': return sauronResolveEvents(state, cat);
     case 'sauronBeginAction': return sauronBeginAction(state, cat, action.track);
     case 'sauronPlaceInfluence': return sauronPlaceInfluence(state, cat, action.loc);
