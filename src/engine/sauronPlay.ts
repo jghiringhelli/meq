@@ -33,6 +33,23 @@ export function plotLocationChoices(s: GameState, cat: Catalog, plotId: string):
   return p ? plotPlacementOptions(s, cat, p).filter((l): l is LocationId => !!l) : [];
 }
 
+/** Plot Step alternative (rulebook p.13): instead of playing a Plot card, Sauron
+ *  may discard one of his ACTIVE plots — always legal, e.g. to free a full track. */
+export function canDiscardActivePlot(s: GameState): boolean {
+  return s.phase === 'SauronEvents' && s.story.turn > 1 && !s.sauronPlotPlayed && (s.sauron.activePlots ?? []).length > 0;
+}
+export function sauronDiscardPlot(state: GameState, cat: Catalog, plotId: string): GameState {
+  if (!canDiscardActivePlot(state)) return state;
+  const entry = (state.sauron.activePlots ?? []).find((e) => e.eventId === plotId);
+  if (!entry) return state;
+  const s = clone(state);
+  s.sauronPlotPlayed = true; // play OR discard, not both
+  s.sauron.activePlots = (s.sauron.activePlots ?? []).filter((e) => e.eventId !== plotId);
+  (s.sauron.plotDiscard ??= []).push(plotId);
+  log(s, 'sauron', 'Sauron', `discards active plot ${cat.plots.find((p) => p.id === plotId)?.name ?? plotId}`);
+  return s;
+}
+
 /** Plot Step: play a plot card. Its influence figure is only a THRESHOLD Sauron
  *  must meet in the Shadow Pool (rulebook p.13: "playing the card does not cause
  *  Sauron to discard any influence from the Shadow Pool") — it is never spent.

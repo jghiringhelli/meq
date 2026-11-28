@@ -36,26 +36,22 @@ export function maybeDrawPeril(s: GameState, cat: Catalog, heroId: HeroId, loc: 
   (s.sauron.perilDiscard ||= []).push(...drawn);
   if (!chosen) {
     log(s, 'peril-draw', heroId, `Peril at ${cat.locations[loc]?.name ?? loc}: drew ${drawn.length}, none apply`);
-    if (s.humanSide !== 'Sauron') {
-      s.pendingReveal = {
-        kind: 'peril', deck: 'perils',
-        title: `Peril — ${cat.locations[loc]?.name ?? loc}`,
-        drawn,
-        note: 'None of the three drawn Perils apply here — they are discarded without effect.',
-      };
-    }
+    s.pendingReveal = {
+      kind: 'peril', deck: 'perils',
+      title: `Peril — ${cat.locations[loc]?.name ?? loc}`,
+      drawn,
+      note: 'None of the three drawn Perils apply here — they are discarded without effect.',
+    };
     return;
   }
   const peril = cat.perils[chosen];
   log(s, 'peril-draw', heroId, `${peril.name} at ${cat.locations[loc]?.name ?? loc} (drew ${drawn.length}, ${applicable.length} apply)`, { cardId: chosen });
-  if (s.humanSide !== 'Sauron') {
-    s.pendingReveal = {
-      kind: 'peril', deck: 'perils',
-      title: `Peril — ${cat.locations[loc]?.name ?? loc}`,
-      drawn, chosen,
-      note: 'Sauron draws three Perils and resolves the applicable one he chooses (the harshest).',
-    };
-  }
+  s.pendingReveal = {
+    kind: 'peril', deck: 'perils',
+    title: `Peril — ${cat.locations[loc]?.name ?? loc}`,
+    drawn, chosen,
+    note: 'Sauron draws three Perils and resolves the applicable one he chooses (the harshest).',
+  };
   const actor = treeActor('peril', chosen);
   if (treeActorIsHuman(s, actor)) {
     // The affected hero is human: pause for his printed choice (e.g. Ill-met

@@ -4,9 +4,11 @@ import type { Action } from '../engine/actions';
 import {
   sauronActionYields,
   playablePlots, plotLocationChoices, playableShadow, monsterTargetsIn, woundedMinions, boardFigures,
+  canDiscardActivePlot,
   moveTargets, canBankInfluence,
 } from '../engine/game';
 import { gameStage } from '../engine/mechanics';
+import { shadowWindow } from '../engine/sauronmech';
 import { placementTargets } from '../engine/influence';
 import { plotArt, shadowArt } from '../data/art';
 
@@ -35,6 +37,8 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const [shadowPick, setShadowPick] = useState<string | null>(null);
   const [keepShadow, setKeepShadow] = useState<string[]>([]);
   const [keepPlot, setKeepPlot] = useState<string[]>([]);
+  const [shadowSort, setShadowSort] = useState<'draw' | 'name' | 'pool' | 'timing'>('draw');
+  const [plotSort, setPlotSort] = useState<'draw' | 'name' | 'marker' | 'cost'>('draw');
   const figure = moveFigureSel ? `${moveFigureSel.kind}:${moveFigureSel.id}:${moveFigureSel.loc}` : '';
   const setFigure = (v: string) => {
     if (!v) { onSelectMoveFigure?.(null); return; }
@@ -62,12 +66,25 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
   const hp = s.setupInfluencePending ? undefined : s.setupHandPending;
   const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>, id: string) =>
     set((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+  const playablePlotIds = new Set(playablePlots(s, cat).map((p) => p.id));
+  const playableShadowIds = new Set(playableShadow(s, cat));
+  // Dim (never hide) cards that cannot be played right now.
+  const plotDim = (id: string, cost: number) =>
+    s.phase === 'SauronEvents' ? !playablePlotIds.has(id) : cost > s.sauron.influence;
+  const plotReady = (id: string) => s.phase === 'SauronEvents' && playablePlotIds.has(id);
+  const shadowReady = (id: string) => s.phase === 'SauronMinions' && playableShadowIds.has(id);
+  const shadowDim = (id: string) => {
+    const c = cat.shadow[id];
+    if (!c) return false;
+    if (Number(c.poolRequirement) > s.sauron.influence) return true;
+    return shadowWindow(c.timing) === 'action' && !playableShadowIds.has(id);
+  };
   const plotTile = (id: string, action?: React.ReactNode) => {
     const p = cat.plots.find((x) => x.id === id);
     if (!p) return <div key={id} className="card-tile">{id}</div>;
     const img = plotArt(p.image);
     return (
-      <div key={id} className="card-tile">
+      <div key={id} className={`card-tile${plotDim(id, Number(p.influenceCost) || 0) ? ' card-tile--dim' : ''}${plotReady(id) ? ' card-tile--ready' : ''}`}>
         {img && <img src={img} alt={p.name} />}
         <div className="card-tile-name">{p.name}</div>
         <div className="card-tile-meta">{p.marker ?? 'red'} +{p.advance ?? p.track.length} · cost {p.influenceCost ?? 0} · counter {p.favorToCounter ?? '—'} favor</div>
@@ -81,7 +98,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
     const c = cat.shadow[id];
     const img = shadowArt(id);
     return (
-      <div key={id} className="card-tile">
+      <div key={id} className={`card-tile${shadowDim(id) ? ' card-tile--dim' : ''}${shadowReady(id) ? ' card-tile--ready' : ''}`} title={shadowDim(id) ? 'Not playable right now' : shadowReady(id) ? 'Playable now' : undefined}>
         {img && <img src={img} alt={c?.name ?? id} />}
         <div className="card-tile-name">{c?.name ?? id}</div>
         <div className="card-tile-meta">pool {c?.poolRequirement} · {c?.timing}</div>
@@ -89,13 +106,49 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
       </div>
     );
   };
+  const sortedShadow = [...s.sauron.shadowHand].sort((a, b) => {
+    const ca = cat.shadow[a], cb = cat.shadow[b];
+    if (shadowSort === 'name') return (ca?.name ?? a).localeCompare(cb?.name ?? b);
+    if (shadowSort === 'pool') return Number(ca?.poolRequirement ?? 0) - Number(cb?.poolRequirement ?? 0);
+    if (shadowSort === 'timing') return (ca?.timing ?? '').localeCompare(cb?.timing ?? '');
+    return 0;
+  });
+  const sortedPlots = [...(s.sauron.plotHand ?? [])].sort((a, b) => {
+    const pa = cat.plots.find((x) => x.id === a), pb = cat.plots.find((x) => x.id === b);
+    if (plotSort === 'name') return (pa?.name ?? a).localeCompare(pb?.name ?? b);
+    if (plotSort === 'marker') return (pa?.marker ?? '').localeCompare(pb?.marker ?? '');
+    if (plotSort === 'cost') return Number(pa?.influenceCost ?? 0) - Number(pb?.influenceCost ?? 0);
+    return 0;
+  });
   const handView = (
     <div className="sauron-hand">
       <b>Your hand</b>
-      <div><u>Shadow</u>{s.sauron.shadowHand.length === 0 && <span className="muted"> none</span>}
-        <div className="card-tiles">{s.sauron.shadowHand.map((id) => shadowTile(id))}</div></div>
-      <div><u>Plot</u>{(s.sauron.plotHand ?? []).length === 0 && <span className="muted"> none</span>}
-        <div className="card-tiles">{(s.sauron.plotHand ?? []).map((id) => plotTile(id))}</div></div>
+      <div className="hand-section hand-section--shadow">
+        <div className="hand-section-head">
+          <u>👁 Shadow cards ({s.sauron.shadowHand.length})</u>
+          <select value={shadowSort} onChange={(e) => setShadowSort(e.target.value as typeof shadowSort)} aria-label="Sort shadow cards">
+            <option value="draw">Order: as drawn</option>
+            <option value="name">Sort: name</option>
+            <option value="pool">Sort: pool cost</option>
+            <option value="timing">Sort: when playable</option>
+          </select>
+        </div>
+        {s.sauron.shadowHand.length === 0 && <span className="muted"> none</span>}
+        <div className="card-tiles">{sortedShadow.map((id) => shadowTile(id))}</div>
+      </div>
+      <div className="hand-section hand-section--plot">
+        <div className="hand-section-head">
+          <u>🚩 Plot cards ({(s.sauron.plotHand ?? []).length})</u>
+          <select value={plotSort} onChange={(e) => setPlotSort(e.target.value as typeof plotSort)} aria-label="Sort plot cards">
+            <option value="draw">Order: as drawn</option>
+            <option value="name">Sort: name</option>
+            <option value="marker">Sort: story track</option>
+            <option value="cost">Sort: influence cost</option>
+          </select>
+        </div>
+        {(s.sauron.plotHand ?? []).length === 0 && <span className="muted"> none</span>}
+        <div className="card-tiles">{sortedPlots.map((id) => plotTile(id))}</div>
+      </div>
     </div>
   );
 
@@ -193,7 +246,7 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
           <div className="sauron-step">
             <p className="prompt">{firstTurn
               ? 'Plot Step skipped on the first turn. Resolve this turn\'s events.'
-              : 'Plot Step — play one plot card, or pass. Then resolve this turn\'s events.'}</p>
+              : 'Plot Step — play one plot card OR discard one active plot (not both), or pass. Then resolve this turn\'s events.'}</p>
             <div className="sauron-plots">
               {playablePlots(s, cat).slice(0, 8).map((p) => {
                 const spots = plotLocationChoices(s, cat, p.id);
@@ -219,7 +272,18 @@ export default function SauronPanel({ state, cat, dispatch, moveFigureSel, onSel
                   ))}
                 </div>
               )}
-              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">{s.sauronPlotPlayed ? 'You have played your Plot card this turn.' : 'No affordable plots (slots full or too costly).'}</p>}
+              {!firstTurn && playablePlots(s, cat).length === 0 && <p className="muted">{s.sauronPlotPlayed ? 'You have used your Plot step this turn.' : 'No affordable plots (slots full or too costly).'}</p>}
+              {canDiscardActivePlot(s) && (
+                <div className="sauron-picker">
+                  <p className="prompt">Or discard an active plot instead:</p>
+                  {(s.sauron.activePlots ?? []).map((e) => (
+                    <button key={e.eventId} className="sauron-plot-btn"
+                      onClick={() => dispatch({ t: 'sauronDiscardPlot', plotId: e.eventId })}>
+                      <span className="cc-label">Discard {cat.plots.find((p) => p.id === e.eventId)?.name ?? e.eventId}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button className="primary" onClick={() => dispatch({ t: 'sauronResolveEvents' })}>
               Resolve events & begin actions ▶

@@ -7,7 +7,16 @@ interface Props {
   /** true when reopened later from the Combat history panel — the game
    *  itself already moved on, so the button just closes this view. */
   readOnly?: boolean;
+  /** Sauron's perspective: a hero win is a defeat for him, and vice versa. */
+  sauronView?: boolean;
 }
+
+const SAURON_LABEL: Record<CombatSummary['result'], string> = {
+  attacker: 'Your foe was defeated',
+  defender: 'Hero defeated — your victory',
+  escape: 'The hero escaped',
+  standoff: 'Standoff',
+};
 
 const RESULT_LABEL: Record<CombatSummary['result'], string> = {
   attacker: 'Victory!',
@@ -20,12 +29,12 @@ const RESULT_LABEL: Record<CombatSummary['result'], string> = {
  *  Continue — separate from CombatBoard, which has already unmounted by the
  *  time this shows (pendingCombat is null the instant combat resolves). Also
  *  reused (read-only) by the Combat history panel to review any past fight. */
-export default function CombatSummaryModal({ summary, cat, onContinue, readOnly }: Props) {
+export default function CombatSummaryModal({ summary, cat, onContinue, readOnly, sauronView }: Props) {
   const { result, heroName, foeName, foeKind, rounds, damageTaken, notes, report } = summary;
   return (
     <div className="choice-overlay">
       <div className="choice-modal combat-summary">
-        <p className="prompt">{RESULT_LABEL[result]}</p>
+        <p className="prompt">{(sauronView ? SAURON_LABEL : RESULT_LABEL)[result]}</p>
         <p>
           {heroName} vs {foeName} ({foeKind}) — {rounds} round{rounds === 1 ? '' : 's'}
           {damageTaken > 0 ? `, took ${damageTaken} damage` : ''}.

@@ -594,9 +594,10 @@ export function applyAtom(s: GameState, cat: Catalog, heroId: HeroId, atom: Atom
     }
     case 'restrictMovement': { hero.moveRestriction = atom.n; return `movement capped to ${atom.n}`; }
     case 'forcePeril': {
-      // Treat the hero's location as perilous now: ensure it holds influence.
-      if (influenceAt(s, hero.location) < 1) addCardInfluence(s, cat, hero.location, 1);
-      return 'location treated as perilous';
+      // "Treated as if perilous until the end of the hero's turn": no influence is
+      // placed; the hero's Encounter Step at this location is skipped instead.
+      hero.perilousHere = hero.location;
+      return 'location treated as perilous until the end of the turn';
     }
     case 'redistributeCorruption': {
       // "Redistribute Corruption cards between two heroes" (net-zero total): the

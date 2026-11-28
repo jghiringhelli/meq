@@ -378,13 +378,28 @@ export interface HeroState {
    *  ambush this turn (Flocks of Crebain / Seem Fairer / Creatures of the Wild).
    *  Cleared once the ambush is skipped or at hero refresh. */
   skipAmbush?: boolean;
+  /** Location where this hero already fought his one Ambush combat this turn (before
+   *  any move). The foe may still be there, but the Ambush step is over: the hero
+   *  may continue his turn (rulebook p.22). Cleared on travel and at refresh. */
+  ambushFoughtAt?: string;
+  /** Consecutive turns the AI deliberately sat out (banking a bigger hand). */
+  idleStreak?: number;
+  /** AI commitment: the plot trip this hero set out on. Kept until the plot is gone,
+   *  the hero arrives, or he is defeated — so the plan is not re-litigated every step. */
+  aiPlan?: { key: string; targets: string[] };
   /** A foe the hero MUST fight before travelling (Flocks of Crebain's forceCombat);
    *  it overrides skipAmbush, which only waives the normal Ambush step. */
   forcedFoe?: string;
+  /** Locations this hero left since his last non-travel action this turn. The AI never
+   *  steps back onto one (a loop with nothing done in between). */
+  travelPath?: string[];
   /** M3 Combat-or-Peril: locations the hero entered this turn where Sauron chose
    *  Peril instead of forcing a fight — the co-located foe does not block further
    *  travel here. Cleared at hero refresh. */
   perilResolvedAt?: LocationId[];
+  /** "His Arm Has Grown Long": this location counts as perilous until the end of
+   *  the hero's turn (skips his Encounter Step). */
+  perilousHere?: LocationId;
   /** M10 hero economy: recruited Characters (allies) travelling with the hero,
    *  and quest progress (both quests done => contributes to Spear of the West). */
   allies?: string[];

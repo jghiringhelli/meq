@@ -14,7 +14,7 @@ export {
   sauronStoryStep, sauronResolveEvents, sauronEndActionStep, resolveCombatOrPeril,
 } from './phases';
 export {
-  sauronPlayPlot, sauronBeginAction, sauronActionYields,
+  sauronPlayPlot, sauronDiscardPlot, canDiscardActivePlot, sauronBeginAction, sauronActionYields,
   sauronPlaceInfluence, sauronExtractInfluence, sauronConfirmInfluence, sauronBankInfluence, canBankInfluence, sauronSpawnMonster, sauronDrawMonsterToken,
   plotLocationChoices,
   sauronMoveFigure, sauronHealMinion, sauronPlayShadow,   setupPlaceInfluence, sauronKeepDrawnPlot, setupExtractInfluence, setupConfirmInfluence, sauronKeepStartingHand, sauronFinishCommand,

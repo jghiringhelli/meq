@@ -5,7 +5,7 @@ import {
   newGame, legalMoves, engageableMonsters, canExplore,
   favorHere, charactersHere, plotHere, canCleanse, canDarkPath, canCompleteQuest, otherHeroesHere,
   canDiscardPlot, plotCounterCost,
-  canSurvey, moveTargets as moveTargetsFor, sauronCommandTargets, moveOptions,
+  canSurvey, moveTargets as moveTargetsFor, sauronCommandTargets, moveOptions, resolveChoice,
 } from './engine/game';
 import { applyAction, type Action } from './engine/actions';
 import Board from './play/Board';
@@ -46,8 +46,8 @@ import { useGameSession } from './net/session';
 import { emptyRoster, rolesOf, SAURON_ROLE, markDisconnected, markReconnected, type Roster } from './net/roles';
 import { applyRemoteAction, claimRole as hostClaimRole, dropPlayer } from './net/host';
 import {
-  saveGame, loadSavedGame, recordCompletedGame,
-  loadHistory, clearSavedGame, type HistoryEntry,
+  saveGame, loadSavedGame, recordCompletedGame, listSavedGames, deleteSavedGame,
+  loadHistory, type HistoryEntry,
 } from './play/persistence';
 
 export default function App() {
@@ -60,7 +60,7 @@ export default function App() {
   const [setup, setSetup] = useState(false);
   const [pendingHost, setPendingHost] = useState(false);
   const [joining, setJoining] = useState(false);
-  const [resumable, setResumable] = useState(() => loadSavedGame());
+  const [saves, setSaves] = useState(() => listSavedGames());
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [artMatched, setArtMatched] = useState(() => (getUserArt() ? 1 : 0));
   const [travelTo, setTravelTo] = useState<string | null>(null);
@@ -194,6 +194,18 @@ export default function App() {
     return !c || c.kind !== 'human' || c.connected === false;
   }, [net.role, roster, state?.humanSide]);
 
+  // A choice owed by an AI-controlled hero (e.g. Training picked during Sauron's Event
+  // step) is made by the hero AI — the driver below only runs on the Hero side. Never
+  // shown to a human Sauron: it would reveal the hero's cards.
+  useEffect(() => {
+    if (!catalog || !state || state.winner || net.role === 'client') return;
+    const pc = state.pendingChoice;
+    if (!pc || pc.seat === 'sauron' || state.activeSide === 'Hero') return;
+    const hero = state.heroes.find((h) => h.seat === pc.seat);
+    if (!hero || !isAiHero(hero.id)) return;
+    setState(resolveChoice(state, catalog, missionAware.combatOption(state, catalog, pc.options, heroRng.current)));
+  }, [catalog, state, net.role, isAiHero]);
+
   useEffect(() => {
     if (!catalog || !state || state.winner) return;
     if (net.role === 'client') return;
@@ -247,8 +259,6 @@ export default function App() {
   const start = useCallback((heroIds?: HeroId[], humanSide: Side = 'Hero') => {
     if (!catalog) return;
     const fresh = Math.floor(Math.random() * 1e9);
-    clearSavedGame();
-    setResumable(null);
     setSeed(fresh);
     heroRng.current = mulberry32(fresh ^ 0x9e3779b9);
     const s = newGame(catalog, fresh, heroIds, humanSide, humanSide === 'Sauron');
@@ -278,34 +288,46 @@ export default function App() {
     if (net.role === 'client') setState(null);
   }, [net]);
 
-  // "New game": if a game is saved, confirm before discarding it.
-  const requestNewGame = useCallback(() => {
-    if (resumable && !window.confirm(
-      `A saved game is in progress (round ${resumable.state.round}). Delete it and start a new game?`)) {
-      return;
-    }
-    setSetup(true);
-  }, [resumable]);
+  // Several games can be saved at once; starting a new one never deletes another.
+  const requestNewGame = useCallback(() => { setSetup(true); }, []);
 
-  // Explicitly delete the current/saved game and return to the start screen.
+  // Delete the CURRENT game's save and return to the start screen.
   const deleteGame = useCallback(() => {
     if (!window.confirm('Delete the current game? This cannot be undone.')) return;
-    clearSavedGame();
-    setResumable(null);
+    deleteSavedGame(seed);
     setState(null);
     setSetup(false);
+  }, [seed]);
+
+  const deleteSave = useCallback((sv: number) => {
+    if (!window.confirm('Delete this saved game? This cannot be undone.')) return;
+    deleteSavedGame(sv);
+    setSaves(listSavedGames());
   }, []);
 
   // Leave the board for the main menu WITHOUT deleting anything — the game
-  // is still autosaved, so the landing screen offers a "Resume" button.
+  // is still autosaved and listed under "Saved games".
   const backToMenu = useCallback(() => {
     setState(null);
     setSetup(false);
   }, []);
 
-  const resume = useCallback(() => {
-    if (resumable) { setSeed(resumable.seed); setState(resumable.state); }
-  }, [resumable]);
+  // Refresh the saved-games list whenever the start screen is shown.
+  useEffect(() => { if (!state) setSaves(listSavedGames()); }, [state]);
+
+  const resume = useCallback((sv: number, host = false) => {
+    const g = loadSavedGame(sv);
+    if (!g) { setSaves(listSavedGames()); return; }
+    heroRng.current = mulberry32(g.seed ^ 0x9e3779b9 ^ (g.state.round * 7919));
+    setSeed(g.seed); setState(g.state);
+    if (host) {
+      const s = g.state;
+      net.createHost().then(() => {
+        const empty = emptyRoster(s);
+        setRoster(s.humanSide === 'Sauron' ? hostClaimRole(empty, s, 'host', 'Host', SAURON_ROLE, false) : empty);
+      }).catch(() => {});
+    }
+  }, [net]);
 
   const handleClaim = useCallback((role: string, release: boolean) => {
     if (net.role === 'client') { net.claimRole(role, release); return; }
@@ -379,15 +401,27 @@ export default function App() {
               <button className="primary start-cta" onClick={requestNewGame}>🎲 New game</button>
               <button className="secondary start-cta" onClick={() => { setPendingHost(true); setSetup(true); }}>🌐 Host online game</button>
               <button className="secondary start-cta" onClick={() => setJoining(true)}>🔗 Join online game</button>
-              {resumable && (
-                <>
-                  <button className="secondary start-cta" onClick={resume}>
-                    ▶ Resume game (round {resumable.state.round})
-                  </button>
-                  <button className="ghost" onClick={deleteGame}>🗑 Delete saved game</button>
-                </>
-              )}
             </div>
+            {saves.length > 0 && (
+              <div className="saved-games">
+                <h3 className="saved-games__title">Saved games</h3>
+                {saves.map((sv, i) => {
+                  const who = sv.humanSide === 'Sauron' ? '👁 You play Sauron' : sv.humanSide === 'Hero' ? '🛡 You play the Heroes' : '🤖 All AI';
+                  return (
+                    <div key={sv.seed} className="saved-games__row">
+                      <div className="saved-games__info">
+                        <b>Slot {i + 1} — {who}</b>
+                        <small>Turn {sv.turn} · {sv.heroes.map((h) => catalog?.heroes[h]?.name ?? h).join(', ')}</small>
+                        <small>Last played {new Date(sv.savedAt).toLocaleString()}</small>
+                      </div>
+                      <button className="primary" onClick={() => resume(sv.seed)}>▶ Play</button>
+                      <button className="secondary" onClick={() => resume(sv.seed, true)} title="Resume and host it online so friends can join">🌐 Host</button>
+                      <button className="ghost danger" onClick={() => deleteSave(sv.seed)}>🗑 Delete</button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section className="start-card start-card--art">
@@ -827,7 +861,7 @@ export default function App() {
           </span>
         </div>
       )}
-      {state.sauronCombatInfluence && iControlSauron && !state.pendingCombat && !state.lastCombatSummary && (
+      {state.sauronCombatInfluence && iControlSauron && !state.pendingCombat && (
         <div className="banner setup-influence-banner">
           <span>{state.sauronCombatInfluence.note}: click a glowing + location on the map ({state.sauronCombatInfluence.remaining} left).</span>
         </div>
@@ -849,7 +883,7 @@ export default function App() {
           <div className="hero-step-next">
             <span><b>Heroes:</b> {heroPanel.text ?? 'The heroes finished their turn.'}</span>
             <button className="primary" onClick={() => {
-              if (!heroPanel.act || !heroPanel.heroId || !catalog) { setHeroPanel(null); return; }
+              if (!heroPanel.act || !heroPanel.heroId || !catalog) { lastActLogLen.current = state.log.length; setHeroPanel(null); return; }
               lastActLogLen.current = state.log.length;
               const ns = applyHeroAction(state, catalog, heroPanel.heroId, heroPanel.act);
               setHeroPanel(null);
@@ -870,8 +904,8 @@ export default function App() {
           onChoose={state.pendingChoice && (state.pendingChoice.seat !== 'sauron' || iControlSauron) ? doChoice : undefined} sauronView={iControlSauron} />
       )}
 
-      {state.lastCombatSummary && !state.pendingCombat && (
-        <CombatSummaryModal summary={state.lastCombatSummary} cat={cat} onContinue={doDismissCombatSummary} />
+      {state.lastCombatSummary && !state.pendingCombat && !(iControlSauron && state.sauronCombatInfluence) && (
+        <CombatSummaryModal summary={state.lastCombatSummary} cat={cat} onContinue={doDismissCombatSummary} sauronView={iControlSauron} />
       )}
 
       {historyView && (

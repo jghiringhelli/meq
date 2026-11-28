@@ -75,7 +75,9 @@ export function heroMove(state: GameState, cat: Catalog, heroId: HeroId, to: Loc
     }
     spent = `via any-card (discarded ${names.length}: ${names.join(', ')})`;
   }
+  (hero.travelPath ||= []).push(hero.location);
   relocateHero(s, heroId, to);
+  hero.ambushFoughtAt = undefined; // a new location: its foe is met via Combat-or-Peril, not the Ambush step
   hero.hasMovedThisTurn = true;
   hero.travelStepsThisTurn = (hero.travelStepsThisTurn ?? 0) + 1;
   log(s, 'hero-move', heroId, `${hero.location} ${spent}`);
@@ -580,10 +582,11 @@ export function endHeroActions(state: GameState, cat: Catalog): GameState {
   if (hero.status === 'active' && !hero.encounterStepDone) {
     hero.encounterStepDone = true;
     const wisdom = cat.heroes[hero.id].wisdom + (hero.statBonus?.wisdom ?? 0);
-    if (!isPerilous(s, cat, hero.location, wisdom)) {
+    if (!isPerilous(s, cat, hero.location, wisdom) && hero.perilousHere !== hero.location) {
       if (runEncounterStep(s, cat, hero.id)) return s;
     }
   }
+  hero.perilousHere = undefined;
   log(s, 'hero-end', hero.id, 'ends turn');
   if (s.activeHeroIndex < s.heroes.length - 1) {
     s.activeHeroIndex += 1;
@@ -650,8 +653,11 @@ function runHeroRefresh(s: GameState, cat: Catalog): GameState {
     hero.travelStepsThisTurn = 0;
     hero.favorGainedThisTurn = 0;
     hero.skipAmbush = false;
+    hero.ambushFoughtAt = undefined;
     hero.forcedFoe = undefined;
+    hero.travelPath = [];
     hero.perilResolvedAt = [];
+    hero.perilousHere = undefined;
     // restrictMovement (Winter Storm etc.): cap THIS turn's Travel steps.
     hero.turnTravelCap = hero.moveRestriction;
     hero.moveRestriction = undefined;

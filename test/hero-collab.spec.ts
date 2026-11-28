@@ -8,7 +8,7 @@ import type { GameState } from '../src/engine/types';
  *  favor; the ally holds `allyFavor`. Returns the state and the plot's cost. */
 function pooledPlotGame(shortBy: number, allyFavor: number): { s: GameState; cost: number } {
   const s = freshGame();
-  const plot = cat.plots.find((p) => (p.favorToCounter ?? 2) >= 2)!;
+  const plot = cat.plots.find((p) => (p.favorToCounter ?? 2) >= 2 && (p.advance ?? 1) >= 2)!;
   const cost = plot.favorToCounter ?? 2;
   s.phase = 'HeroActions';
   s.activeHeroIndex = 0;
